@@ -65,6 +65,14 @@ jobs:
           grep -iE "error|warning: Failed|not found" /tmp/sdk.log | head -5
           "$SDKM" --list_installed | grep -E "android-35|build-tools;35" || echo "android-35 still missing"
 
+      - name: Wrapper check
+        run: |
+          set +e
+          ls -l android/gradle/wrapper/
+          file android/gradle/wrapper/gradle-wrapper.jar
+          unzip -l android/gradle/wrapper/gradle-wrapper.jar | tail -3
+          head -c 4 android/gradle/wrapper/gradle-wrapper.jar | od -c | head -2
+
       - name: Build APK
         run: |
           set -uo pipefail

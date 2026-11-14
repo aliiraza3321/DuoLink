@@ -65,14 +65,6 @@ jobs:
           grep -iE "error|warning: Failed|not found" /tmp/sdk.log | head -5
           "$SDKM" --list_installed | grep -E "android-35|build-tools;35" || echo "android-35 still missing"
 
-      - name: Wrapper check
-        run: |
-          set +e
-          ls -l android/gradle/wrapper/
-          file android/gradle/wrapper/gradle-wrapper.jar
-          unzip -l android/gradle/wrapper/gradle-wrapper.jar | tail -3
-          head -c 4 android/gradle/wrapper/gradle-wrapper.jar | od -c | head -2
-
       - name: Build APK
         run: |
           set -uo pipefail
@@ -89,12 +81,10 @@ jobs:
           STATUS=${PIPESTATUS[0]}
           if [ $STATUS -ne 0 ]; then
             # Surface the real reason on the run page: the raw log needs auth.
-            {
-              echo '### Gradle failure'"'"'
-              echo '```'
-              grep -A12 -m1 "What went wrong" ../gradle-build.log || tail -40 ../gradle-build.log
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
+            echo "### Gradle failure" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+            grep -A12 -m1 "What went wrong" ../gradle-build.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || tail -40 ../gradle-build.log >> "$GITHUB_STEP_SUMMARY"
+            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
           fi
           exit $STATUS
 

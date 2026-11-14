@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="minimal.css?v=21">
   <link rel="stylesheet" href="dark-glass.css?v=4">
   <link rel="stylesheet" href="design.css">
+  <link rel="stylesheet" href="ref-panes.css">
 </head>
 <body class="dark-theme">
   <!-- Overlay title bar (titleBarStyle: hidden in main.js). Drag region +
@@ -106,9 +107,6 @@
         <button class="nav-tab active" data-tab="tab-pairing">
           <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-grid"/></svg></span> Overview
         </button>
-        <button class="nav-tab" data-tab="tab-trusted">
-          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-shield"/></svg></span> Trusted Devices
-        </button>
 
         <div class="nav-group">Communicate</div>
         <button class="nav-tab" data-tab="tab-messages">
@@ -129,6 +127,9 @@
         <div class="nav-group">Control</div>
         <button class="nav-tab" data-tab="tab-screen-mirror">
           <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-phone"/></svg></span> Phone Screen
+        </button>
+        <button class="nav-tab" data-tab="tab-apps">
+          <span class="tab-icon"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg></span> Apps
         </button>
 
         <div class="nav-group">Media</div>
@@ -620,140 +621,221 @@
       </section>
 
       <!-- TAB 6: MESSAGES (SMS) -->
-      <section id="tab-messages" class="tab-pane">
-        <div class="pane-header">
-          <div>
-            <h1>Messages (SMS)</h1>
-            <p class="subtitle">Read and reply to SMS through the paired phone. SMS only — use Notifications for WhatsApp replies.</p>
-          </div>
-          <div class="header-tools">
-            <button id="btn-sms-refresh" class="btn btn-primary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Refresh</button>
-          </div>
-        </div>
-
-        <!-- Full-width search bar: filters the conversation list live and
-             narrows the open thread's messages to matching bubbles. -->
-        <div class="search-bar" role="search">
-          <svg class="ic " aria-hidden="true"><use href="#i-search"/></svg>
-          <input type="text" id="sms-search" placeholder="Search messages and conversations…" autocomplete="off">
-          <button id="sms-search-clear" class="search-bar-clear hidden" title="Clear search"><svg class="ic " aria-hidden="true"><use href="#i-x"/></svg></button>
-        </div>
-
-        <div class="split-view">
-          <div class="card">
-            <div class="card-header-row"><h3>Conversations</h3><span id="sms-unread-badge" class="badge">0 unread</span></div>
-            <div id="sms-thread-list" class="history-list" style="max-height:64vh;overflow:auto">
-              <div class="history-empty">Loading conversations…</div>
+      <section id="tab-messages" class="tab-pane rf-pane">
+        <div class="rf-split">
+          <div class="rf-col rf-col-list">
+            <div class="rf-head">
+              <h2>Conversations</h2>
+              <div class="rf-head-actions">
+                <button id="btn-sms-refresh" class="rf-icon" title="Refresh conversations"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+                <button id="btn-sms-compose" class="rf-icon" title="New message"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+              </div>
+            </div>
+            <div class="rf-search">
+              <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+              <input type="text" id="sms-search" placeholder="Search" autocomplete="off">
+            </div>
+            <div class="rf-search hidden" id="sms-new-row">
+              <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>
+              <input type="text" id="sms-new-addr" placeholder="New message — phone number" autocomplete="off">
+            </div>
+            <div id="sms-thread-list" class="rf-rows">
+              <div class="rf-empty">Loading conversations…</div>
             </div>
           </div>
-          <div class="card chat-panel">
-            <div class="card-header-row"><h3 id="sms-thread-title">Select a conversation</h3></div>
-            <div id="sms-messages" class="chat-messages">
-              <div class="chat-msg system">Pick a thread on the left to read and reply.</div>
+          <div class="rf-col rf-col-detail">
+            <div class="rf-head rf-head-detail">
+              <h2 id="sms-thread-title">Select a conversation</h2>
+              <span id="sms-unread-badge" class="rf-chip">0 unread</span>
+              <div class="rf-head-actions">
+                <button id="btn-sms-call" class="rf-icon" title="Call this number"><svg class="ic" aria-hidden="true"><use href="#i-handset"/></svg></button>
+              </div>
             </div>
-            <div class="chat-input-row">
-              <input type="text" id="sms-input" placeholder="Reply via SMS…" disabled>
-              <button id="btn-sms-send" class="btn btn-primary" disabled>Send <svg class="ic " aria-hidden="true"><use href="#i-send"/></svg></button>
+            <div id="sms-messages" class="chat-messages rf-thread">
+              <div class="rf-empty">Pick a thread on the left to read and reply.</div>
             </div>
-            <div id="sms-send-status" class="hint" style="min-height:16px"></div>
+            <div class="rf-composer">
+              <svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg>
+              <input type="text" id="sms-input" placeholder="Text message" autocomplete="off" disabled>
+              <button id="btn-sms-send" class="rf-send" title="Send" disabled><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg></button>
+            </div>
+            <div id="sms-send-status" class="hint rf-status"></div>
           </div>
         </div>
       </section>
 
       <!-- TAB 7: CALLS -->
-      <section id="tab-calls" class="tab-pane">
-        <div class="pane-header">
-          <div>
-            <h1>Calls</h1>
-            <p class="subtitle">See who's calling, answer or reject from the PC, dial out, and browse recent calls.</p>
-          </div>
-          <div class="header-tools">
-            <button id="btn-call-recents" class="btn btn-primary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Load Recents</button>
-          </div>
-        </div>
-
-        <div class="card" style="margin-bottom:14px">
-          <div class="card-header-row"><h3>Live Call State</h3><span id="call-state-badge" class="badge">IDLE</span></div>
-          <div id="call-active-row" class="toggle-row">
-            <div class="dev-info">
-              <h4 id="call-caller">No active call</h4>
-              <p class="hint" id="call-caller-sub">State syncs from the phone in real time (needs the Phone permission).</p>
+      <section id="tab-calls" class="tab-pane rf-pane">
+        <div class="rf-split">
+          <div class="rf-col rf-col-list">
+            <div class="rf-head">
+              <div class="rf-seg">
+                <button class="rf-seg-btn active" data-call-view="recents">Recent</button>
+                <button class="rf-seg-btn" data-call-view="contacts">Contacts</button>
+              </div>
+              <div class="rf-head-actions">
+                <button id="btn-call-recents" class="rf-icon" title="Refresh call log"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+              </div>
             </div>
-            <div class="header-tools">
-              <button id="btn-call-answer" class="btn btn-success btn-sm" disabled>Answer</button>
-              <button id="btn-call-reject" class="btn btn-danger btn-sm" disabled>Reject / End</button>
+            <div class="rf-search">
+              <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+              <input type="text" id="call-search" placeholder="Search calls" autocomplete="off">
+            </div>
+            <div id="call-recents-list" class="rf-rows">
+              <div class="rf-empty">Press refresh to load the phone's call log.</div>
             </div>
           </div>
+          <div class="rf-col rf-col-detail rf-dial-col">
+            <div class="rf-live">
+              <div class="rf-live-text">
+                <strong id="call-caller">No active call</strong>
+                <span class="hint" id="call-caller-sub">State syncs from the phone in real time.</span>
+              </div>
+              <span id="call-state-badge" class="rf-chip">IDLE</span>
+              <div class="rf-head-actions">
+                <button id="btn-call-answer" class="rf-btn rf-btn-ok" disabled>Answer</button>
+                <button id="btn-call-reject" class="rf-btn" disabled>End</button>
+              </div>
+            </div>
+            <div class="rf-dialpad">
+              <input type="tel" id="call-dial-input" class="rf-dial-display" placeholder="Enter a number" autocomplete="off">
+              <div class="rf-keys">
+                <button class="rf-key" data-key="1"><span>1</span></button>
 
-          <!-- Dial field -->
-          <div class="dial-row">
-            <input type="tel" id="call-dial-input" placeholder="Dial a number…" autocomplete="off">
-            <button id="btn-call-dial" class="btn btn-primary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-send"/></svg> Call</button>
-          </div>
+                <button class="rf-key" data-key="2"><span>2</span><em>ABC</em></button>
 
-          <!-- Collapsible blue info box (not a red warning) -->
-          <details class="info-box">
-            <summary><svg class="ic " aria-hidden="true"><use href="#i-info"/></svg> About Bluetooth call audio</summary>
-            <p>DuoLink mirrors call state and controls, but Android only lets the default dialer own call audio. To hear the call on your PC, pair the phone to Windows via Bluetooth (Hands-Free Profile) — then Windows routes call audio to the PC speakers/mic.</p>
-          </details>
-        </div>
+                <button class="rf-key" data-key="3"><span>3</span><em>DEF</em></button>
 
-        <div class="card">
-          <div class="card-header-row"><h3>Recent Calls</h3></div>
-          <div id="call-recents-list" class="history-list" style="max-height:44vh;overflow:auto">
-            <div class="history-empty">Click "Load Recents" to fetch the phone's call log (needs the Call log permission on the phone).</div>
+                <button class="rf-key" data-key="4"><span>4</span><em>GHI</em></button>
+
+                <button class="rf-key" data-key="5"><span>5</span><em>JKL</em></button>
+
+                <button class="rf-key" data-key="6"><span>6</span><em>MNO</em></button>
+
+                <button class="rf-key" data-key="7"><span>7</span><em>PQRS</em></button>
+
+                <button class="rf-key" data-key="8"><span>8</span><em>TUV</em></button>
+
+                <button class="rf-key" data-key="9"><span>9</span><em>WXYZ</em></button>
+
+                <button class="rf-key" data-key="*"><span>*</span></button>
+
+                <button class="rf-key" data-key="0"><span>0</span><em>+</em></button>
+
+                <button class="rf-key" data-key="#"><span>#</span></button>
+
+              </div>
+              <div class="rf-dial-actions">
+                <button id="btn-call-text" class="rf-btn"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg> Text</button>
+                <button id="btn-call-dial" class="rf-btn rf-btn-primary"><svg class="ic" aria-hidden="true"><use href="#i-handset"/></svg> Call</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- TAB 8: PHONE MEDIA -->
-      <section id="tab-media" class="tab-pane">
-        <div class="pane-header">
-          <div>
-            <h1>Phone Media Browser</h1>
-            <p class="subtitle">Browse photos, videos, audio and documents on the phone — preview thumbnails instantly, open or download the full file.</p>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header-row">
-            <h3 id="media-count">No items loaded</h3>
-            <div class="header-tools">
-              <button id="btn-media-open" class="btn btn-secondary btn-sm" disabled>Open Selected</button>
-              <button id="btn-media-download" class="btn btn-secondary btn-sm" disabled>Download Selected</button>
+      <section id="tab-media" class="tab-pane rf-pane">
+        <div class="rf-split">
+          <div class="rf-col rf-col-list rf-col-albums">
+            <div class="rf-head">
+              <h2>Albums</h2>
+              <div class="rf-head-actions">
+                <button id="btn-media-load" class="rf-icon" title="Reload from the phone"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+              </div>
+            </div>
+            <div id="media-albums" class="rf-albums">
+              <button class="rf-album active" data-album="all"><span class="rf-album-icon"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span><span class="rf-album-text"><strong>All photos</strong><em>0</em></span></button>
             </div>
           </div>
-          <div class="media-toolbar">
-            <div class="media-field">
-              <label for="media-kind">Category</label>
-              <select id="media-kind" class="uri-box">
+          <div class="rf-col rf-col-detail">
+            <div class="rf-head rf-head-detail">
+              <h2 id="media-count">No items loaded</h2>
+              <div class="rf-head-actions">
+                <button id="btn-media-select" class="rf-btn">Select</button>
+                <button id="btn-media-open" class="rf-btn" disabled>Open</button>
+                <button id="btn-media-download" class="rf-btn" disabled>Download</button>
+                <button id="btn-media-share" class="rf-btn" disabled>Share on PC</button>
+                <button id="btn-media-delete" class="rf-btn rf-btn-danger" disabled>Delete</button>
+              </div>
+            </div>
+            <div class="rf-media-tools">
+              <div class="rf-search rf-search-sm">
+                <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+                <input type="text" id="media-search" placeholder="Search by name" autocomplete="off">
+              </div>
+              <select id="media-kind" class="rf-select" title="Category">
                 <option value="images">Photos</option>
                 <option value="videos">Videos</option>
                 <option value="audio">Audio</option>
                 <option value="all">All media</option>
               </select>
-            </div>
-            <div class="media-field">
-              <label for="media-sort">Sort by</label>
-              <select id="media-sort" class="uri-box">
+              <select id="media-sort" class="rf-select" title="Sort">
                 <option value="date_desc">Newest first</option>
                 <option value="date_asc">Oldest first</option>
                 <option value="name">By name</option>
                 <option value="size_desc">By size</option>
               </select>
             </div>
-            <div class="media-field media-field-grow">
-              <label for="media-search">Search</label>
-              <input type="text" id="media-search" placeholder="Filter by name…" class="uri-box">
+            <div id="media-grid" class="rf-grid">
+              <div class="rf-empty">Pick an album to load photos from the phone.</div>
             </div>
-            <button id="btn-media-load" class="btn btn-primary media-load-btn"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Load</button>
-            <button id="btn-media-share" class="btn btn-secondary media-load-btn" disabled title="Open the ticked items on this PC (nothing pops up on the phone)"><svg class="ic " aria-hidden="true"><use href="#i-external"/></svg> Share on PC</button>
-            <button id="btn-media-delete" class="btn btn-danger media-load-btn" disabled title="Delete the ticked items from the phone"><svg class="ic " aria-hidden="true"><use href="#i-trash"/></svg> Delete</button>
+            <div id="media-transfer-status" class="hint rf-status"></div>
           </div>
-          <div id="media-grid" class="media-grid">
-            <div class="history-empty">Pick a category and press Load. On the phone, grant media access when prompted.</div>
+        </div>
+      </section>
+
+      <!-- TAB: PHONE APPS (wireless debugging) -->
+      <section id="tab-apps" class="tab-pane rf-pane">
+        <div class="rf-split">
+          <div class="rf-col rf-col-list rf-col-apps">
+            <div class="rf-head">
+              <h2>Phone apps</h2>
+              <div class="rf-head-actions">
+                <button id="btn-adb-refresh" class="rf-icon" title="Reload the app list"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+              </div>
+            </div>
+            <div class="adbf-card">
+              <div class="adbf-row">
+                <label for="adb-serial">Device</label>
+                <div class="adbf-line">
+                  <select id="adb-serial" class="rf-select"></select>
+                  <button id="btn-adb-disconnect" class="rf-btn">Disconnect</button>
+                </div>
+              </div>
+              <div class="adbf-row">
+                <label for="adb-connect-addr">Device address</label>
+                <div class="adbf-line">
+                  <input id="adb-connect-addr" class="rf-input" placeholder="192.168.1.40:5555" autocomplete="off">
+                  <button id="btn-adb-connect" class="rf-btn rf-btn-primary">Connect</button>
+                </div>
+              </div>
+              <div class="adbf-row">
+                <label for="adb-pair-addr">Pairing IP:port + code</label>
+                <div class="adbf-line">
+                  <input id="adb-pair-addr" class="rf-input" placeholder="192.168.1.40:41234" autocomplete="off">
+                  <input id="adb-pair-code" class="rf-input rf-input-code" placeholder="6-digit code" autocomplete="off" maxlength="6">
+                  <button id="btn-adb-pair" class="rf-btn">Pair</button>
+                </div>
+              </div>
+              <div id="adb-status" class="hint">Wireless debugging: off</div>
+              <div class="hint adbf-help">On the phone: Developer options → Wireless debugging → Pair device with pairing code. Then use “Device address” from the same screen.</div>
+            </div>
           </div>
-          <div id="media-transfer-status" class="hint" style="min-height:16px;margin-top:8px"></div>
+          <div class="rf-col rf-col-detail">
+            <div class="rf-head rf-head-detail">
+              <h2 id="adb-count">Apps</h2>
+              <div class="rf-head-actions">
+                <div class="rf-search rf-search-sm rf-search-inline">
+                  <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+                  <input type="text" id="adb-search" placeholder="Search apps" autocomplete="off">
+                </div>
+              </div>
+            </div>
+            <div id="adb-apps" class="rf-apps">
+              <div class="rf-empty">Pair over wireless debugging to list the phone's apps.</div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -865,24 +947,6 @@
       <!-- Device Status tab removed: battery/permissions live in Overview,
            volume + diagnostics live in Settings → Phone health and permissions. -->
 
-      <!-- TAB 11: TRUSTED DEVICES -->
-      <section id="tab-trusted" class="tab-pane">
-        <div class="pane-header">
-          <div>
-            <h1>Trusted Devices Registry</h1>
-            <p class="subtitle">Manage phones that have completed pairing. Paired devices reconnect automatically and securely.</p>
-          </div>
-          <div class="header-tools">
-            <button id="btn-refresh-trusted" class="btn btn-primary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Refresh List</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div id="trusted-devices-list" class="trusted-devices-list">
-            <!-- Dynamically populated -->
-          </div>
-        </div>
-      </section>
 
       <!-- TAB 6: SETTINGS -->
       <section id="tab-settings" class="tab-pane">
@@ -1072,6 +1136,18 @@
             <button id="btn-open-log" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-folder"/></svg> Open log</button>
             <button id="btn-check-updates" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-external"/></svg> Check for updates</button>
           </div>
+        </div>
+      
+        <div class="card settings-card" id="settings-trusted">
+          <div class="settings-group-label">Trusted devices</div>
+          <div class="toggle-row" style="border-top:none;padding-top:6px">
+            <div>
+              <h3>Paired phones</h3>
+              <p class="hint">Devices that completed pairing reconnect automatically. Revoke one to require a fresh QR scan.</p>
+            </div>
+            <button id="btn-refresh-trusted" class="btn btn-secondary btn-sm"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> Refresh</button>
+          </div>
+          <div id="trusted-devices-list" class="trusted-devices-list"></div>
         </div>
       </section>
 

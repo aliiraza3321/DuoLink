@@ -163,6 +163,14 @@ contextBridge.exposeInMainWorld('phonePcApi', {
   callRecents: () => ipcRenderer.invoke('call-recents'),
   callLogDelete: (id) => ipcRenderer.invoke('call-log-delete', id),
 
+  // Phone apps over Wireless debugging (adb)
+  adbStatus: () => ipcRenderer.invoke('adb-status'),
+  adbPair: (addr, code) => ipcRenderer.invoke('adb-pair', { addr, code }),
+  adbConnect: (addr) => ipcRenderer.invoke('adb-connect', { addr }),
+  adbDisconnect: (addr) => ipcRenderer.invoke('adb-disconnect', { addr }),
+  adbApps: (serial) => ipcRenderer.invoke('adb-apps', { serial }),
+  adbLaunch: (serial, pkg) => ipcRenderer.invoke('adb-launch', { serial, pkg }),
+
   // V2: Phone volume
   phoneVolume: (action, value) => ipcRenderer.invoke('phone-volume', { action, value }),
 

@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       clone.querySelectorAll('.nav-badge').forEach((b) => b.remove());
       titlebarTitle.textContent = clone.textContent.trim().replace(/\s+/g, ' ');
     }
-    if (tabId === 'tab-trusted') refreshTrustedDevices();
+    if (tabId === 'tab-settings') refreshTrustedDevices();
   }
 
   // Tab switching events
@@ -1779,6 +1779,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ================================================================
   const escapeAttr = (v) => escapeHtml(String(v == null ? '' : v)).replace(/"/g, '&quot;');
 
+  /** Stable pastel tone for a name/number avatar (reference-style lists). */
+  function rfTone(key) {
+    const str = String(key || '');
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 9973;
+    return 'a' + (h % 5 + 1);
+  }
+
+  function rfInitial(key) {
+    const clean = String(key || '').replace(/[^0-9a-z]/gi, '');
+    return (clean[0] || '#').toUpperCase();
+  }
+
+  function rfDayLabel(ts) {
+    const d = new Date(Number(ts) || 0);
+    if (!ts) return 'Unknown date';
+    const today = new Date();
+    const startOf = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const diff = Math.round((startOf(today) - startOf(d)) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    if (diff < 7) return d.toLocaleDateString([], { weekday: 'long' });
+    return d.toLocaleDateString([], { day: 'numeric', month: 'short', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' });
+  }
+
+
   /** Clipboard helper shared by the call-log and message "copy" buttons. */
   async function copyText(text, okMessage) {
     if (!text) return;
@@ -2015,18 +2041,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!list.length) {
       el.innerHTML = smsSupported === false
         ? '<div class="history-empty">SMS unavailable — grant SMS permission to DuoLink on the phone, then Refresh.</div>'
-        : q ? '<div class="history-empty">No conversations match your search.</div>'
-        : '<div class="history-empty">No conversations found yet. Press Refresh, and allow SMS access on the phone if prompted.</div>';
+        : q ? '<div class="rf-empty">No conversations match your search.</div>'
+        : '<div class="rf-empty">No conversations found yet. Press Refresh, and allow SMS access on the phone if prompted.</div>';
       return;
     }
-    el.innerHTML = list.map((t) => `
-      <div class="history-item" data-addr="${escapeAttr(t.address)}" style="cursor:pointer${t.address === smsCurrentAddr ? ';border-color:var(--brand)' : ''}">
-        <span class="history-icon">${IC('chat')}</span>
-        <div class="history-details">
-          <strong>${escapeHtml(t.address || 'Unknown')}${t.unread ? ` <span class="badge">${t.unread}</span>` : ''}</strong>
-          <span class="history-meta">${escapeHtml(t.snippet || '')}${t.snippet ? ' • ' : ''}${timeLabel(t.lastDate)}${t.count ? ` • ${t.count} msgs` : ''}</span>
+    el.innerHTML = list.map((t) => {
+      const name = t.address || 'Unknown';
+      return `
+      <div class="rf-row${t.address === smsCurrentAddr ? ' active' : ''}" data-addr="${escapeAttr(t.address)}">
+        <span class="rf-avatar ${rfTone(name)}">${escapeHtml(rfInitial(name))}</span>
+        <div class="rf-row-body">
+          <div class="rf-row-top">
+            <span class="rf-row-name">${escapeHtml(name)}</span>
+            <span class="rf-row-time">${escapeHtml(timeLabel(t.lastDate))}</span>
+          </div>
+          <div class="rf-row-sub"><span>${escapeHtml(t.snippet || '')}</span></div>
         </div>
-      </div>`).join('');
+        ${t.unread ? `<span class="rf-unread">${t.unread}</span>` : ''}
+      </div>`;
+    }).join('');
   }
 
   function renderSmsMessages() {
@@ -2140,6 +2173,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   $id('btn-sms-refresh').addEventListener('click', loadSmsThreads);
+
+  const smsCallBtn = $id('btn-sms-call');
+  if (smsCallBtn) smsCallBtn.addEventListener('click', async () => {
+    if (!smsCurrentAddr) return;
+    const res = await window.phonePcApi.callAction('DIAL', smsCurrentAddr);
+    if (res && res.ok === false) showToast(res.error || 'Could not place the call', 'error');
+    else showToast('Dialling from your phone\u2026', 'info');
+  });
+
+  const smsCompose = $id('btn-sms-compose');
+  const smsNewRow = $id('sms-new-row');
+  if (smsCompose && smsNewRow) smsCompose.addEventListener('click', () => {
+    smsNewRow.classList.toggle('hidden');
+    if (!smsNewRow.classList.contains('hidden')) $id('sms-new-addr').focus();
+  });
+  const smsNewAddr = $id('sms-new-addr');
+  if (smsNewAddr) smsNewAddr.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const addr = smsNewAddr.value.trim();
+    if (!addr) return;
+    openSmsThread(addr);
+    smsNewAddr.value = '';
+    smsNewRow.classList.add('hidden');
+  });
   $id('sms-search').addEventListener('input', () => {
     renderSmsThreads();
     renderSmsMessages();
@@ -2262,6 +2319,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     rej.textContent = s.state === 'RINGING' ? 'Reject' : s.state === 'OFFHOOK' ? 'End Call' : 'Reject / End';
   }
 
+  let callLog = [];
+  let callView = 'recents';
+
   function renderCallRecents(list, error) {
     const el = $id('call-recents-list');
     if (error) {
@@ -2272,20 +2332,49 @@ document.addEventListener('DOMContentLoaded', async () => {
       el.innerHTML = '<div class="history-empty">No recent calls found (grant the Call log permission on the phone, then retry).</div>';
       return;
     }
-    el.innerHTML = list.map((c) => {
+    callLog = Array.isArray(list) ? list.slice() : callLog;
+    let rows = callLog.slice();
+    const q = ($id('call-search').value || '').trim().toLowerCase();
+    if (q) {
+      rows = rows.filter((c) => String(c.name || '').toLowerCase().includes(q) || String(c.number || '').includes(q));
+      if (!rows.length) {
+        el.innerHTML = '<div class="rf-empty">No calls match your search.</div>';
+        return;
+      }
+    }
+    if (callView === 'contacts') {
+      const seen = new Set();
+      rows = rows.filter((c) => {
+        const key = String(c.name || c.number || '');
+        if (!c.name || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      if (!rows.length) {
+        el.innerHTML = '<div class="rf-empty">No named contacts in the call log yet.</div>';
+        return;
+      }
+    }
+    el.innerHTML = rows.map((c) => {
       const dur = Number(c.durationSec) || 0;
       const num = String(c.number || '');
+      const dir = c.type === 'missed' ? '\u2199' : c.type === 'incoming' ? '\u2199' : '\u2197';
+      const meta = [c.type ? c.type.charAt(0).toUpperCase() + c.type.slice(1) : '', dur > 0 ? `${Math.floor(dur / 60)}:${String(dur % 60).padStart(2, '0')}` : '', c.dateLabel || '']
+        .filter(Boolean).join(' \u00b7 ');
       return `
-      <div class="history-item">
-        <span class="history-icon" style="${c.type === 'missed' ? 'color:var(--danger)' : ''}">${IC('phone')}</span>
-        <div class="history-details">
-          <strong>${escapeHtml(c.name || c.number || 'Unknown')}</strong>
-          <span class="history-meta">${escapeHtml(c.type || '')} • ${escapeHtml(c.dateLabel || '')}${dur > 0 ? ` • ${Math.floor(dur / 60)}:${String(dur % 60).padStart(2, '0')}` : ''}</span>
+      <div class="rf-row${num && num === $id('call-dial-input').value ? ' active' : ''}">
+        <span class="rf-avatar ${rfTone(c.name || num)}">${escapeHtml(rfInitial(c.name || num))}</span>
+        <div class="rf-row-body">
+          <div class="rf-row-top">
+            <span class="rf-row-name">${escapeHtml(c.name || c.number || 'Unknown')}</span>
+          </div>
+          <div class="rf-row-sub${c.type === 'missed' ? ' missed' : ''}"><em style="font-style:normal">${dir}</em><span>${escapeHtml(meta)}</span></div>
         </div>
-        <div class="row-actions">
-          ${num ? `<button class="btn btn-secondary btn-sm" data-call="${escapeAttr(num)}">Call back</button>` : ''}
-          ${num ? `<button class="icon-btn" data-call-copy="${escapeAttr(num)}" title="Copy number">${IC('copy')}</button>` : ''}
-          ${c.id ? `<button class="icon-btn icon-btn-danger" data-call-delete="${escapeAttr(c.id)}" title="Delete from the phone's call log">${IC('trash')}</button>` : ''}
+        <div class="rf-row-actions">
+          ${num ? `<button class="rf-icon" data-call-msg="${escapeAttr(num)}" title="Send a message">${IC('chat')}</button>` : ''}
+          ${num ? `<button class="rf-icon" data-call="${escapeAttr(num)}" title="Call back">${IC('handset')}</button>` : ''}
+          ${num ? `<button class="rf-icon" data-call-copy="${escapeAttr(num)}" title="Copy number">${IC('copy')}</button>` : ''}
+          ${c.id ? `<button class="rf-icon" data-call-delete="${escapeAttr(c.id)}" title="Delete from the phone's call log">${IC('trash')}</button>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -2302,6 +2391,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         del.disabled = false;
         showToast(res.error || 'Could not delete that entry', 'error');
       }
+      return;
+    }
+    const msg = e.target.closest('[data-call-msg]');
+    if (msg) {
+      const addr = msg.dataset.callMsg;
+      switchTab('tab-messages');
+      openSmsThread(addr);
       return;
     }
     const copy = e.target.closest('[data-call-copy]');
@@ -2340,6 +2436,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   $id('btn-call-dial').addEventListener('click', dialFromPc);
   callDialInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); dialFromPc(); }
+  });
+
+  document.querySelectorAll('.rf-seg-btn[data-call-view]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      callView = btn.dataset.callView;
+      document.querySelectorAll('.rf-seg-btn[data-call-view]').forEach((b) => b.classList.toggle('active', b === btn));
+      renderCallRecents(callLog);
+    });
+  });
+
+  $id('call-search').addEventListener('input', () => renderCallRecents(callLog));
+
+  document.querySelectorAll('.rf-key[data-key]').forEach((key) => {
+    key.addEventListener('click', () => {
+      callDialInput.value = (callDialInput.value || '') + key.dataset.key;
+      callDialInput.focus();
+    });
+  });
+
+  $id('btn-call-text').addEventListener('click', () => {
+    const num = (callDialInput.value || '').trim();
+    switchTab('tab-messages');
+    if (num) openSmsThread(num);
   });
 
   $id('btn-call-answer').addEventListener('click', async () => {
@@ -2649,6 +2768,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateMediaButtons() {
+    renderAlbums();
     const n = mediaSelected.size;
     $id('btn-media-open').disabled = n === 0;
     $id('btn-media-download').disabled = n === 0;
@@ -2685,6 +2805,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  const MEDIA_ALBUMS = [
+    { kind: 'images', label: 'All photos', icon: 'image' },
+    { kind: 'videos', label: 'Videos', icon: 'play' },
+    { kind: 'audio', label: 'Audio', icon: 'vol-up' },
+    { kind: 'all', label: 'All media', icon: 'folder' }
+  ];
+
+  function albumCount(kind) {
+    if (kind === 'images') return mediaItems.filter((m) => (m.mime || '').startsWith('image/')).length;
+    if (kind === 'videos') return mediaItems.filter((m) => (m.mime || '').startsWith('video/')).length;
+    if (kind === 'audio') return mediaItems.filter((m) => (m.mime || '').startsWith('audio/')).length;
+    return mediaItems.length;
+  }
+
+  function renderAlbums() {
+    const wrap = $id('media-albums');
+    if (!wrap) return;
+    const current = $id('media-kind').value;
+    wrap.innerHTML = MEDIA_ALBUMS.map((a) => `
+      <button class="rf-album${a.kind === current ? ' active' : ''}" data-album="${a.kind}">
+        <span class="rf-album-icon">${IC(a.icon)}</span>
+        <span class="rf-album-text"><strong>${a.label}</strong><em>${albumCount(a.kind) || '\u2014'}</em></span>
+      </button>`).join('');
+  }
+
   function renderMedia() {
     const grid = $id('media-grid');
     if (!mediaItems.length) {
@@ -2694,13 +2839,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateMediaButtons();
       return;
     }
+    let lastDay = '';
     grid.innerHTML = mediaItems.map((m) => {
+      const day = rfDayLabel(m.date);
+      const dayChip = day !== lastDay ? (lastDay = day, `<div class="rf-day">${escapeHtml(day)}</div>`) : '';
       const mime = m.mime || '';
       const phIcon = mime.startsWith('image/') ? 'camera' : mime.startsWith('video/') ? 'play'
         : mime.startsWith('audio/') ? 'vol-up' : 'folder';
       const thumbable = mime.startsWith('image/') || mime.startsWith('video/');
       const sel = mediaSelected.has(m.id);
-      return `
+      return dayChip + `
       <div class="media-tile${sel ? ' selected' : ''}" data-id="${escapeAttr(m.id)}">
         <input type="checkbox" class="media-check"${sel ? ' checked' : ''}>
         ${thumbable
@@ -2744,6 +2892,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   $id('btn-media-load').addEventListener('click', loadMedia);
+
+  $id('media-albums').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-album]');
+    if (!btn) return;
+    $id('media-kind').value = btn.dataset.album;
+    renderAlbums();
+    loadMedia();
+  });
+
+  const mediaSelectBtn = $id('btn-media-select');
+  if (mediaSelectBtn) mediaSelectBtn.addEventListener('click', () => {
+    const on = !$id('media-grid').classList.contains('selecting');
+    $id('media-grid').classList.toggle('selecting', on);
+    mediaSelectBtn.classList.toggle('rf-btn-primary', on);
+  });
   $id('media-search').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); loadMedia(); }
   });
@@ -3731,6 +3894,147 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
   setTimeout(() => {
     window.phonePcApi.diagRequest().catch(() => {});
   }, 800);
+
+
+  // ---------------- 10. Phone apps over Wireless debugging ----------------
+  let adbSerial = null;
+  let adbApps = [];
+  let adbBusy = false;
+
+  function adbSetStatus(text, tone) {
+    const el = $id('adb-status');
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = tone === 'error' ? 'var(--danger)' : tone === 'ok' ? 'var(--success)' : '';
+  }
+
+  function renderAdbApps() {
+    const wrap = $id('adb-apps');
+    if (!wrap) return;
+    const q = ($id('adb-search').value || '').trim().toLowerCase();
+    const shown = q
+      ? adbApps.filter((a) => a.label.toLowerCase().includes(q) || a.pkg.toLowerCase().includes(q))
+      : adbApps;
+    $id('adb-count').textContent = adbApps.length ? `${adbApps.length} apps` : 'Apps';
+    if (!shown.length) {
+      wrap.innerHTML = `<div class="rf-empty">${adbApps.length
+        ? 'No apps match your search.'
+        : adbSerial
+          ? 'No third-party apps found on the phone.'
+          : 'Pair over wireless debugging to list the phone’s apps.'}</div>`;
+      return;
+    }
+    wrap.innerHTML = shown.map((a) => `
+      <button class="rf-app" data-pkg="${escapeAttr(a.pkg)}" title="${escapeAttr(a.pkg)}">
+        <span class="rf-app-icon">${escapeHtml(rfInitial(a.label))}</span>
+        <span class="rf-app-name">${escapeHtml(a.label)}</span>
+      </button>`).join('');
+  }
+
+  async function adbLoadDevices() {
+    const res = await window.phonePcApi.adbStatus().catch(() => null);
+    const select = $id('adb-serial');
+    if (!res) { adbSetStatus('adb is unavailable', 'error'); return; }
+    const devices = (res.devices || []).filter((d) => d.state === 'device');
+    select.innerHTML = devices.length
+      ? devices.map((d) => `<option value="${escapeAttr(d.serial)}">${escapeHtml(d.model || d.serial)} · ${escapeHtml(d.serial)}</option>`).join('')
+      : '<option value="">No device connected</option>';
+    adbSerial = res.serial || (devices[0] ? devices[0].serial : null);
+    if (adbSerial) select.value = adbSerial;
+    select.disabled = !devices.length;
+    $id('btn-adb-disconnect').disabled = !devices.length;
+    $id('btn-adb-refresh').disabled = !devices.length;
+    if (adbSerial) {
+      adbSetStatus(`Connected to ${adbSerial} · ${res.adb}`, 'ok');
+    } else {
+      adbSetStatus(res.adb && res.adb !== 'adb' ? `adb found · no phone connected yet` : 'adb not found — install Android platform-tools', 'error');
+    }
+    return adbSerial;
+  }
+
+  async function adbLoadApps() {
+    if (adbBusy) return;
+    if (!adbSerial) { adbSetStatus('Connect a phone first', 'error'); return; }
+    adbBusy = true;
+    $id('adb-apps').innerHTML = '<div class="rf-empty">Reading the app list from the phone…</div>';
+    const res = await window.phonePcApi.adbApps(adbSerial).catch(() => null);
+    adbBusy = false;
+    if (!res || !res.ok) {
+      $id('adb-apps').innerHTML = `<div class="rf-empty">${escapeHtml((res && res.error) || 'Could not read the app list')}</div>`;
+      adbSetStatus((res && res.error) || 'Could not read the app list', 'error');
+      return;
+    }
+    adbApps = res.apps || [];
+    renderAdbApps();
+    adbSetStatus(`Connected to ${adbSerial} · ${adbApps.length} apps`, 'ok');
+  }
+
+  async function adbRefreshAll(loadApps) {
+    const serial = await adbLoadDevices();
+    if (serial && loadApps) adbLoadApps();
+  }
+
+  if ($id('btn-adb-connect')) {
+    $id('btn-adb-connect').addEventListener('click', async () => {
+      const addr = ($id('adb-connect-addr').value || '').trim();
+      if (!addr) return adbSetStatus('Enter the IP:port from Wireless debugging', 'error');
+      adbSetStatus('Connecting…');
+      const res = await window.phonePcApi.adbConnect(addr).catch(() => null);
+      if (!res || !res.ok) return adbSetStatus((res && res.error) || 'Could not connect', 'error');
+      showToast(`Connected to ${addr}`, 'success');
+      adbRefreshAll(true);
+    });
+
+    $id('btn-adb-pair').addEventListener('click', async () => {
+      const addr = ($id('adb-pair-addr').value || '').trim();
+      const code = ($id('adb-pair-code').value || '').trim();
+      adbSetStatus('Pairing…');
+      const res = await window.phonePcApi.adbPair(addr, code).catch(() => null);
+      if (!res || !res.ok) return adbSetStatus((res && res.error) || 'Pairing failed', 'error');
+      $id('adb-pair-code').value = '';
+      showToast('Paired. Now use the device address to connect.', 'success');
+      adbSetStatus('Paired · enter the device address and press Connect', 'ok');
+      adbRefreshAll(false);
+    });
+
+    $id('btn-adb-disconnect').addEventListener('click', async () => {
+      await window.phonePcApi.adbDisconnect(adbSerial || '').catch(() => null);
+      adbApps = [];
+      renderAdbApps();
+      adbRefreshAll(false);
+    });
+
+    $id('btn-adb-refresh').addEventListener('click', () => adbRefreshAll(true));
+    $id('adb-serial').addEventListener('change', () => {
+      adbSerial = $id('adb-serial').value || null;
+      adbApps = [];
+      renderAdbApps();
+      if (adbSerial) adbLoadApps();
+    });
+    $id('adb-search').addEventListener('input', renderAdbApps);
+    $id('adb-search').addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const first = $id('adb-apps').querySelector('[data-pkg]');
+      if (first) first.click();
+    });
+    $id('adb-apps').addEventListener('click', async (e) => {
+      const cell = e.target.closest('[data-pkg]');
+      if (!cell || !adbSerial) return;
+      const res = await window.phonePcApi.adbLaunch(adbSerial, cell.dataset.pkg).catch(() => null);
+      if (res && res.ok) showToast('Opened on your phone', 'success');
+      else showToast((res && res.error) || 'Could not open that app', 'error');
+    });
+  }
+
+  // Load lazily: the pane only talks to adb when it is opened.
+  let adbLoaded = false;
+  document.querySelectorAll('.nav-tab[data-tab="tab-apps"]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      if (adbLoaded) return adbRefreshAll(false);
+      adbLoaded = true;
+      adbRefreshAll(true);
+    });
+  });
 
   // Initial QR load
   refreshQr();

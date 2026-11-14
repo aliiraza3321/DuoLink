@@ -19,6 +19,7 @@ const { MessageType, createMessage } = require('./src/protocol');
 const { FeatureHub } = require('./src/features');
 const { RemotePcStreamer } = require('./src/remotepc');
 const { WebcamHub } = require('./src/webcam');
+const { WirelessAdb } = require('./src/wirelessadb');
 
 // Enforce single instance so clicking shortcut brings existing window to front
 const gotTheLock = app.requestSingleInstanceLock();
@@ -916,6 +917,18 @@ function setupIpc() {
     return sendToPhone(MessageType.CALL_ACTION, payload);
   });
   ipcMain.handle('call-recents', () => sendToPhone(MessageType.CALL_RECENTS_REQ, { limit: 50 }));
+  // ---- Phone apps over Wireless debugging (adb) ----
+  const wirelessAdb = new WirelessAdb();
+  ipcMain.handle('adb-status', () => wirelessAdb.status());
+  ipcMain.handle('adb-pair', (_e, { addr, code }) => wirelessAdb.pair(addr, code));
+  ipcMain.handle('adb-connect', async (_e, { addr }) => {
+    const res = await wirelessAdb.connect(addr);
+    return res;
+  });
+  ipcMain.handle('adb-disconnect', (_e, { addr }) => wirelessAdb.disconnect(addr));
+  ipcMain.handle('adb-apps', (_e, { serial }) => wirelessAdb.apps(serial));
+  ipcMain.handle('adb-launch', (_e, { serial, pkg }) => wirelessAdb.launch(serial, pkg));
+
   ipcMain.handle('call-log-delete', (_e, id) => {
     if (!id) return { ok: false, error: 'Nothing to delete' };
     return sendToPhone(MessageType.CALL_LOG_DELETE, { id: String(id).slice(0, 40) });

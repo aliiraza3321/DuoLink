@@ -80,11 +80,9 @@ jobs:
           ./gradlew "$TASK" --no-daemon --stacktrace 2>&1 | tee ../gradle-build.log | tail -80
           STATUS=${PIPESTATUS[0]}
           if [ $STATUS -ne 0 ]; then
-            # Surface the real reason on the run page: the raw log needs auth.
-            echo "### Gradle failure" >> "$GITHUB_STEP_SUMMARY"
-            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
-            grep -A12 -m1 "What went wrong" ../gradle-build.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || tail -40 ../gradle-build.log >> "$GITHUB_STEP_SUMMARY"
-            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "===== gradle failure ====="
+            grep -A30 -m1 "What went wrong" ../gradle-build.log || tail -60 ../gradle-build.log
+            echo "=========================="
           fi
           exit $STATUS
 

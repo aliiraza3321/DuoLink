@@ -75,8 +75,13 @@ jobs:
           ./gradlew "$TASK" --no-daemon --stacktrace > ../gradle-build.log 2>&1
           STATUS=$?
           if [ $STATUS -ne 0 ]; then
-            # Surface the real reason as an annotation (log files need auth).
-            tail -c 1500 ../gradle-build.log | tr '\n' '~' | sed 's/^/::error::/'
+            # Surface the real reason on the run page: the raw log needs auth.
+            {
+              echo '### Gradle failure'"'"'
+              echo '```'
+              grep -A12 -m1 "What went wrong" ../gradle-build.log || tail -40 ../gradle-build.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
           exit $STATUS
 

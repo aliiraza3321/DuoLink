@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; frame-src 'none'; object-src 'none'; base-uri 'none';" />
+  <title>DuoLink · Phone screen</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #000;
+      overflow: hidden;
+      user-select: none;
+      /* Normal pointer — the window is a plain picture of the phone screen. */
+      cursor: default;
+    }
+    body { display: flex; align-items: center; justify-content: center; }
+    /* Typing hint: appears only once the picture is clicked (keyboard armed). */
+    #type-hint {
+      position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%);
+      padding: 7px 12px; border-radius: 999px;
+      background: rgba(10, 12, 20, 0.82); border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #dfe3f0; font: 600 11px/1 system-ui, sans-serif; letter-spacing: .2px;
+      opacity: 0; transition: opacity .2s ease; pointer-events: none; z-index: 6;
+      white-space: nowrap;
+    }
+    body.typing #type-hint { opacity: 1; }
+    /* The pane is the screen and nothing else: no chrome, no labels. */
+    #frame { display: none; max-width: 100%; max-height: 100%; transition: opacity .25s ease; }
+    /* Stalled-stream note: dimmed last frame + pill, self-clearing on resume. */
+    #stale {
+      position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      display: none; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: 999px;
+      background: rgba(10, 12, 20, 0.78); border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #dfe3f0; font: 600 12px/1 system-ui, sans-serif; letter-spacing: .2px;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 5;
+      pointer-events: none;
+    }
+    #stale span { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;
+                  animation: stale-pulse 1s ease-in-out infinite; }
+    @keyframes stale-pulse { 0%, 100% { opacity: .35; transform: scale(.8); }
+                             50% { opacity: 1; transform: scale(1.15); } }
+    body.stale #frame { opacity: .38; }
+    body.stale #stale { display: flex; }
+    @media (prefers-reduced-motion: reduce) { #stale span { animation: none; } }
+    /* Frameless window: an invisible 8px strip along the very top doubles as
+       the drag handle (everything below stays pure phone screen). */
+    #drag { position: fixed; top: 0; left: 0; right: 0; height: 8px;
+            -webkit-app-region: drag; z-index: 2; }
+    /* Window controls: invisible until the mouse comes near, so the pane stays
+       a pure phone picture but minimize/close are always reachable. */
+    #winctl {
+      position: fixed; top: 4px; right: 6px; z-index: 4;
+      display: flex; gap: 6px;
+      opacity: 0; transition: opacity .16s ease; pointer-events: none;
+    }
+    body:hover #winctl { opacity: 1; pointer-events: auto; }
+    #winctl button {
+      -webkit-app-region: no-drag;
+      width: 30px; height: 26px; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(10, 12, 20, 0.72);
+      color: #dfe3f0;
+      font-size: 15px; line-height: 1;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    #winctl #btn-win-min:hover { background: rgba(108, 123, 255, 0.45); border-color: rgba(108, 123, 255, 0.7); }
+    #winctl #btn-win-close:hover { background: rgba(248, 113, 113, 0.48); border-color: rgba(248, 113, 113, 0.72); }
+    /* Hover-revealed drag grip at top-centre: a generous target for moving
+       the window (the 8px strip alone was too thin to grab reliably). */
+    #grip {
+      position: fixed; top: 5px; left: 50%; transform: translateX(-50%);
+      z-index: 3;
+      width: 150px; height: 22px;
+      -webkit-app-region: drag;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(10, 12, 20, 0.66);
+      color: rgba(223, 227, 240, 0.85);
+      font-size: 11px; letter-spacing: 2px; line-height: 1;
+      opacity: 0; transition: opacity .16s ease; pointer-events: none;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    body:hover #grip { opacity: 1; pointer-events: auto; }
+  </style>
+</head>
+<body>
+  <div id="drag"></div>
+  <div id="grip" title="Drag to move">⣿ ⣿ ⣿</div>
+  <div id="winctl">
+    <button id="btn-win-min" title="Minimize" aria-label="Minimize">–</button>
+    <button id="btn-win-max" title="Maximize / restore" aria-label="Maximize">▢</button>
+    <button id="btn-win-close" title="Close" aria-label="Close">✕</button>
+  </div>
+  <canvas id="frame" width="360" height="740"></canvas>
+  <!-- Frames paused (rotation, heavy game, Wi-Fi blip): the last picture
+       stays visible but dimmed, with this note over it — never a black hole. -->
+  <div id="stale" aria-hidden="true"><span></span>Reconnecting…</div>
+  <div id="type-hint">Type to write on the phone · Enter sends · Ctrl+V pastes · Esc closes</div>
+  <script src="h264-mirror.js"></script>
+  <script src="screen-window.js"></script>
+</body>
+</html>

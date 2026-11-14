@@ -1,0 +1,1447 @@
+/**
+ * DuoLink — PC design tokens (single source of truth).
+ *
+ * Load order: tokens.css loads AFTER style.css / glass.css / pro.css so these
+ * values win over the legacy :root blocks. All colours, radii, motion and the
+ * brand gradient are defined here; screens must never hard-code colours.
+ *
+ * Theme is applied before first paint by preload.js:
+ *   <html data-theme="dark|light" data-accent="violet|cyan|green|orange" data-reduce-motion="0|1">
+ * System mode resolves through nativeTheme and updates live.
+ */
+
+:root {
+  /* ---- Shape / motion / type (theme-independent) ---- */
+  --titlebar-h: 40px;
+  --r-sm: 12px;      /* buttons, inputs */
+  --r-md: 18px;      /* cards */
+  --r-lg: 28px;      /* hero cards */
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --dur-1: 150ms;
+  --dur-2: 250ms;
+  --font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --mono: "JetBrains Mono", "Cascadia Mono", "SF Mono", Consolas, monospace;
+
+  /* Brand gradient (both themes): cyan -> violet. Logo, Link line, orb,
+     active tab and primary buttons only. Text on it is dark #06121C. */
+  --gradient-brand: linear-gradient(90deg, #22d3ee 0%, #7c6cff 100%);
+  --on-gradient: #06121c;
+}
+
+/* ============================ DARK (default) ============================ */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Spec token table — dark */
+  --bg: #0b0d14;
+  --surface: #12151f;
+  --elevated: #181c29;
+  --border: rgba(255, 255, 255, .07);
+  --text: #e8eaf2;
+  --muted: #8b90a7;
+  --primary: #7c6cff;
+  --accent: #22d3ee;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+
+  /* Legacy aliases used across style.css / glass.css / pro.css */
+  --bg-main: var(--bg);
+  --ink: var(--bg);
+  --bg-sidebar: var(--surface);
+  --bg-card: var(--surface);
+  --bg-input: rgba(6, 9, 18, .55);
+  --border-color: rgba(255, 255, 255, .10);
+  --line: rgba(255, 255, 255, .07);
+  --line-strong: rgba(255, 255, 255, .16);
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --text-muted: #767b92; /* still 4.5:1 on --bg */
+  --surface-1: rgba(255, 255, 255, .035);
+  --surface-2: rgba(255, 255, 255, .06);
+  --surface-3: rgba(255, 255, 255, .09);
+  --accent-primary: var(--primary);
+  --accent-primary-hover: #9385ff;
+  --brand: var(--primary);
+  --brand-2: var(--accent);
+  --brand-soft: rgba(124, 108, 255, .16);
+  --violet: var(--primary);
+  --aqua: var(--accent);
+  --mint: var(--success);
+  --rose: #ff6aa2;
+  --ok: var(--success);
+  --warn: var(--warning);
+  --bad: var(--danger);
+  --danger-hover: #e14d4d;
+  --glass-fill: linear-gradient(155deg, rgba(255, 255, 255, .11), rgba(255, 255, 255, .035) 55%, rgba(255, 255, 255, .07));
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, .38), inset 0 -1px 0 rgba(255, 255, 255, .06), inset 1px 0 0 rgba(255, 255, 255, .12);
+  --glass-drop: 0 18px 40px -18px rgba(0, 0, 0, .65), 0 2px 8px rgba(0, 0, 0, .25);
+  --tint: 255, 255, 255;
+  /* Light studio backdrop behind the phone previews (screen mirror + webcam),
+     in every dark palette. */
+  --stage-bg: radial-gradient(120% 100% at 15% 0%, #ffffff 0%, #eef2f9 46%, #dde5f1 100%);
+  --input-fill: rgba(0, 0, 0, .28);
+  --list-fill: rgba(0, 0, 0, .22);
+  --soft-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+  --card-shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 10px 30px -18px rgba(0, 0, 0, .7);
+  --toast-fill: rgba(17, 21, 34, .92);
+  --scroll-thumb: rgba(255, 255, 255, .12);
+  --scroll-thumb-hover: rgba(255, 255, 255, .22);
+  --on-primary-btn: #ffffff;
+  --code-text: #b8c1dc;
+  --brand-text: #b7c0ff;
+}
+
+/* ============================= LIGHT =================================== */
+:root[data-base="light"] {
+  color-scheme: light;
+
+  /* Spec token table — light */
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --elevated: #eef0f7;
+  /* The dark default (--text-primary: near-white) was never overridden here,
+     so every element using it (notification titles, message headers, card
+     headings…) rendered white-on-white in light mode. */
+  --text-primary: #1b2033;
+  --border: rgba(15, 18, 30, .10);
+  --text: #12151f;
+  --muted: #5b6078;
+  --primary: #6354f0;
+  --accent: #0e7490;
+  --success: #047857;
+  --warning: #b45309;
+  --danger: #dc2626;
+
+  --bg-main: var(--bg);
+  --ink: var(--bg);
+  --bg-sidebar: var(--surface);
+  --bg-card: var(--surface);
+  --bg-input: var(--elevated);
+  --border-color: rgba(15, 18, 30, .12);
+  --line: rgba(15, 18, 30, .10);
+  --line-strong: rgba(15, 18, 30, .20);
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --text-muted: #6b7086;
+  --surface-1: #ffffff;
+  --surface-2: #eef0f7;
+  --surface-3: #e4e7f0;
+  --accent-primary: var(--primary);
+  --accent-primary-hover: #4f41d9;
+  --brand: var(--primary);
+  --brand-2: var(--accent);
+  --brand-soft: rgba(99, 84, 240, .12);
+  --violet: var(--primary);
+  --aqua: var(--accent);
+  --mint: var(--success);
+  --rose: #e0447c;
+  --ok: var(--success);
+  --warn: var(--warning);
+  --bad: var(--danger);
+  --danger-hover: #b91c1c;
+  /* Premium liquid glass — white & silver. A soft top-lit gradient fill with a
+     bright 1px inner rim (the glass edge catching light) over an elegant,
+     low-contrast shadow. Backdrop blur does the glassmorphism. */
+  --glass-fill: linear-gradient(165deg, rgba(255, 255, 255, .74) 0%, rgba(255, 255, 255, .50) 100%);
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 0 0 1px rgba(255, 255, 255, .35);
+  --glass-drop: 0 1px 2px rgba(15, 18, 30, .05), 0 12px 32px -12px rgba(15, 18, 30, .16);
+  --tint: 15, 18, 30;
+  --stage-bg: radial-gradient(120% 100% at 15% 0%, #ffffff 0%, #f4f7fc 46%, #e7ecf5 100%);
+  --input-fill: #ffffff;
+  --list-fill: rgba(15, 18, 30, .03);
+  --soft-shadow: 0 1px 2px rgba(15, 18, 30, .08);
+  --card-shadow: 0 1px 2px rgba(15, 18, 30, .05), 0 14px 36px -18px rgba(15, 18, 30, .18);
+  --toast-fill: rgba(255, 255, 255, .96);
+  --scroll-thumb: rgba(15, 18, 30, .18);
+  --scroll-thumb-hover: rgba(15, 18, 30, .30);
+  --on-primary-btn: #ffffff;
+  --code-text: #3f4663;
+  --brand-text: var(--primary);
+  --ok: var(--success);
+  --warn: var(--warning);
+  --bad: var(--danger);
+}
+
+/* ====================== Theme artwork ================================== */
+/* Every theme gets its own background image (artwork lives in
+   assets/backgrounds and is painted by the .aurora layer). */
+:root { --theme-bg: url("assets/backgrounds/dark.svg"); }
+:root[data-theme="midnight"]  { --theme-bg: url("assets/backgrounds/midnight.svg"); }
+:root[data-theme="cyberpunk"] { --theme-bg: url("assets/backgrounds/cyberpunk.svg"); }
+:root[data-theme="emerald"]   { --theme-bg: url("assets/backgrounds/emerald.svg"); }
+:root[data-theme="ocean"]     { --theme-bg: url("assets/backgrounds/ocean.svg"); }
+:root[data-theme="purple"]    { --theme-bg: url("assets/backgrounds/purple.svg"); }
+:root[data-theme="graphite"]  { --theme-bg: url("assets/backgrounds/graphite.svg"); }
+:root[data-base="light"] { --theme-bg: url("assets/light-bg.png"); }
+:root[data-base="light"][data-theme="ocean"]    { --theme-bg: url("assets/backgrounds/ocean-light.svg"); }
+:root[data-base="light"][data-theme="purple"]   { --theme-bg: url("assets/backgrounds/purple-light.svg"); }
+:root[data-base="light"][data-theme="graphite"] { --theme-bg: url("assets/backgrounds/graphite-light.svg"); }
+
+/* ====================== ACCENT PRESETS (dark) =========================== */
+:root[data-accent="cyan"] {
+  --primary: #22d3ee;
+  --accent-primary: var(--primary);
+  --accent-primary-hover: #67e8f9;
+  --brand: var(--primary);
+  --brand-soft: rgba(34, 211, 238, .16);
+  --brand-text: #a5f3fc;
+}
+:root[data-accent="green"] {
+  --primary: #34d399;
+  --accent-primary: var(--primary);
+  --accent-primary-hover: #6ee7b7;
+  --brand: var(--primary);
+  --brand-soft: rgba(52, 211, 153, .16);
+  --brand-text: #a7f3d0;
+}
+/* "orange" preset re-tuned to a professional azure blue (user request: the
+   rust-orange buttons looked out of place). The id stays "orange" so saved
+   settings keep working — only the rendered colour changed. */
+:root[data-accent="orange"] {
+  --primary: #60a5fa;
+  --accent-primary: var(--primary);
+  --accent-primary-hover: #93c5fd;
+  --brand: var(--primary);
+  --brand-soft: rgba(96, 165, 250, .16);
+  --brand-text: #bfdbfe;
+}
+/* Accent presets — light (readable on white) */
+:root[data-base="light"][data-accent="cyan"] {
+  --primary: #0e7490; --brand: var(--primary); --brand-soft: rgba(14, 116, 144, .12); --brand-text: #0e7490;
+  --accent-primary: var(--primary); --accent-primary-hover: #155e75;
+}
+:root[data-base="light"][data-accent="green"] {
+  --primary: #047857; --brand: var(--primary); --brand-soft: rgba(4, 120, 87, .12); --brand-text: #047857;
+  --accent-primary: var(--primary); --accent-primary-hover: #065f46;
+}
+:root[data-base="light"][data-accent="orange"] {
+  --primary: #2563eb; --brand: var(--primary); --brand-soft: rgba(37, 99, 235, .12); --brand-text: #2563eb;
+  --accent-primary: var(--primary); --accent-primary-hover: #1d4ed8;
+}
+:root[data-base="light"][data-accent="violet"] {
+  --primary: #6354f0; --brand: var(--primary); --brand-soft: rgba(99, 84, 240, .12); --brand-text: #6354f0;
+  --accent-primary: var(--primary); --accent-primary-hover: #4f41d9;
+}
+
+/* ====================== Appearance controls ============================ */
+.segmented {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+.seg-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  min-height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+.seg-btn:hover { color: var(--text); background: var(--surface-2); }
+.seg-btn[aria-checked="true"] {
+  background: var(--gradient-brand);
+  color: var(--on-gradient);
+  border-color: transparent;
+}
+.accent-row { display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap; }
+.accent-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  min-width: 44px; /* 44px touch/pointer target */
+}
+.accent-swatch input { position: absolute; opacity: 0; pointer-events: none; }
+.accent-swatch > span {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  box-shadow: 0 0 0 0 transparent;
+  transition: box-shadow var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.accent-swatch[data-active="true"] > span,
+.accent-swatch:has(input:checked) > span {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--primary);
+  transform: scale(1.06);
+}
+.accent-swatch:has(input:focus-visible) > span { outline: 2px solid var(--primary); outline-offset: 3px; }
+[data-accent-chip="violet"] { background: #7c6cff; }
+[data-accent-chip="cyan"]   { background: #22d3ee; }
+[data-accent-chip="green"]  { background: #34d399; }
+[data-accent-chip="orange"] { background: #60a5fa; }
+
+/* ========================= Title bar (WCO) ============================== */
+/* Hidden native title bar + Window Controls Overlay coloured from tokens.
+   The overlay buttons float over the top-right corner, so that area stays
+   empty (padding-right below) and the whole strip is a drag region. */
+.titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--titlebar-h);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 140px 0 16px; /* leave room for native min/max/close */
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  -webkit-app-region: drag;
+  z-index: 60;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.titlebar .titlebar-title { color: var(--text-primary); font-weight: 700; letter-spacing: .01em; }
+.titlebar button { -webkit-app-region: no-drag; }
+.titlebar-spacer { flex: 1; }
+
+/* ========================= Link bar (spec 6.1) ========================== */
+/* [PC name] ━━●━━ [phone name] + latency + TLS-pinned, sitting under the
+   title strip. The wire uses the brand gradient; the dot glows when linked. */
+.link-bar {
+  position: fixed;
+  top: var(--titlebar-h);
+  left: 0;
+  right: 0;
+  height: var(--linkbar-h);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  z-index: 55;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+.link-bar .link-node {
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+.link-bar .link-node.link-offline { color: var(--muted); font-weight: 500; }
+.link-wire { display: flex; align-items: center; gap: 6px; flex: 0 1 180px; min-width: 90px; }
+.link-wire .wire-line {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--gradient-brand);
+  opacity: .45;
+  transition: opacity var(--dur-2) var(--ease);
+}
+.link-wire .wire-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: background var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+.link-bar.is-connected .wire-line { opacity: 1; }
+.link-bar.is-connected .wire-dot {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+.link-spacer { flex: 1; }
+.link-bar .tag-secure { display: inline-flex; align-items: center; gap: 5px; }
+@media (max-width: 900px) {
+  .link-bar .link-node { max-width: 110px; }
+  .link-bar .tag-secure { display: none; }
+}
+
+/* Layout: only the titlebar is an overlay now — the link bar lives INSIDE
+   .main-content as the first card (mockup order: title → link bar → cards),
+   so nothing can slide underneath a fixed strip. */
+:root { --linkbar-h: 62px; } /* reserved inside content, not as a viewport offset */
+/* 6.7-inch handset preview: 1080 x 2400 at 3x density = 360 x 800 CSS px.
+   --phone-h is the screen height. It uses every pixel the page chrome leaves
+   and stops at the phone's full logical size, so a tall/maximised window shows
+   a literal 6.7" handset (360 x 800 screen) while a shorter window scales it
+   down instead of clipping the bottom of the phone. 305px is the titlebar,
+   page header, link bar, stream status bar and stage padding combined. */
+:root {
+  --phone-h: min(860px, calc(100vh - 228px));
+  --phone-ar: 0.45; /* 20:9, the 1080 x 2400 panel */
+}
+/* The titlebar is a fixed overlay: the layout starts below it, and ONLY it —
+   the link bar scrolls inside .main-content, so nothing can be clipped. */
+.app-layout { height: calc(100vh - var(--titlebar-h)); margin-top: var(--titlebar-h); }
+.sidebar { height: calc(100vh - var(--titlebar-h)); }
+.split-view { height: calc(100vh - var(--titlebar-h) - var(--linkbar-h) - 176px); }
+.mirror-viewport { height: calc(100vh - var(--titlebar-h) - var(--linkbar-h) - 116px); }
+/* Webcam settings column: the cap must never sit below the preview column
+   (measured live: any shorter cap clamps the stretched card and re-creates
+   the gap under it). Stretch stops at the grid row on its own, so this only
+   engages as the scroll guard for very tall content. */
+#tab-webcam .mirror-controls { max-height: calc(100vh - var(--titlebar-h) - 16px); }
+
+/* ====================== Reduce motion setting ========================== */
+:root[data-reduce-motion="1"] *,
+:root[data-reduce-motion="1"] *::before,
+:root[data-reduce-motion="1"] *::after {
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Visible focus rings everywhere (accessibility) */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ====================== Calls screen (spec 6.2.4) ======================
+   Dial field + Call back buttons + collapsible blue info box. */
+.dial-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.dial-row input[type="tel"] {
+  flex: 1;
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--input-fill);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13.5px;
+}
+.dial-row input[type="tel"]::placeholder { color: var(--muted); font-family: var(--font-family); }
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+}
+.history-item:hover { background: var(--elevated); border-color: var(--border); }
+.history-item .history-details { flex: 1; min-width: 0; }
+.history-item .btn { flex-shrink: 0; }
+
+.info-box {
+  margin-top: 14px;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  background: rgba(34, 211, 238, 0.07);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.info-box summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  list-style: none;
+}
+.info-box summary::-webkit-details-marker { display: none; }
+.info-box summary .ic { width: 16px; height: 16px; }
+.info-box p {
+  margin-top: 8px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* Quiet "N DuoLink alerts hidden" line (spec 6.2.5) */
+.notif-hidden-line {
+  padding: 6px 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-sm);
+  text-align: center;
+}
+
+/* Model code shown in small text under the display name (spec §9) */
+.hero-model {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  margin-top: 2px;
+  color: var(--muted);
+}
+.hero-model.hidden { display: none; }
+
+/* =================== Shell revision — mockup match ======================
+   Flat flush sidebar, link bar as an in-content card under the page title,
+   flat background (no aurora on PC — mockup bg is #0B0D14), solid cards
+   with 1px borders, larger page titles. Both themes covered. */
+
+/* Flat background: the aurora is the phone's signature, not the PC's */
+.aurora { display: none !important; }
+body, .app-layout, .main-content { background-color: var(--bg) !important; }
+
+/* Flush full-height sidebar (no floating rounded card) */
+.sidebar {
+  margin: 0;
+  border-radius: 0;
+  height: calc(100vh - var(--titlebar-h));
+  border: none;
+  border-right: 1px solid var(--line);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background-color: var(--surface);
+  background-image: none;
+}
+:root[data-base="light"] .sidebar {
+  background-color: #ffffff;
+  background-image: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Sidebar brand + groups per mockup */
+.brand { padding-bottom: 16px; margin-bottom: 12px; }
+.brand-text h2 { font-size: 16px; letter-spacing: 0.06em; }
+.nav-group {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 14px;
+}
+.nav-tab {
+  border-radius: 12px;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+.nav-tab:hover { background: var(--surface-2); color: var(--text); }
+.nav-tab.active {
+  background: linear-gradient(90deg, var(--brand-soft), transparent);
+  box-shadow: inset 3px 0 0 var(--primary);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Link bar = card in content flow (renderer moves it under the page title) */
+.link-bar {
+  position: static;
+  top: auto; left: auto; right: auto;
+  height: auto;
+  min-height: 0;
+  padding: 13px 18px;
+  margin: 0 0 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: none;
+  z-index: auto;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+:root[data-base="light"] .link-bar {
+  background: var(--glass-fill);
+  box-shadow: var(--glass-edge), var(--card-shadow);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+}
+
+/* Solid cards, 1px borders (spec: borders over shadows in dark) */
+.card {
+  background-color: var(--surface);
+  background-image: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-base="light"] .card { box-shadow: var(--glass-edge), var(--card-shadow); }
+.quick-tile, .status-card, .gesture-card {
+  background-color: var(--surface);
+  background-image: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: none;
+}
+:root[data-base="light"] .quick-tile,
+:root[data-base="light"] .status-card,
+:root[data-base="light"] .gesture-card { box-shadow: var(--glass-edge), var(--card-shadow); }
+
+/* Page headers: large mockup-style titles, no rule under the header */
+.pane-header {
+  align-items: center;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+  border-bottom: none;
+  gap: 24px;
+}
+.pane-header h1 {
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 4px;
+}
+.pane-header .subtitle {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Hero card matches mockup: rounded 24, quiet surface, generous padding */
+.hero-card {
+  border-radius: var(--r-lg);
+  padding: 24px 26px;
+  gap: 26px;
+}
+
+/* =================== Settings reorg (mockup) ========================== */
+.settings-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.settings-card-wide { max-width: none; }
+.settings-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+.settings-flex-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.settings-flex-row .info-block { min-width: 0; }
+.settings-kbd {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 11px;
+}
+
+/* Phone health: 4-column stats row (mockup) */
+.health-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 4px 2px 16px;
+}
+.health-cell { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.health-label { font-size: 11.5px; color: var(--muted); }
+.health-cell strong {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.health-cell .hint { margin: 0; font-size: 11.5px; }
+.health-cell strong.bad { color: var(--warning); }
+
+/* Footer strip: version + maintenance actions (mockup) */
+.settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 16px;
+  padding: 16px 22px;
+}
+.settings-footer strong { font-size: 13.5px; color: var(--text); }
+.settings-footer .hint { margin-top: 4px; }
+
+@media (max-width: 1080px) {
+  .settings-grid-2 { grid-template-columns: 1fr; }
+  .health-stats { grid-template-columns: repeat(2, 1fr); }
+  .settings-footer { flex-direction: column; align-items: flex-start; }
+}
+
+/* ==================== Light theme: component overrides ==================
+   Legacy layers hard-code dark-only rgba() surfaces and tinted text.
+   These flip them for light mode. Spec: white 70% glass, 1px borders,
+   soft shadows, dark text. */
+:root[data-base="light"] body.dark-theme,
+:root[data-base="light"] {
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* Light ambient backdrop: the soft-blue wallpaper fills the window, the violet
+   floor glow is layered over it, and the three drifting orbs stay on top for
+   gentle motion — recolored to the blue/silver palette (no pink). */
+:root[data-base="light"] .aurora {
+  background:
+    radial-gradient(90% 60% at 50% 110%, rgba(108, 123, 255, .07), transparent 60%),
+    /* White veil: the raw wallpaper read as "too cyan" on its own; a soft
+       silver wash pulls it back to the white-and-silver palette while the
+       glass waves still show through. */
+    linear-gradient(rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.44)),
+    url("assets/light-bg.png") center / cover no-repeat,
+    var(--bg);
+}
+:root[data-base="light"] .aurora i { opacity: .14 !important; }
+:root[data-base="light"] .aurora i:nth-child(1) { background: radial-gradient(circle, #8b9dff, transparent 68%); }
+:root[data-base="light"] .aurora i:nth-child(2) { background: radial-gradient(circle, #67e8f9, transparent 68%); }
+:root[data-base="light"] .aurora i:nth-child(3) { background: radial-gradient(circle, #a5b4fc, transparent 70%); }
+
+/* Page titles: the dark layer clips them with a WHITE gradient, which goes
+   invisible on the light background. Restore a readable silver-ink heading. */
+:root[data-base="light"] .pane-header h1 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: var(--text);
+}
+
+/* Card family: premium translucent white glass — soft top-lit gradient, 1px
+   silver rim, elegant shadow, backdrop blur. */
+:root[data-base="light"] .sidebar,
+:root[data-base="light"] .card,
+:root[data-base="light"] .quick-tile,
+:root[data-base="light"] .gesture-card,
+:root[data-base="light"] .status-card,
+:root[data-base="light"] .qr-card,
+:root[data-base="light"] .confirmation-box,
+:root[data-base="light"] .active-session-box,
+:root[data-base="light"] .quick-controls-card,
+:root[data-base="light"] .chat-panel,
+:root[data-base="light"] .files-panel,
+:root[data-base="light"] .drop-zone {
+  background: var(--glass-fill);
+  border: 1px solid var(--border);
+  box-shadow: var(--glass-edge), var(--card-shadow);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+}
+:root[data-base="light"] .sidebar { background: rgba(255, 255, 255, .78); }
+
+/* Hard-coded dark fills -> tokens */
+:root[data-base="light"] input[type="text"],
+:root[data-base="light"] input[type="password"],
+:root[data-base="light"] textarea,
+:root[data-base="light"] .uri-box input,
+:root[data-base="light"] .chat-input-row input,
+:root[data-base="light"] select {
+  background: var(--input-fill);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px rgba(15, 18, 30, .04);
+  transition: border-color var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease);
+}
+:root[data-base="light"] input[type="text"]:focus,
+:root[data-base="light"] input[type="password"]:focus,
+:root[data-base="light"] textarea:focus,
+:root[data-base="light"] select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+  outline: none;
+}
+:root[data-base="light"] .session-info,
+:root[data-base="light"] .chat-messages,
+:root[data-base="light"] .history-list,
+:root[data-base="light"] .code-display,
+:root[data-base="light"] .indicator-bar {
+  background: var(--list-fill);
+  border-color: var(--border);
+}
+:root[data-base="light"] .drop-zone { background: rgba(15, 18, 30, .02); }
+:root[data-base="light"] .mirror-viewport { box-shadow: 0 0 0 1px var(--border), 0 16px 40px -22px rgba(15, 18, 30, .35); }
+:root[data-base="light"] .toast {
+  background: var(--toast-fill);
+  border-color: var(--border);
+  color: var(--text);
+  box-shadow: 0 16px 40px -14px rgba(15, 18, 30, .28);
+}
+:root[data-base="light"] .btn { box-shadow: var(--soft-shadow); }
+:root[data-base="light"] .btn:hover:not(:disabled) { border-color: var(--line-strong); }
+:root[data-base="light"] .btn-primary,
+:root[data-base="light"] .btn-primary:hover {
+  background: var(--gradient-brand);
+  color: var(--on-gradient);
+  border-color: rgba(15, 18, 30, .10);
+  box-shadow: 0 6px 16px -8px rgba(99, 84, 240, .55);
+}
+:root[data-base="light"] .btn-danger { color: var(--danger); }
+:root[data-base="light"] .nav-tab.active {
+  color: var(--primary);
+  background: linear-gradient(90deg, rgba(99, 84, 240, .12), rgba(99, 84, 240, .04));
+  border-color: rgba(99, 84, 240, .30);
+}
+:root[data-base="light"] .nav-tab.active .tab-icon { color: var(--primary); }
+:root[data-base="light"] .step-num,
+:root[data-base="light"] .tile-icon,
+:root[data-base="light"] .drop-icon,
+:root[data-base="light"] .history-icon,
+:root[data-base="light"] .gesture-icon,
+:root[data-base="light"] .dev-avatar { color: var(--brand-text); }
+:root[data-base="light"] .confirmation-box {
+  border-color: rgba(99, 84, 240, .45);
+  background: rgba(99, 84, 240, .06);
+}
+:root[data-base="light"] .alert-header h4 { color: var(--primary); }
+:root[data-base="light"] #display-confirmation-code {
+  /* Use background-image, NOT the `background` shorthand: the shorthand
+     resets background-clip:text (set in glass.css) back to border-box, which
+     painted the gradient as a solid blue bar over the invisible text. */
+  background-image: linear-gradient(180deg, var(--text), var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+:root[data-base="light"] .cert-fp code,
+:root[data-base="light"] .info-row code,
+:root[data-base="light"] .trusted-devices-list code,
+:root[data-base="light"] .security-banner code {
+  background: var(--elevated);
+  border-color: var(--border);
+  color: var(--code-text);
+}
+:root[data-base="light"] .security-banner code { color: var(--danger); }
+:root[data-base="light"] .chat-msg.system { color: var(--text-muted); }
+:root[data-base="light"] .loading-overlay { background: rgba(246, 247, 251, .88); color: var(--text); }
+:root[data-base="light"] ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); }
+:root[data-base="light"] ::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
+:root[data-base="light"] ::-webkit-scrollbar-track { background: transparent; }
+:root[data-base="light"] .slider { background: var(--surface-3); border-color: var(--line-strong); }
+/* Enabled toggles must clearly change colour. The light `.slider` rule above
+   outranks `input:checked + .slider`, which used to leave enabled switches
+   gray in light mode (knob moved, track never changed) — restate the checked
+   state at higher specificity: brand gradient track + soft glow. */
+input:checked + .slider {
+  background: var(--gradient-brand);
+  border-color: transparent;
+  box-shadow: 0 0 14px -4px rgba(124, 108, 255, .55), inset 0 1px 0 rgba(255, 255, 255, .35);
+}
+:root[data-base="light"] input:checked + .slider {
+  background: var(--gradient-brand);
+  border-color: transparent;
+  box-shadow: 0 0 14px -4px rgba(124, 108, 255, .40), inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+:root[data-base="light"] .quick-tile:hover,
+:root[data-base="light"] .gesture-card:hover { border-color: rgba(99, 84, 240, .40); }
+
+/* Dark scrollbars + input fill follow tokens too (no hard-coded values) */
+:root:not([data-base="light"]) ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); }
+:root:not([data-base="light"]) ::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
+
+/* ===================== Shell components (spec 6.1) ===================== */
+
+/* Grouped sidebar headings: Connect / Communicate / Control / Media / System */
+.nav-group {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 14px 14px 5px;
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+}
+.nav-group:first-child { border-top: none; margin-top: 0; padding-top: 4px; }
+.nav-tab { position: relative; }
+.nav-tab .nav-badge {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-align: center;
+  background: var(--brand-soft);
+  color: var(--brand-text);
+  border: 1px solid transparent;
+}
+.nav-tab.active .nav-badge { background: rgba(0, 0, 0, .18); color: var(--on-gradient); }
+
+/* Kill switch in the title bar: always visible; loudly armed when active */
+#btn-titlebar-killswitch.is-active {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+  animation: pulse 1.4s infinite;
+}
+
+/* Overview hero card (spec 6.2.1) */
+.hero-card {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr .9fr;
+  gap: 22px;
+  padding: 20px 22px;
+  border-radius: var(--r-lg);
+  align-items: start;
+  /* Standalone card on the Overview pane: it used to sit flush against the
+     pairing grid below (no gap between the two surfaces). */
+  margin-bottom: 20px;
+}
+.hero-card .hero-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.hero-card h2 { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -.01em; }
+.hero-card .hero-battery .battery-hero { margin-top: 0; }
+:root[data-base="light"] .hero-card {
+  background: var(--glass-fill);
+  border-color: var(--border);
+  box-shadow: var(--glass-edge), var(--card-shadow);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+}
+#perm-summary.bad { color: var(--danger); }
+@media (max-width: 1080px) { .hero-card { grid-template-columns: 1fr; gap: 14px; } }
+
+/* Overview: when the QR card is hidden the session card takes the row */
+.pairing-grid.no-qr { grid-template-columns: 1fr; }
+.pairing-grid.no-qr .qr-card { display: none; }
+
+/* Activity feed rows sit tighter than transfer history */
+#activity-feed .history-item { padding: 8px 12px; gap: 10px; }
+#activity-feed .history-item .btn { margin-left: auto; flex-shrink: 0; }
+
+/* =================== Unified button system =============================
+   One size scale, one corner radius (10px), one font (semibold, sizes
+   11.5/12.5/13/14), one quiet palette — flat fills, no gradients, no glow,
+   no lift/scale on hover. Appended last so it wins over style.css, glass.css
+   and pro.css in BOTH themes; every button in the app follows this block. */
+.btn,
+.btn-lg,
+.btn-sm,
+.btn-xs,
+.btn-icon {
+  font-family: var(--font-family);
+  font-weight: 600;
+  letter-spacing: .005em;
+  border-radius: var(--r-sm);
+  gap: 7px;
+  white-space: nowrap;
+  text-shadow: none;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  box-shadow: none;
+  transition: background .15s ease, border-color .15s ease, color .15s ease, filter .15s ease;
+}
+.btn        { padding: 8px 16px; font-size: 13px; }
+.btn-lg     { padding: 11px 22px; font-size: 14px; }
+.btn-sm     { padding: 6px 14px; font-size: 12.5px; }
+.btn-xs     { padding: 5px 12px; font-size: 11.5px; }
+.btn-icon   { padding: 8px 12px; font-size: 13px; }
+.btn .ic    { width: 15px; height: 15px; }
+.btn-sm .ic, .btn-xs .ic { width: 14px; height: 14px; }
+.btn-lg .ic { width: 16px; height: 16px; }
+
+/* Calm interaction: colour changes only — no jump, no scale. */
+.btn:hover:not(:disabled) {
+  transform: none;
+  filter: none;
+  background: var(--surface-3);
+  border-color: var(--line-strong);
+  color: var(--text-primary);
+}
+.btn:active:not(:disabled) { transform: none; filter: brightness(.96); }
+.btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+
+/* Primary: flat brand fill with a label colour that stays readable on every
+   accent preset (violet = white text, cyan/green/orange = dark text). */
+:root {
+  --btn-primary-bg: var(--primary);
+  --btn-primary-fg: #ffffff;
+}
+:root[data-accent="cyan"]  { --btn-primary-fg: #06121c; }
+:root[data-accent="green"] { --btn-primary-fg: #052e1e; }
+/* azure preset: dark ink on the light blue (dark theme), white on the deep
+   blue (light theme). */
+:root[data-accent="orange"] { --btn-primary-fg: #06182f; }
+:root[data-base="light"][data-accent="orange"] { --btn-primary-fg: #ffffff; }
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  background: var(--btn-primary-bg);
+  border-color: transparent;
+  color: var(--btn-primary-fg);
+  box-shadow: none;
+  text-shadow: none;
+}
+.btn-primary:hover:not(:disabled) { filter: brightness(1.08); background: var(--btn-primary-bg); }
+
+/* Success: one solid green; text flips with the theme for contrast. */
+.btn-success,
+.btn-success:hover {
+  background: var(--success);
+  border-color: transparent;
+  color: #04170f;
+  box-shadow: none;
+  text-shadow: none;
+}
+:root[data-base="light"] .btn-success,
+:root[data-base="light"] .btn-success:hover { color: #ffffff; }
+
+/* Danger: quiet tinted chip (delete/decline stay visible without shouting). */
+.btn-danger,
+.btn-danger:hover {
+  background: rgba(248, 113, 113, .14);
+  border-color: rgba(248, 113, 113, .45);
+  color: var(--danger);
+  box-shadow: none;
+  text-shadow: none;
+}
+.btn-danger:hover:not(:disabled) { background: rgba(248, 113, 113, .24); border-color: var(--danger); }
+
+.btn-outline,
+.btn-outline:hover {
+  background: transparent;
+  border-color: var(--line-strong);
+  color: var(--text-secondary);
+  box-shadow: none;
+}
+.btn-outline:hover:not(:disabled) { color: var(--text-primary); background: var(--surface-1); }
+
+.btn-link,
+.btn-link:hover {
+  padding: 4px 6px;
+  background: none;
+  border-color: transparent;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  box-shadow: none;
+}
+.btn-link:hover:not(:disabled) { color: var(--text-primary); background: none; }
+
+/* Light theme: same system, its own surfaces (overrides the gradient rule
+   and soft shadow declared earlier in this file). */
+:root[data-base="light"] .btn { box-shadow: 0 1px 2px rgba(15, 18, 30, .05); }
+:root[data-base="light"] .btn:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--line-strong);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(15, 18, 30, .06);
+}
+:root[data-base="light"] .btn-primary,
+:root[data-base="light"] .btn-primary:hover {
+  background: var(--btn-primary-bg);
+  border-color: transparent;
+  color: var(--btn-primary-fg);
+  box-shadow: 0 1px 2px rgba(15, 18, 30, .08), 0 6px 16px -8px rgba(99, 84, 240, .45);
+}
+:root[data-base="light"] .btn-danger,
+:root[data-base="light"] .btn-danger:hover { color: var(--danger); }
+
+/* Icon-only buttons: same radius and a theme-aware surface (the old chip was
+   hardcoded dark, which read as a black hole in the light theme). */
+.icon-btn {
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+  color: var(--text-primary);
+}
+.icon-btn:hover {
+  background: var(--brand-soft);
+  border-color: var(--primary);
+  color: var(--brand-text);
+}
+.icon-btn-danger:hover {
+  background: rgba(248, 113, 113, .2);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.icon-btn-xs { border-radius: 8px; }
+/* Over photo/video thumbnails the chip must stay dark in BOTH themes. */
+:root[data-base="light"] .icon-btn { background: rgba(255, 255, 255, .92); }
+:root[data-base="light"] .tile-actions .icon-btn {
+  background: rgba(10, 12, 20, .74);
+  border-color: rgba(255, 255, 255, .22);
+  color: #e8eaf2;
+}
+
+
+/* ======================= ADDITIONAL THEME PALETTES =======================
+   Six extra palettes built on the same design system as Dark/Light: identical
+   geometry, type, spacing and component rules — only the surface ramp, text
+   tones and brand accent differ. Aliases are declared once so no component
+   needs a palette-specific rule and switching never changes the layout.
+
+   These blocks sit AFTER the accent presets on purpose: a palette owns its
+   accent, so a leftover data-accent from an older build cannot recolour it. */
+:root[data-theme="midnight"],
+:root[data-theme="cyberpunk"],
+:root[data-theme="emerald"] {
+  color-scheme: dark;
+  --bg-main: var(--bg);
+  --ink: var(--bg);
+  --bg-sidebar: var(--surface);
+  --bg-card: var(--surface);
+  --bg-input: rgba(2, 6, 14, .55);
+  --border-color: var(--border);
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --text-muted: var(--muted);
+  --surface-1: rgba(255, 255, 255, .035);
+  --surface-2: rgba(255, 255, 255, .06);
+  --surface-3: rgba(255, 255, 255, .09);
+  --accent-primary: var(--primary);
+  --brand: var(--primary);
+  --brand-2: var(--accent);
+  --violet: var(--primary);
+  --aqua: var(--accent);
+  --mint: var(--success);
+  --rose: #ff6aa2;
+  --ok: var(--success);
+  --warn: var(--warning);
+  --bad: var(--danger);
+  --danger-hover: #e14d4d;
+  --glass-fill: linear-gradient(155deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .025) 55%, rgba(255, 255, 255, .05));
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(255, 255, 255, .04), inset 1px 0 0 rgba(255, 255, 255, .07);
+  --glass-drop: 0 18px 40px -18px rgba(0, 0, 0, .7), 0 2px 8px rgba(0, 0, 0, .3);
+  --tint: 255, 255, 255;
+  --input-fill: rgba(0, 0, 0, .3);
+  --list-fill: rgba(0, 0, 0, .22);
+  --soft-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+  --card-shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 10px 26px -20px rgba(0, 0, 0, .8);
+  --toast-fill: rgba(12, 16, 26, .94);
+  --scroll-thumb: rgba(255, 255, 255, .12);
+  --scroll-thumb-hover: rgba(255, 255, 255, .22);
+  --on-primary-btn: #ffffff;
+  --code-text: #b8c1dc;
+}
+
+/* Midnight — the deepest neutral-blue palette, near-black surfaces. */
+:root[data-theme="midnight"] {
+  --bg: #06090f;
+  --surface: #0b101a;
+  --elevated: #111827;
+  --border: rgba(148, 163, 184, .12);
+  --line: rgba(148, 163, 184, .1);
+  --line-strong: rgba(148, 163, 184, .2);
+  --text: #dde6f2;
+  --muted: #8b96aa;
+  --primary: #4f8cff;
+  --accent: #38bdf8;
+  --brand-soft: rgba(79, 140, 255, .16);
+  --brand-text: #b6d0ff;
+  --accent-primary-hover: #77a6ff;
+  --gradient-brand: linear-gradient(90deg, #38bdf8 0%, #4f8cff 100%);
+  --on-gradient: #04101f;
+}
+
+/* Ocean — teal surfaces with a sea-blue accent. */
+:root[data-theme="ocean"] {
+  --bg: #06111a;
+  --surface: #0a1a26;
+  --elevated: #0f2433;
+  --border: rgba(125, 211, 252, .11);
+  --line: rgba(125, 211, 252, .09);
+  --line-strong: rgba(125, 211, 252, .2);
+  --text: #e2f1f7;
+  --muted: #8aa6b8;
+  --primary: #14b8a6;
+  --accent: #38bdf8;
+  --brand-soft: rgba(20, 184, 166, .16);
+  --brand-text: #7ee7d8;
+  --accent-primary-hover: #2dd4bf;
+  --gradient-brand: linear-gradient(90deg, #22d3ee 0%, #14b8a6 100%);
+  --on-gradient: #02181a;
+}
+
+/* Cyberpunk — violet ink with a magenta signal colour (restrained, no glow). */
+:root[data-theme="cyberpunk"] {
+  --bg: #0c0714;
+  --surface: #150a23;
+  --elevated: #1d0f30;
+  --border: rgba(232, 121, 249, .13);
+  --line: rgba(232, 121, 249, .1);
+  --line-strong: rgba(232, 121, 249, .22);
+  --text: #f2e9ff;
+  --muted: #a394bd;
+  --primary: #e0348f;
+  --accent: #22d3ee;
+  --brand-soft: rgba(224, 52, 143, .17);
+  --brand-text: #ffa6d4;
+  --accent-primary-hover: #f0579f;
+  --gradient-brand: linear-gradient(90deg, #22d3ee 0%, #e0348f 100%);
+  --on-gradient: #17040f;
+}
+
+/* Purple — deep aubergine with an amethyst accent. */
+:root[data-theme="purple"] {
+  --bg: #120a1f;
+  --surface: #1a0f2b;
+  --elevated: #241538;
+  --border: rgba(192, 132, 252, .13);
+  --line: rgba(192, 132, 252, .1);
+  --line-strong: rgba(192, 132, 252, .22);
+  --text: #f0e8ff;
+  --muted: #a596bd;
+  --primary: #a855f7;
+  --accent: #e879f9;
+  --brand-soft: rgba(168, 85, 247, .18);
+  --brand-text: #d8b4fe;
+  --accent-primary-hover: #b975f9;
+  --gradient-brand: linear-gradient(90deg, #c084fc 0%, #a855f7 100%);
+  --on-gradient: #170a26;
+}
+
+/* Emerald — green-black surfaces with a jade accent. */
+:root[data-theme="emerald"] {
+  --bg: #05110e;
+  --surface: #081a15;
+  --elevated: #0d241d;
+  --border: rgba(110, 231, 183, .12);
+  --line: rgba(110, 231, 183, .09);
+  --line-strong: rgba(110, 231, 183, .2);
+  --text: #e1f6ec;
+  --muted: #8fb3a5;
+  --primary: #10b981;
+  --accent: #34d399;
+  --brand-soft: rgba(16, 185, 129, .16);
+  --brand-text: #86efac;
+  --accent-primary-hover: #34d399;
+  --gradient-brand: linear-gradient(90deg, #6ee7b7 0%, #10b981 100%);
+  --on-gradient: #03140e;
+}
+
+/* Graphite — neutral studio grey, deliberately low-chroma. */
+:root[data-theme="graphite"] {
+  --bg: #141619;
+  --surface: #1a1d21;
+  --elevated: #212529;
+  --border: rgba(226, 232, 240, .1);
+  --line: rgba(226, 232, 240, .08);
+  --line-strong: rgba(226, 232, 240, .18);
+  --text: #e9eaee;
+  --muted: #9aa0a8;
+  --primary: #94a3b8;
+  --accent: #cbd5e1;
+  --brand-soft: rgba(148, 163, 184, .16);
+  --brand-text: #dbe3ee;
+  --accent-primary-hover: #a9b7c9;
+  --gradient-brand: linear-gradient(90deg, #cbd5e1 0%, #94a3b8 100%);
+  --on-gradient: #10131a;
+  /* Graphite's accent is light, so buttons need dark text on it. */
+  --on-primary-btn: #10131a;
+}
+
+
+/* ======================== PALETTE SET v2 =================================
+   The first palette pass produced six near-black surfaces with different
+   accent colours, which read as "dark theme with a tint". These palettes are
+   deliberately far apart: four light environments (neutral, airy blue,
+   lavender, warm graphite) and four dark ones (charcoal, navy, neon,
+   forest). Layout, type and component rules stay identical; only the token
+   ramp changes, and the light component overrides key off data-base so a
+   light palette gets real light-mode chrome. */
+
+/* ---- Light: neutral desk, blue accent ---- */
+:root[data-base="light"][data-theme="light"] {
+  --bg: #f5f6fa;
+  --surface: #ffffff;
+  --elevated: #eceef5;
+  --border: rgba(15, 23, 42, .11);
+  --line: rgba(15, 23, 42, .09);
+  --line-strong: rgba(15, 23, 42, .22);
+  --text: #141824;
+  --muted: #5b6274;
+  --primary: #2563eb;
+  --accent: #0891b2;
+  --brand-soft: rgba(37, 99, 235, .12);
+  --brand-text: #1d4ed8;
+  --accent-primary-hover: #1d4ed8;
+  --gradient-brand: linear-gradient(90deg, #0891b2 0%, #2563eb 100%);
+  --on-gradient: #04121f;
+  --surface-1: #ffffff;
+  --surface-2: #eef1f7;
+  --surface-3: #e2e7f1;
+  --on-primary-btn: #ffffff;
+}
+
+/* ---- Ocean: sunlit blue water, teal accent ---- */
+:root[data-base="light"][data-theme="ocean"] {
+  --bg: #e9f4fa;
+  --surface: #ffffff;
+  --elevated: #d8ecf5;
+  --border: rgba(12, 74, 110, .15);
+  --line: rgba(12, 74, 110, .11);
+  --line-strong: rgba(12, 74, 110, .26);
+  --text: #082b3a;
+  --muted: #48697a;
+  --primary: #0e7490;
+  --accent: #0284c7;
+  --brand-soft: rgba(14, 116, 144, .13);
+  --brand-text: #0e7490;
+  --accent-primary-hover: #155e75;
+  --gradient-brand: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);
+  --on-gradient: #032029;
+  --surface-1: #ffffff;
+  --surface-2: #e5f2f8;
+  --surface-3: #d6eaf3;
+  --input-fill: #ffffff;
+  --on-primary-btn: #ffffff;
+}
+
+/* ---- Purple: soft lavender paper ---- */
+:root[data-base="light"][data-theme="purple"] {
+  --bg: #f5f0ff;
+  --surface: #ffffff;
+  --elevated: #ece2fd;
+  --border: rgba(76, 29, 149, .15);
+  --line: rgba(76, 29, 149, .11);
+  --line-strong: rgba(76, 29, 149, .26);
+  --text: #241338;
+  --muted: #64517c;
+  --primary: #7c3aed;
+  --accent: #c026d3;
+  --brand-soft: rgba(124, 58, 237, .13);
+  --brand-text: #6d28d9;
+  --accent-primary-hover: #6d28d9;
+  --gradient-brand: linear-gradient(90deg, #c026d3 0%, #7c3aed 100%);
+  --on-gradient: #1a0726;
+  --surface-1: #ffffff;
+  --surface-2: #f0e8fd;
+  --surface-3: #e6d9fb;
+  --input-fill: #ffffff;
+  --on-primary-btn: #ffffff;
+}
+
+/* ---- Graphite: warm concrete, amber signal ---- */
+:root[data-base="light"][data-theme="graphite"] {
+  --bg: #f0f0ec;
+  --surface: #fbfbf8;
+  --elevated: #e6e5df;
+  --border: rgba(41, 43, 45, .15);
+  --line: rgba(41, 43, 45, .11);
+  --line-strong: rgba(41, 43, 45, .26);
+  --text: #1c1e20;
+  --muted: #5b5f63;
+  --primary: #374151;
+  --accent: #b45309;
+  --brand-soft: rgba(55, 65, 81, .13);
+  --brand-text: #374151;
+  --accent-primary-hover: #1f2937;
+  --gradient-brand: linear-gradient(90deg, #8a939c 0%, #374151 100%);
+  --on-gradient: #f8fafc;
+  --surface-1: #fbfbf8;
+  --surface-2: #eaeae4;
+  --surface-3: #dfdfd7;
+  --input-fill: #fdfdfb;
+  --toast-fill: rgba(251, 251, 248, .97);
+  --scroll-thumb: rgba(41, 43, 45, .22);
+  --on-primary-btn: #ffffff;
+}
+
+/* ---- Dark: graphite charcoal, iris accent (the default) ---- */
+:root[data-theme="dark"] {
+  --primary: #7c6cff;
+  --accent: #22d3ee;
+  --gradient-brand: linear-gradient(90deg, #22d3ee 0%, #7c6cff 100%);
+  --on-primary-btn: #ffffff;
+}
+
+/* ---- Midnight: deep ocean-at-night navy, electric blue ---- */
+:root[data-theme="midnight"] {
+  --bg: #050a16;
+  --surface: #0a1425;
+  --elevated: #101d33;
+  --border: rgba(148, 163, 184, .13);
+  --line: rgba(148, 163, 184, .10);
+  --line-strong: rgba(148, 163, 184, .23);
+  --text: #e6eefc;
+  --muted: #8ba0c0;
+  --primary: #3b82f6;
+  --accent: #22d3ee;
+  --brand-soft: rgba(59, 130, 246, .18);
+  --brand-text: #9cc2ff;
+  --accent-primary-hover: #60a5fa;
+  --gradient-brand: linear-gradient(90deg, #22d3ee 0%, #3b82f6 100%);
+  --on-gradient: #03101f;
+}
+
+/* ---- Cyberpunk: black-plum with hot magenta and cyan ---- */
+:root[data-theme="cyberpunk"] {
+  --bg: #0a0410;
+  --surface: #150726;
+  --elevated: #200d39;
+  --border: rgba(255, 45, 149, .18);
+  --line: rgba(255, 45, 149, .13);
+  --line-strong: rgba(255, 45, 149, .30);
+  --text: #ffe8f7;
+  --muted: #b795b8;
+  --primary: #ff2d95;
+  --accent: #00e5ff;
+  --brand-soft: rgba(255, 45, 149, .20);
+  --brand-text: #ff8cc6;
+  --accent-primary-hover: #ff5aa9;
+  --gradient-brand: linear-gradient(90deg, #00e5ff 0%, #ff2d95 100%);
+  --on-gradient: #16020c;
+  --on-primary-btn: #1a0310;
+  /* Inset glow instead of a flat surface: still no decorative blobs. */
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, .10), inset 0 0 0 1px rgba(255, 45, 149, .12);
+}
+
+/* ---- Emerald: forest green, lime signal ---- */
+:root[data-theme="emerald"] {
+  --bg: #04140f;
+  --surface: #07231b;
+  --elevated: #0b3126;
+  --border: rgba(163, 230, 53, .14);
+  --line: rgba(163, 230, 53, .10);
+  --line-strong: rgba(163, 230, 53, .24);
+  --text: #e6fbef;
+  --muted: #8fb6a4;
+  --primary: #22c55e;
+  --accent: #a3e635;
+  --brand-soft: rgba(34, 197, 94, .18);
+  --brand-text: #86efac;
+  --accent-primary-hover: #4ade80;
+  --gradient-brand: linear-gradient(90deg, #a3e635 0%, #22c55e 100%);
+  --on-gradient: #03170d;
+  --on-primary-btn: #04170c;
+}
+
+/* Form controls do not inherit the page font by default, so every <button>,
+   <select> and <option> used the OS default (Arial on Windows) while the rest
+   of the UI rendered in Inter. One app, one typeface. */
+button, input, select, textarea, optgroup, option {
+  font-family: var(--font-family);
+}

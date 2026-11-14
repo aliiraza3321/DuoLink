@@ -1,0 +1,582 @@
+/**
+ * DuoLink — glass layer (loads LAST, after tokens.css, so it wins the cascade).
+ *
+ * tokens.css deliberately flattened the PC: aurora off, solid cards, solid
+ * sidebar. The user later asked for the frosted-glass look on BOTH apps (the
+ * phone already has AuroraBackground + GlassCard), matching the mockup:
+ * translucent surfaces over the aurora, plain outline icons, uppercase group
+ * labels, a soft violet active pill and solid violet count badges.
+ *
+ * Everything here is scoped and theme-aware; light theme keeps its own
+ * higher-specificity rules from tokens.css where they already do the right
+ * thing.
+ */
+
+/* ---------- 1. Aurora returns behind the glass ---------- */
+.aurora { display: block !important; }
+body,
+.app-layout,
+.main-content { background-color: transparent !important; }
+
+/* Titlebar reads as frosted glass over the aurora too */
+.titlebar {
+  background: rgba(9, 11, 19, 0.55);
+  border-bottom: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+}
+:root[data-base="light"] .titlebar {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- 2. Frosted-glass surfaces (dark theme) ----------
+   Dark previously got solid fills; give it the same family treatment the
+   light theme already has: glass gradient + blur + soft drop. */
+.sidebar {
+  background: rgba(11, 13, 22, 0.72);
+  background-image: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(26px) saturate(160%);
+  backdrop-filter: blur(26px) saturate(160%);
+}
+
+.card,
+.hero-card,
+.quick-tile,
+.status-card,
+.gesture-card,
+.qr-card,
+.confirmation-box,
+.active-session-box,
+.quick-controls-card,
+.chat-panel,
+.files-panel,
+.drop-zone,
+.link-bar {
+  background: var(--glass-fill);
+  border-color: var(--border);
+  box-shadow: var(--glass-drop);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+:root[data-base="light"] .card,
+:root[data-base="light"] .hero-card,
+:root[data-base="light"] .quick-tile,
+:root[data-base="light"] .status-card,
+:root[data-base="light"] .gesture-card,
+:root[data-base="light"] .qr-card,
+:root[data-base="light"] .confirmation-box,
+:root[data-base="light"] .active-session-box,
+:root[data-base="light"] .quick-controls-card,
+:root[data-base="light"] .chat-panel,
+:root[data-base="light"] .files-panel,
+:root[data-base="light"] .drop-zone,
+:root[data-base="light"] .link-bar {
+  -webkit-backdrop-filter: blur(26px) saturate(175%);
+  backdrop-filter: blur(26px) saturate(175%);
+}
+/* Sidebar reads as a frosted glass pane over the wallpaper in light mode
+   (tokens.css pins it solid white; this file loads later and wins). */
+:root[data-base="light"] .sidebar {
+  background: rgba(255, 255, 255, 0.58);
+  -webkit-backdrop-filter: blur(28px) saturate(175%);
+  backdrop-filter: blur(28px) saturate(175%);
+}
+
+/* ---------- 3. Sidebar mockup styling ---------- */
+.sidebar .nav-group {
+  border-top: none;
+  margin-top: 16px;
+  padding: 0 10px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.sidebar .nav-group:first-child {
+  margin-top: 2px;
+  padding-top: 0;
+}
+
+.sidebar .nav-tabs { gap: 2px; }
+.sidebar .nav-tab {
+  gap: 12px;
+  padding: 8px 11px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+}
+
+/* Plain outline icon: no chip, no box (mockup) */
+.sidebar .nav-tab .tab-icon {
+  width: 20px;
+  height: 20px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: inherit;
+}
+.sidebar .nav-tab .tab-icon .ic { width: 17px; height: 17px; }
+
+.sidebar .nav-tab:hover {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: transparent;
+  color: var(--text);
+}
+:root[data-base="light"] .sidebar .nav-tab:hover { background: rgba(15, 18, 30, 0.05); }
+
+/* Active = soft violet pill (mockup), no left bar */
+.sidebar .nav-tab.active {
+  background: linear-gradient(90deg, rgba(124, 108, 255, 0.26), rgba(124, 108, 255, 0.07));
+  border: 1px solid rgba(124, 108, 255, 0.38);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: none;
+}
+.sidebar .nav-tab.active::before { display: none; }
+.sidebar .nav-tab.active .tab-icon { color: #fff !important; }
+
+:root[data-base="light"] .sidebar .nav-tab.active {
+  background: linear-gradient(90deg, rgba(124, 108, 255, 0.18), rgba(124, 108, 255, 0.05));
+  border-color: rgba(124, 108, 255, 0.30);
+  color: var(--text);
+}
+:root[data-base="light"] .sidebar .nav-tab.active .tab-icon { color: var(--primary) !important; }
+
+/* Count badges: solid violet pills with white digits (mockup) */
+.sidebar .nav-tab .nav-badge {
+  margin-left: auto;
+  min-width: 22px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 10px -4px rgba(124, 108, 255, 0.8);
+}
+.sidebar .nav-tab.active .nav-badge {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Brand block: quiet divider under the logo (mockup) */
+.sidebar .brand { border-bottom-color: var(--line); }
+
+/* ---------- 4. Prominent search bar (Messages) ---------- */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  margin-bottom: 14px;
+  background: var(--glass-fill);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--glass-drop);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  transition: border-color var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease);
+}
+.search-bar:focus-within {
+  border-color: rgba(124, 108, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(124, 108, 255, 0.16), var(--glass-drop);
+}
+.search-bar .ic { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+.search-bar input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 13.5px;
+  font-family: var(--font-family);
+}
+.search-bar input::placeholder { color: var(--muted); }
+.search-bar-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.search-bar-clear:hover { background: var(--surface-3); color: var(--text); }
+.search-bar-clear .ic { width: 12px; height: 12px; color: inherit; }
+
+/* ---------- 6. Animated transparent-white glass (light theme) ----------
+   A slow diagonal sheen sweeps across the translucent-white cards so the
+   glass reads as alive. Uses the free ::before ( ::after is the pointer
+   highlight). Frozen when reduce-motion is set. */
+:root[data-base="light"] .card,
+:root[data-base="light"] .hero-card,
+:root[data-base="light"] .quick-tile,
+:root[data-base="light"] .status-card,
+:root[data-base="light"] .gesture-card,
+:root[data-base="light"] .qr-card,
+:root[data-base="light"] .confirmation-box,
+:root[data-base="light"] .active-session-box,
+:root[data-base="light"] .quick-controls-card,
+:root[data-base="light"] .chat-panel,
+:root[data-base="light"] .files-panel,
+:root[data-base="light"] .drop-zone,
+:root[data-base="light"] .link-bar,
+:root[data-base="light"] .sidebar {
+  position: relative;
+  overflow: hidden;
+}
+/* .files-panel is a SCROLL container (pro.css: overflow-y auto). The clip group
+   above also matches it through `.card`, which cut ~300px of card content —
+   "Recent File Transfers" and the bottom buttons were unreachable. Explicit
+   later override: keep the glass fill, restore scrolling, drop the sheen. */
+:root[data-base="light"] .files-panel {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+:root[data-base="light"] .files-panel::before { content: none; }
+:root[data-base="light"] .card::before,
+:root[data-base="light"] .hero-card::before,
+:root[data-base="light"] .quick-tile::before,
+:root[data-base="light"] .status-card::before,
+:root[data-base="light"] .gesture-card::before,
+:root[data-base="light"] .qr-card::before,
+:root[data-base="light"] .confirmation-box::before,
+:root[data-base="light"] .active-session-box::before,
+:root[data-base="light"] .quick-controls-card::before,
+:root[data-base="light"] .chat-panel::before,
+:root[data-base="light"] .drop-zone::before,
+:root[data-base="light"] .link-bar::before,
+:root[data-base="light"] .sidebar::before {
+  content: "";
+  position: absolute;
+  top: -60%;
+  bottom: -60%;
+  left: -30%;
+  width: 40%;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-18deg);
+  animation: duolink-glass-sheen 7s ease-in-out infinite;
+  opacity: 0.7;
+}
+/* Keep real content above the sheen layer. */
+:root[data-base="light"] .card > *,
+:root[data-base="light"] .hero-card > *,
+:root[data-base="light"] .quick-tile > *,
+:root[data-base="light"] .status-card > *,
+:root[data-base="light"] .gesture-card > *,
+:root[data-base="light"] .qr-card > *,
+:root[data-base="light"] .confirmation-box > *,
+:root[data-base="light"] .active-session-box > *,
+:root[data-base="light"] .quick-controls-card > *,
+:root[data-base="light"] .chat-panel > *,
+:root[data-base="light"] .files-panel > *,
+:root[data-base="light"] .drop-zone > *,
+:root[data-base="light"] .link-bar > *,
+:root[data-base="light"] .sidebar > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes duolink-glass-sheen {
+  0%   { transform: translateX(-40%) skewX(-18deg); }
+  55%  { transform: translateX(320%) skewX(-18deg); }
+  100% { transform: translateX(320%) skewX(-18deg); }
+}
+:root[data-reduce-motion="1"][data-base="light"] .card::before { animation: none; }
+:root[data-reduce-motion="1"][data-base="light"] .hero-card::before,
+:root[data-reduce-motion="1"][data-base="light"] .quick-tile::before,
+:root[data-reduce-motion="1"][data-base="light"] .status-card::before,
+:root[data-reduce-motion="1"][data-base="light"] .gesture-card::before,
+:root[data-reduce-motion="1"][data-base="light"] .qr-card::before,
+:root[data-reduce-motion="1"][data-base="light"] .confirmation-box::before,
+:root[data-reduce-motion="1"][data-base="light"] .active-session-box::before,
+:root[data-reduce-motion="1"][data-base="light"] .quick-controls-card::before,
+:root[data-reduce-motion="1"][data-base="light"] .chat-panel::before,
+:root[data-reduce-motion="1"][data-base="light"] .files-panel::before,
+:root[data-reduce-motion="1"][data-base="light"] .drop-zone::before,
+:root[data-reduce-motion="1"][data-base="light"] .link-bar::before,
+:root[data-reduce-motion="1"][data-base="light"] .sidebar::before { animation: none; }
+
+/* ---------- 7. iOS "Liquid Glass" polish (light theme) ----------
+   Apple-style spec: heavy backdrop blur + saturation lift, a bright specular
+   rim (inset 0 1px 0 white), a large soft drop shadow, 22px corners, and
+   translucent-white fills that let the blue wallpaper bleed through. */
+:root[data-base="light"] .card,
+:root[data-base="light"] .hero-card,
+:root[data-base="light"] .quick-tile,
+:root[data-base="light"] .status-card,
+:root[data-base="light"] .gesture-card,
+:root[data-base="light"] .qr-card,
+:root[data-base="light"] .confirmation-box,
+:root[data-base="light"] .active-session-box,
+:root[data-base="light"] .quick-controls-card,
+:root[data-base="light"] .chat-panel,
+:root[data-base="light"] .files-panel,
+:root[data-base="light"] .drop-zone,
+:root[data-base="light"] .link-bar {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.38) 52%, rgba(255, 255, 255, 0.50) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 22px;
+  box-shadow:
+    0 24px 60px -24px rgba(30, 41, 70, 0.22),
+    0 6px 18px -8px rgba(30, 41, 70, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(46px) saturate(215%);
+  backdrop-filter: blur(46px) saturate(215%);
+}
+:root[data-base="light"] .sidebar {
+  background: rgba(255, 255, 255, 0.52);
+  border-right: 1px solid rgba(255, 255, 255, 0.80);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 8px 0 32px -16px rgba(30, 41, 70, 0.18);
+  -webkit-backdrop-filter: blur(52px) saturate(200%);
+  backdrop-filter: blur(52px) saturate(200%);
+}
+:root[data-base="light"] .titlebar {
+  background: rgba(255, 255, 255, 0.62);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 24px -14px rgba(30, 41, 70, 0.14);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  backdrop-filter: blur(40px) saturate(200%);
+}
+/* iOS-style inputs: translucent white lens with a bright inner rim. */
+:root[data-base="light"] input,
+:root[data-base="light"] select,
+:root[data-base="light"] textarea {
+  background: rgba(255, 255, 255, 0.66);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 3px rgba(30, 41, 70, 0.06);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+}
+
+/* ---------- 8. Inline code / kbd chips: readable + wrap-safe ----------
+   Light mode used to reuse the dark chips (light-grey text on grey) and the
+   inline background tore in half where a long path wrapped to the next line.
+   Clone the chip per line fragment, and repaint light chips properly. */
+.card code,
+.hint code,
+.info-block code,
+.info-row code,
+.session-info code,
+.settings-info-row code,
+.settings-kbd,
+.nav-tab kbd {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  line-height: 2;
+  padding: 1px 7px;
+  border-radius: 6px;
+}
+.settings-kbd { white-space: normal; max-width: 200px; text-align: right; }
+:root[data-base="light"] .settings-info-row code,
+:root[data-base="light"] .hint code,
+:root[data-base="light"] .info-block code,
+:root[data-base="light"] .info-row code,
+:root[data-base="light"] .session-info code {
+  background: rgba(15, 18, 30, 0.05);
+  border: 1px solid rgba(15, 18, 30, 0.10);
+  color: var(--code-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+:root[data-base="light"] .settings-kbd {
+  background: rgba(15, 18, 30, 0.05);
+  border-color: rgba(15, 18, 30, 0.10);
+  color: var(--code-text);
+}
+
+/* ---------- 9. Light hero height fix ----------
+   Section 6 puts overflow:hidden on light cards (to clip the sheen sweep).
+   Per flexbox, non-visible overflow zeroes a flex item's automatic minimum
+   size (min-height:auto), so the Overview flex column squeezed the hero to
+   its 42px padding box — only the label row survived, the rest was clipped.
+   Pin the hero to content height, exactly like dark mode renders it. */
+:root[data-base="light"] .hero-card {
+  flex-shrink: 0;
+  min-height: fit-content;
+}
+
+/* ---------- 10. Dark Overview: richer liquid glass ----------
+   The dark Overview read as flat panels; give it the same glassmorphic depth
+   as the active-session panel: brighter translucent fill, a visible white
+   rim + top specular line, heavy blur/saturation lift, deep soft shadow. */
+:root:not([data-base="light"]) #tab-pairing .card,
+:root:not([data-base="light"]) #tab-pairing .hero-card {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.055) 50%, rgba(255, 255, 255, 0.10) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 24px 48px -20px rgba(0, 0, 0, 0.70),
+    0 4px 16px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(30px) saturate(175%);
+  backdrop-filter: blur(30px) saturate(175%);
+}
+
+/* The session details panel kept a flat mid-grey fill (pro.css rgba(0,0,0,.22))
+   that read WHITER than every other glass surface around it — "pairing looks
+   whiter than the rest". Deepen it to a cool inset well so it matches the
+   surrounding navy glass. */
+:root:not([data-base="light"]) .active-session-box .session-info {
+  background: linear-gradient(160deg, rgba(4, 6, 12, 0.42), rgba(4, 6, 12, 0.30));
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 24px -18px rgba(0, 0, 0, 0.9);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+
+/* DEVICE / LINK diagnostic cells (`.diag-fact`) were dark grey chips in
+   light mode. Restyle as soft white glass with a readable label/value. */:root[data-base="light"] .diag-fact {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 8px rgba(30, 41, 70, 0.07);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+}
+:root[data-base="light"] .diag-fact .fact-label { color: var(--muted); }
+:root[data-base="light"] .diag-fact .fact-value { color: var(--text-primary); }
+:root[data-base="light"] .diag-summary,
+:root[data-base="light"] .diag-footer { border-color: var(--line); }
+:root[data-base="light"] .summary-stat strong { color: var(--text-primary); }
+
+/* ---------- Light-mode message thread readability ----------
+   style.css hard-codes dark-theme message colours (white text, navy panels,
+   slate cards). In light mode that produced white-on-white message bodies and
+   near-invisible headers — "messages are not readable". Every rule below only
+   touches the light theme; the dark theme keeps its original styling. */
+/* Flex children default to min-height:auto: the message list refused to shrink
+   below its content, so the card overflowed and the input row was clipped.
+   min-height:0 lets it become the scroller inside the fixed-height card. */
+.chat-messages { min-height: 0; }
+:root[data-base="light"] .chat-messages {
+  background: rgba(255, 255, 255, 0.66);
+  border-color: rgba(15, 18, 30, 0.10);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+}
+:root[data-base="light"] .chat-msg.received {
+  background: #ffffff;
+  color: #1b2033;
+  border: 1px solid rgba(15, 18, 30, 0.10);
+  box-shadow: 0 1px 2px rgba(15, 18, 30, 0.06);
+}
+:root[data-base="light"] .chat-msg.sent { color: #ffffff; }
+:root[data-base="light"] .chat-msg.sent .msg-header { color: rgba(255, 255, 255, 0.85); }
+:root[data-base="light"] .chat-msg.system { color: var(--muted); }
+:root[data-base="light"] .msg-header { color: var(--muted); opacity: 1; font-weight: 600; }
+:root[data-base="light"] .msg-body { color: #1b2033; }
+/* The conversation lists and drop zone inherited pro.css's translucent black
+   fill, which turns into a muddy grey slab on the light wallpaper. */
+:root[data-base="light"] .history-list {
+  background: rgba(255, 255, 255, 0.66);
+  border-color: rgba(15, 18, 30, 0.10);
+}
+:root[data-base="light"] .drop-zone {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(15, 18, 30, 0.22);
+}
+:root[data-base="light"] .history-item { color: var(--text); }
+:root[data-base="light"] .history-meta { color: var(--muted); }
+:root[data-base="light"] .history-empty { color: var(--muted); }
+/* Gallery bar: keep the file name ellipsized so the ✕ / Open externally
+   buttons can never be pushed off-screen again. */
+.media-viewer-name { flex: 1 1 0; min-width: 0; }
+
+/* ============================================================
+   Motion & interaction polish — this file loads LAST, so these
+   rules win over style.css / pro.css without touching them.
+   ============================================================ */
+
+/* ---- Tab switching: a short fade + rise instead of a hard cut ---- */
+.tab-pane.active { animation: dl-pane-in .32s var(--ease, cubic-bezier(.2,.7,.2,1)) both; }
+@keyframes dl-pane-in {
+  from { opacity: 0; transform: translateY(10px) scale(.995); }
+  to   { opacity: 1; transform: none; }
+}
+.nav-tab {
+  transition: background var(--dur-1, 150ms) ease, color var(--dur-1, 150ms) ease,
+              box-shadow var(--dur-2, 250ms) ease, transform var(--dur-1, 150ms) ease;
+}
+.nav-tab:hover:not(.active) { transform: translateY(-1px); }
+.nav-tab.active { animation: dl-tab-pop .32s var(--ease, cubic-bezier(.2,.7,.2,1)); }
+@keyframes dl-tab-pop {
+  0% { transform: scale(.97); }
+  60% { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Buttons: a light press so clicks feel physical, nothing bouncy ---- */
+.btn, .icon-btn {
+  transition: transform var(--dur-1, 150ms) var(--ease, cubic-bezier(.2,.7,.2,1)),
+              filter var(--dur-1, 150ms) ease, box-shadow var(--dur-2, 250ms) ease;
+}
+.btn:active, .icon-btn:active { transform: translateY(1px) scale(.985); }
+.btn:hover:not(:disabled) { filter: brightness(1.06); }
+
+/* ---- LAN chat: messages must be selectable, links clickable ---- */
+.chat-messages, .chat-msg, .msg-header, .msg-body { user-select: text; -webkit-user-select: text; }
+.chat-messages, .msg-body { cursor: text; }
+.chat-link {
+  color: var(--accent, #22d3ee);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.chat-link:hover { text-decoration-thickness: 2px; }
+.chat-msg.sent .chat-link { color: #ffffff; text-decoration-color: rgba(255, 255, 255, 0.75); }
+
+/* ---- Mirror: held-last-frame reconnect state (never a black pane) ---- */
+.badge-info {
+  background: rgba(34, 211, 238, 0.14);
+  border-color: rgba(34, 211, 238, 0.45) !important;
+  color: var(--accent, #22d3ee);
+}
+#screen-canvas { transition: opacity .25s ease; }
+#screen-canvas.mirror-dimmed { opacity: .38; }
+.mirror-stale-note {
+  position: absolute;
+  left: 50%; bottom: 16px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 999px; white-space: nowrap;
+  background: rgba(9, 11, 18, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e8eaf2; font-size: 12px; z-index: 3;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.mirror-stale-note.hidden { display: none; }
+.mirror-stale-note strong { font-weight: 600; }
+.mirror-stale-note .stale-sub { color: #b8bdd0; opacity: .85; }
+.mirror-stale-note .stale-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #fbbf24;
+  animation: dl-pulse 1s ease-in-out infinite;
+}
+@keyframes dl-pulse {
+  0%, 100% { opacity: .35; transform: scale(.8); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* ---- Reduced motion (system setting or the in-app toggle) ---- */
+@media (prefers-reduced-motion: reduce) {
+  .tab-pane.active, .nav-tab.active { animation: none; }
+  .mirror-stale-note .stale-dot { animation: none; }
+}
+:root[data-reduce-motion="1"] .tab-pane.active { animation: none; }
+:root[data-reduce-motion="1"] .nav-tab.active { animation: none; }
+:root[data-reduce-motion="1"] .mirror-stale-note .stale-dot { animation: none; }
+.media-viewer-actions { flex-shrink: 0; }

@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">DuoLink</string>
+    <string name="accessibility_service_description">Enables your paired PC to click, scroll, and type into fields on this phone when you explicitly allow remote control.</string>
+    <string name="pairing_notification_title">DuoLink — Link Active</string>
+    <string name="pairing_notification_text">Connected securely to your PC over local Wi-Fi.</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="action_send_clipboard">Send Clipboard</string>
+</resources>

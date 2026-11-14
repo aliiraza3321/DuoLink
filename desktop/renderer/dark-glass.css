@@ -1,0 +1,146 @@
+/* ===========================================================================
+   DuoLink — dark theme, liquid glass (phone parity)
+   ===========================================================================
+   The dark desktop theme used to be a flat #0B0D14 page with hairline outlines,
+   which looked dull next to the phone app. Dark now follows the same recipe the
+   Android build uses (ui/Glass.kt):
+
+     backdrop  #0B0D14 with three soft glows — violet 55%, cyan 38%, rose 26%
+     panel     vertical gradient #181F35 -> #121829 -> #151C30
+     rim       1px gradient edge, white 60% at the top fading to 5%, 22% at the base
+     depth     16px black shadow, 24px radius
+
+   Only the dark base is touched; the light theme keeps its own glass styling.
+   =========================================================================== */
+
+/* Dark page base is the navy surface picked for the app (#131A2B) instead of
+   the near-black #0B0D14 it used to be. Everything that paints a solid dark
+   background reads the token, so the whole app moves together. */
+:root:not([data-base="light"]) {
+  --bg: #131a2b;
+  --bg-main: #131a2b;
+  --ink: #131a2b;
+  --stage-bg: #131a2b;
+  --surface: #171f33;
+  --surface-1: rgba(255, 255, 255, .045);
+  --surface-2: rgba(255, 255, 255, .075);
+  --surface-3: rgba(255, 255, 255, .11);
+  --bg-sidebar: #131a2b;
+  --bg-card: #171f33;
+}
+
+/* The base sheets paint body/.main-content flat with !important, so the glow
+   has to claim both layers back. Glows stay soft so the navy base leads. */
+:root:not([data-base="light"]) body {
+  background-color: #131a2b !important;
+  background-image:
+    radial-gradient(58vw 46vw at 2% 0%, rgba(124, 108, 255, .30), transparent 62%),
+    radial-gradient(52vw 42vw at 100% 38%, rgba(34, 211, 238, .20), transparent 64%),
+    radial-gradient(46vw 34vw at 28% 104%, rgba(255, 106, 162, .14), transparent 66%) !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+}
+:root:not([data-base="light"]) .app-layout,
+:root:not([data-base="light"]) .main-content {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Frosted chrome: the sidebar and the titlebar sit over the glow instead of
+   cutting it off with an opaque block. */
+:root:not([data-base="light"]) .sidebar {
+  background: rgba(19, 26, 43, .62) !important;
+  backdrop-filter: blur(22px) saturate(130%);
+  -webkit-backdrop-filter: blur(22px) saturate(130%);
+  border-right: 1px solid rgba(255, 255, 255, .07) !important;
+}
+:root:not([data-base="light"]) .titlebar {
+  background: rgba(19, 26, 43, .55) !important;
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  border-bottom: 1px solid rgba(255, 255, 255, .07) !important;
+}
+
+/* Glass panels: two background layers — the frosted fill clipped to the
+   padding box, and the lit rim clipped to the border box. */
+:root:not([data-base="light"]) .card,
+:root:not([data-base="light"]) .control-strip,
+:root:not([data-base="light"]) .qr-card,
+:root:not([data-base="light"]) .quick-tile,
+:root:not([data-base="light"]) .settings-card,
+:root:not([data-base="light"]) .settings-card-wide,
+:root:not([data-base="light"]) .hero-card,
+:root:not([data-base="light"]) .info-box,
+:root:not([data-base="light"]) .guide-section,
+:root:not([data-base="light"]) .share-picker-card,
+:root:not([data-base="light"]) .file-transfer-box,
+:root:not([data-base="light"]) .webcam-settings,
+:root:not([data-base="light"]) .app-confirm {
+  background-color: transparent !important;
+  background-image:
+    linear-gradient(180deg, #181f35, #121829 55%, #151c30),
+    linear-gradient(160deg, rgba(255, 255, 255, .60), rgba(255, 255, 255, .05) 52%, rgba(255, 255, 255, .22)) !important;
+  background-origin: padding-box, border-box !important;
+  background-clip: padding-box, border-box !important;
+  border: 1px solid transparent !important;
+  border-radius: 22px;
+  box-shadow: 0 14px 34px -18px rgba(0, 0, 0, .75), 0 2px 10px rgba(0, 0, 0, .28);
+}
+
+/* The control rail is one panel: its sections stay plain rows separated by a
+   hairline. Boxing each section made the rail read as a stack of nested cards
+   and pushed its labels against the edges. */
+:root:not([data-base="light"]) .sp-block {
+  border: 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, .08) !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+:root:not([data-base="light"]) .sp-block:first-of-type { border-top: 0 !important; }
+/* The rail itself is not a card: it sits inside the stream shell's card, the
+   same way it does in the light theme, so its labels keep the shell's inset. */
+:root:not([data-base="light"]) .stream-panel {
+  background: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+:root:not([data-base="light"]) .stream-panel .sp-head { gap: 10px; }
+:root:not([data-base="light"]) .stream-panel .badge { margin-right: 2px; }
+
+/* Inputs and selects read as inset glass wells. */
+:root:not([data-base="light"]) .text-input,
+:root:not([data-base="light"]) .field select,
+:root:not([data-base="light"]) .field input,
+:root:not([data-base="light"]) .uri-box {
+  background: rgba(255, 255, 255, .05) !important;
+  border: 1px solid rgba(255, 255, 255, .10) !important;
+  border-radius: 12px;
+  color: #e8eaf2;
+}
+:root:not([data-base="light"]) .text-input:focus,
+:root:not([data-base="light"]) .field select:focus,
+:root:not([data-base="light"]) .field input:focus {
+  border-color: rgba(124, 108, 255, .70) !important;
+  box-shadow: 0 0 0 3px rgba(124, 108, 255, .22);
+}
+
+/* The active nav row is the one tinted surface in the rail. */
+:root:not([data-base="light"]) .nav-tab.active {
+  background: linear-gradient(120deg, rgba(124, 108, 255, .30), rgba(34, 211, 238, .16)) !important;
+  border: 1px solid rgba(255, 255, 255, .12) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 6px 18px -10px rgba(124, 108, 255, .8) !important;
+}
+
+/* Primary actions carry the brand glow so the page has a focal point. */
+:root:not([data-base="light"]) .btn-primary {
+  background: linear-gradient(135deg, #7c6cff, #5b8cff 55%, #22d3ee);
+  border: 1px solid rgba(255, 255, 255, .28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 10px 24px -12px rgba(124, 108, 255, .95);
+  color: #06121c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-base="light"]) body { background-attachment: scroll; }
+}

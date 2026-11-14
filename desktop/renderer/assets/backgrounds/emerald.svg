@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04140f"/><stop offset="1" stop-color="#061d15"/></linearGradient>
+<filter id="soft"><feGaussianBlur stdDeviation="42"/></filter>
+</defs>
+<rect width="1600" height="1000" fill="url(#bg)"/>
+<g filter="url(#soft)" fill="none" stroke-linecap="round">
+<path d="M-100 260 C 300 60 700 340 1100 140 S 1600 180 1750 60" stroke="#10b981" stroke-opacity=".5" stroke-width="90"/>
+<path d="M-100 520 C 360 330 760 600 1180 400 S 1600 430 1750 330" stroke="#34d399" stroke-opacity=".3" stroke-width="70"/>
+<path d="M-100 800 C 320 640 780 880 1160 700 S 1580 720 1750 640" stroke="#a3e635" stroke-opacity=".16" stroke-width="60"/>
+</g></svg>

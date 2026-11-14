@@ -1,0 +1,1160 @@
+/**
+ * VORTEX - Professional refinement layer.
+ * Loaded LAST. Calms the glass/aurora look into a clean, consistent product UI.
+ * Class names are unchanged, so renderer.js keeps working.
+ */
+
+:root {
+  --ink: #090c14;
+  --surface-1: rgba(255, 255, 255, 0.035);
+  --surface-2: rgba(255, 255, 255, 0.06);
+  --surface-3: rgba(255, 255, 255, 0.09);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  --brand: #6c7bff;
+  --brand-2: #4cc9f0;
+  --brand-soft: rgba(108, 123, 255, 0.16);
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+
+  --text-primary: #eef1fa;
+  --text-secondary: #98a2bd;
+  --text-muted: #6b7591;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+
+  --font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --mono: "JetBrains Mono", "Cascadia Mono", "SF Mono", Consolas, monospace;
+}
+
+body.dark-theme {
+  font-size: 14px;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Icons ---------- */
+.ic {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -0.2em;
+}
+
+/* ---------- Backdrop: quieter aurora ---------- */
+.aurora { background: radial-gradient(90% 60% at 50% 110%, rgba(108, 123, 255, 0.10), transparent 60%), var(--ink); }
+.aurora i { filter: blur(110px); opacity: 0.22 !important; }
+
+/* ---------- Surfaces ---------- */
+.sidebar,
+.card,
+.quick-tile,
+.gesture-card,
+.status-card,
+.qr-card,
+.confirmation-box,
+.active-session-box,
+.quick-controls-card,
+.mirror-viewport,
+.chat-panel,
+.drop-zone {
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 10px 30px -18px rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+
+.card { border-radius: var(--r-lg); padding: 22px; }
+.card::after, .quick-tile::after, .gesture-card::after, .qr-card::after { display: none; }
+
+/* nested boxes sit inside cards: no double glass */
+.status-card, .qr-card, .chat-panel, .active-session-box {
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+.active-session-box, .quick-controls-card { background: rgba(0, 0, 0, 0.18); box-shadow: none; }
+.security-banner { box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+.card-header-row { padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.card h3, .card-header-row h3 { font-size: 14px; font-weight: 650; letter-spacing: 0.01em; color: var(--text-primary); }
+.card h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.hint { color: var(--text-secondary); font-size: 12.5px; line-height: 1.55; margin-top: 4px; }
+
+/* ---------- Sidebar ---------- */
+.sidebar { width: 260px; padding: 20px 14px; border-radius: 20px; margin: 12px 0 12px 12px; height: calc(100vh - 24px); }
+
+.brand { padding: 4px 8px 20px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+.brand-icon { width: 40px; height: 40px; border-radius: 12px; background: none; box-shadow: 0 6px 18px -6px rgba(108, 123, 255, 0.7); }
+.brand-icon img { width: 40px; height: 40px; border-radius: 12px; }
+.brand-text h2 { font-size: 17px; font-weight: 750; letter-spacing: 0.14em; }
+.brand-badges { gap: 4px; margin-top: 6px; }
+
+.badge {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 2px 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text-secondary);
+  box-shadow: none;
+  width: fit-content;
+}
+.badge-latency { background: var(--surface-2); color: var(--text-secondary); border-color: var(--line); }
+.badge-success { background: rgba(52, 211, 153, 0.12); color: var(--ok); border-color: rgba(52, 211, 153, 0.28); font-family: var(--font-family); font-weight: 600; font-size: 11.5px; }
+.badge-warning { background: rgba(251, 191, 36, 0.12); color: var(--warn); border-color: rgba(251, 191, 36, 0.28); font-family: var(--font-family); font-weight: 600; font-size: 11.5px; }
+.badge-time { font-family: var(--mono); }
+#session-badge, .badge-private { font-family: var(--font-family); font-size: 11.5px; font-weight: 600; }
+.tag-secure { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; background: rgba(52, 211, 153, 0.1); color: var(--ok); border-color: rgba(52, 211, 153, 0.25); border-radius: 999px; padding: 3px 10px; }
+.badge-private { display: inline-flex; align-items: center; gap: 5px; }
+
+.nav-tabs { gap: 4px; padding-top: 4px; }
+.nav-tab {
+  gap: 12px;
+  padding: 8px 14px; /* compact: all 13 tabs must fit without leaving the sidebar */
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  overflow: hidden;
+}
+.nav-tab:hover { background: var(--surface-2); color: var(--text-primary); transform: none; }
+.nav-tab.active {
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(90deg, rgba(108, 123, 255, 0.28), rgba(108, 123, 255, 0.08));
+  border-color: rgba(108, 123, 255, 0.35);
+  box-shadow: none;
+}
+.nav-tab.active::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 22%; bottom: 22%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, var(--brand), var(--brand-2));
+}
+.tab-icon { display: inline-flex; width: 20px; justify-content: center; }
+.tab-icon .ic { width: 18px; height: 18px; }
+.nav-tab.active .tab-icon { color: #b7c0ff; }
+
+.sidebar-footer { gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.indicator-bar { padding: 10px 12px; border-radius: 10px; background: var(--surface-1); border: 1px solid var(--line); box-shadow: none; font-size: 12.5px; font-weight: 500; }
+.status-dot { width: 8px; height: 8px; flex-shrink: 0; }
+.killswitch-pill { display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px; letter-spacing: 0.04em; box-shadow: none; }
+.footer-actions .btn { width: 100%; }
+
+/* ---------- Main + headers ---------- */
+.main-content { padding: 28px 36px 32px; }
+.pane-header { align-items: center; padding-bottom: 18px; margin-bottom: 22px; border-bottom: 1px solid var(--line); gap: 24px; }
+.pane-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: none;
+  color: var(--text-primary);
+  -webkit-text-fill-color: currentColor;
+}
+.subtitle { max-width: 640px; line-height: 1.55; margin-top: 2px; }
+.tab-pane.active { animation: pane-in .28s var(--ease); }
+@keyframes pane-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Buttons: clean, tactile, not glossy ---------- */
+.btn {
+  --tint: 255, 255, 255;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-shadow: none;
+  overflow: visible;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: background .18s ease, border-color .18s ease, transform .15s var(--ease), box-shadow .18s ease, filter .18s ease;
+}
+.btn::before, .btn::after { display: none !important; }
+.btn:hover:not(:disabled) { transform: translateY(-1px); filter: none; background: var(--surface-3); border-color: rgba(255, 255, 255, 0.26); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(0.98); filter: none; }
+.btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+.btn-primary, .btn-primary:hover {
+  background: linear-gradient(180deg, #7b89ff, #5a69f0);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  text-shadow: none;
+  box-shadow: 0 6px 16px -6px rgba(108, 123, 255, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+
+.btn-secondary, .btn-secondary:hover { background: var(--surface-2); color: var(--text-primary); }
+.btn-secondary:hover:not(:disabled) { background: var(--surface-3); }
+
+.btn-success, .btn-success:hover {
+  background: linear-gradient(180deg, #3fdca2, #22b884);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #032015;
+  text-shadow: none;
+  box-shadow: 0 6px 16px -6px rgba(52, 211, 153, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.btn-success:hover:not(:disabled) { filter: brightness(1.07); }
+
+.btn-danger, .btn-danger:hover {
+  background: rgba(248, 113, 113, 0.14);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #fecaca;
+  box-shadow: none;
+}
+.btn-danger:hover:not(:disabled) { background: rgba(248, 113, 113, 0.26); border-color: rgba(248, 113, 113, 0.65); }
+
+.btn-outline, .btn-outline:hover { background: transparent; box-shadow: none; color: var(--text-secondary); border-color: var(--line-strong); }
+.btn-outline:hover:not(:disabled) { color: var(--text-primary); background: var(--surface-1); }
+.btn-link, .btn-link:hover { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 3px; }
+.btn-link:hover { color: var(--text-primary); }
+
+.btn-lg { padding: 12px 24px; font-size: 14px; border-radius: 12px; }
+.btn-sm { padding: 7px 14px; font-size: 12.5px; }
+.btn-xs { padding: 6px 12px; font-size: 11.5px; border-radius: 8px; }
+.btn-icon { border-radius: 10px; padding: 8px 11px; }
+.btn .ic { width: 15px; height: 15px; }
+.btn-lg .ic { width: 17px; height: 17px; }
+
+/* ---------- Inputs ---------- */
+input[type="text"], input[type="password"], textarea, .uri-box input, .chat-input-row input {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: none;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+}
+.uri-box input, textarea { font-family: var(--mono); font-size: 11.5px; }
+input[type="text"]:focus, textarea:focus, .chat-input-row input:focus {
+  border-color: rgba(108, 123, 255, 0.7);
+  box-shadow: 0 0 0 3px rgba(108, 123, 255, 0.2);
+}
+textarea { resize: none; line-height: 1.5; }
+::placeholder { color: var(--text-muted); }
+.auto-sync-label { color: var(--text-secondary); font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; }
+.auto-sync-label input { accent-color: var(--brand); width: 14px; height: 14px; }
+label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+
+/* ---------- Pairing ---------- */
+.pairing-grid { grid-template-columns: 380px 1fr; gap: 22px; align-items: start; }
+.qr-container { width: 252px; height: 252px; padding: 14px; border-radius: 18px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2), 0 20px 50px -20px rgba(108, 123, 255, 0.55); }
+.loading-overlay { background: rgba(9, 12, 20, 0.88); border-radius: 18px; }
+.spinner { border-top-color: var(--brand); }
+.qr-timer-bar { background: transparent; border-radius: 0; margin-top: 18px; padding: 0; }
+#qr-countdown { font-family: var(--mono); font-size: 12px; }
+.manual-details { margin-top: 20px; padding-top: 18px; }
+.manual-details label { font-size: 11.5px; margin-bottom: 8px; }
+.cert-fp { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.cert-fp code { font-family: var(--mono); font-weight: 400; font-size: 10.5px; line-height: 1.5; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.28); color: #b8c1dc; }
+
+.steps-flow { position: relative; gap: 12px; margin-top: 0; }
+.step-item { background: var(--surface-1); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; gap: 14px; align-items: center; }
+.step-num { width: 28px; height: 28px; font-size: 12.5px; background: var(--brand-soft); color: #b7c0ff; border: 1px solid rgba(108, 123, 255, 0.4); box-shadow: none; }
+.step-content strong { font-size: 13.5px; }
+.step-content p { font-size: 12.5px; margin-top: 3px; line-height: 1.5; }
+
+.confirmation-box { border: 1px solid rgba(108, 123, 255, 0.55); background: rgba(108, 123, 255, 0.08); border-radius: 16px; animation: pulse-border 2.4s infinite; }
+@keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(108, 123, 255, 0.35); } 70% { box-shadow: 0 0 0 10px rgba(108, 123, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(108, 123, 255, 0); } }
+.alert-header h4 { color: #c9d0ff; font-size: 16px; font-weight: 650; }
+.code-display { background: rgba(0, 0, 0, 0.3); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+#display-confirmation-code { font-family: var(--mono); font-size: 40px; font-weight: 700; letter-spacing: 0.35em; padding-left: 0.35em; filter: none; background: linear-gradient(180deg, #fff, #b7c0ff); -webkit-background-clip: text; background-clip: text; }
+.code-hint { font-size: 12.5px; }
+.confirm-error { border-radius: 10px; }
+.prompt-actions { gap: 10px; }
+.prompt-actions .btn { flex: 1; max-width: 200px; }
+
+.active-session-box { border-radius: 14px; padding: 18px; gap: 18px; }
+.session-info { background: rgba(0, 0, 0, 0.22); border: 1px solid var(--line); border-radius: 12px; padding: 6px 16px; gap: 0; }
+.info-row { padding: 11px 0; font-size: 13px; align-items: center; }
+.info-row + .info-row { border-top: 1px solid var(--line); }
+.info-label { font-size: 12.5px; }
+.info-row code { font-family: var(--mono); font-size: 11.5px; color: #b8c1dc; }
+.text-accent { color: var(--ok); font-size: 12.5px; font-weight: 500; }
+
+.quick-tiles-grid { gap: 10px; margin-top: 0; }
+.quick-tile { border-radius: 12px; padding: 16px 8px; gap: 10px; font-size: 12px; font-weight: 600; color: var(--text-primary); background: var(--surface-1); box-shadow: none; }
+.quick-tile:hover { transform: translateY(-2px); background: var(--surface-2); border-color: rgba(108, 123, 255, 0.5); box-shadow: 0 10px 24px -14px rgba(108, 123, 255, 0.7); }
+.tile-icon { display: inline-flex; width: 38px; height: 38px; align-items: center; justify-content: center; border-radius: 10px; background: var(--brand-soft); color: #b7c0ff; }
+.tile-icon .ic { width: 19px; height: 19px; }
+
+/* ---------- Chat & files ---------- */
+.split-view { gap: 22px; height: calc(100vh - 176px); }
+.chat-panel, .files-panel { min-height: 0; }
+.files-panel { overflow-y: auto; }
+.chat-messages { background: rgba(0, 0, 0, 0.22); border: 1px solid var(--line); border-radius: 14px; padding: 16px; gap: 12px; }
+.chat-msg { border-radius: 14px; padding: 9px 14px; font-size: 13.5px; line-height: 1.5; box-shadow: none; max-width: 82%; }
+.chat-msg.sent { background: linear-gradient(135deg, #6c7bff, #5262e6); border-color: transparent; border-bottom-right-radius: 4px; }
+.chat-msg.received { background: var(--surface-2); border-color: var(--line); border-bottom-left-radius: 4px; }
+.chat-msg.system { background: none; border: none; color: var(--text-muted); font-size: 11.5px; max-width: 90%; }
+.msg-header { font-size: 10.5px; opacity: 0.7; margin-bottom: 3px; }
+.chat-input-row { gap: 10px; }
+.chat-input-row input { padding: 11px 16px; }
+
+.clipboard-actions { flex-wrap: wrap; margin-top: 12px; }
+.clipboard-box textarea { margin-top: 12px; }
+.divider { background: var(--line); margin: 20px 0; }
+.file-transfer-box > label, .transfer-history > label { display: block; margin-bottom: 8px; }
+.drop-zone { border: 1.5px dashed var(--line-strong); border-radius: 14px; padding: 22px; background: rgba(0, 0, 0, 0.16); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.drop-zone p { color: var(--text-secondary); font-size: 12.5px; margin-bottom: 10px; }
+.drop-zone.drag-active { border-color: var(--brand); background: var(--brand-soft); box-shadow: none; }
+.drop-icon { display: inline-flex; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 12px; background: var(--brand-soft); color: #b7c0ff; margin-bottom: 8px; }
+.drop-icon .ic { width: 20px; height: 20px; }
+.file-send-row { margin-top: 12px; }
+.progress-bar-bg { height: 6px; background: var(--surface-3); }
+.progress-bar-fill { background: linear-gradient(90deg, var(--brand), var(--brand-2)); box-shadow: none; border-radius: 999px; }
+.progress-info { font-size: 12px; margin-bottom: 8px; color: var(--text-secondary); }
+.history-list { background: rgba(0, 0, 0, 0.22); border: 1px solid var(--line); border-radius: 12px; max-height: 150px; }
+.history-item { padding: 10px 14px; gap: 12px; }
+.history-item:last-child { border-bottom: none; }
+.history-icon { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; border-radius: 8px; background: var(--brand-soft); color: #b7c0ff; flex-shrink: 0; }
+.history-meta { font-size: 11px; color: var(--text-muted); }
+
+/* ---------- Remote control ---------- */
+.control-settings-card { max-width: 980px; }
+.toggle-row { padding-bottom: 22px; gap: 24px; }
+.toggle-row h3 { font-size: 15px; }
+.switch { width: 46px; height: 26px; flex-shrink: 0; }
+.slider { border-radius: 999px; background: var(--surface-3); border: 1px solid var(--line-strong); box-shadow: none; }
+.slider:before { height: 18px; width: 18px; left: 3px; bottom: 3px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); }
+input:checked + .slider { background: linear-gradient(135deg, #6c7bff, #5a69f0); border-color: transparent; box-shadow: none; }
+input:checked + .slider:before { transform: translateX(20px); }
+
+.security-banner { background: rgba(248, 113, 113, 0.07); border: 1px solid rgba(248, 113, 113, 0.28); border-radius: 14px; padding: 16px 18px; margin: 22px 0; gap: 16px; }
+.shield-icon { display: inline-flex; width: 38px; height: 38px; align-items: center; justify-content: center; border-radius: 10px; background: rgba(248, 113, 113, 0.14); color: var(--bad); flex-shrink: 0; }
+.shield-icon .ic { width: 19px; height: 19px; }
+.banner-text { flex: 1; font-size: 13px; }
+.banner-text p { color: var(--text-secondary); font-size: 12.5px; margin-top: 3px; }
+.security-banner code { font-family: var(--mono); background: rgba(0, 0, 0, 0.4); border: 1px solid var(--line); color: #fecaca; font-size: 12px; padding: 3px 8px; }
+
+.quick-controls-card { border-radius: 14px; padding: 18px; margin: 0 0 22px; }
+.quick-controls-card h4, .control-features-list h4 { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); font-weight: 650; }
+.quick-buttons-row { margin-top: 14px; gap: 10px; }
+.gesture-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+.gesture-card { display: grid; grid-template-columns: 40px 1fr; grid-template-rows: auto auto; column-gap: 14px; align-items: center; padding: 14px 16px; border-radius: 12px; background: var(--surface-1); box-shadow: none; }
+.gesture-card:hover { transform: translateY(-2px); border-color: rgba(108, 123, 255, 0.45); box-shadow: none; }
+.gesture-icon { grid-row: 1 / span 2; display: inline-flex !important; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: 10px; background: var(--brand-soft); color: #b7c0ff; margin: 0 !important; }
+.gesture-icon .ic { width: 19px; height: 19px; }
+.gesture-card strong { font-size: 13px; align-self: end; }
+.gesture-card p { font-size: 12px; margin-top: 2px; align-self: start; }
+
+/* ---------- Screen mirror ---------- */
+.mirror-viewport { background: #000; border: 0; border-radius: 30px; box-shadow: none; padding: 0; }
+.mirror-controls { padding: 22px; }
+
+/* Control Phone: the controls card stretches beside the phone so the column
+   never ends early (gap under it was the biggest layout flaw). */
+#tab-screen-mirror .mirror-controls {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+.mirror-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.mirror-panel-head > div { min-width: 0; }
+.mirror-panel-head .badge { flex-shrink: 0; }
+.mirror-panel .nav-button-group { flex-wrap: wrap; }
+.mirror-panel-foot { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line); }
+.mirror-foot-label { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.gesture-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.gesture-item {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 9px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gesture-item strong { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gesture-item span { font-size: 11px; color: var(--text-muted); }
+.gesture-strip .gesture-item { animation: none; }
+#mirror-stream-badge.badge-success { animation: none; }
+@media (max-width: 1180px) { .gesture-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.mirror-controls h3 { font-size: 15px; }
+.nav-button-group { gap: 10px; margin: 18px 0 22px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.nav-button-group .btn { flex: 1; min-width: 96px; padding: 11px 14px; }
+.screen-placeholder { color: var(--text-muted); }
+.screen-placeholder strong { color: var(--text-secondary); font-size: 13px; }
+/* In-app pane stays visually blank while the pop-out window owns the screen. */
+.mirror-popout-note { background: rgba(6, 8, 14, 0.92); z-index: 3; }
+.mirror-popout-note strong { color: var(--text-secondary); }
+.placeholder-icon { display: inline-flex; width: 56px; height: 56px; align-items: center; justify-content: center; border-radius: 16px; background: var(--surface-2); color: var(--text-secondary); font-size: 0; }
+.placeholder-icon .ic { width: 26px; height: 26px; }
+
+/* ---------- Trusted devices ---------- */
+.trusted-devices-list { display: flex; flex-direction: column; gap: 10px; }
+.trusted-devices-list > .hint { text-align: center; padding: 36px 0; }
+.trusted-devices-list .toggle-row { padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-1); align-items: center; gap: 16px; }
+.dev-avatar { display: inline-flex; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 12px; background: var(--brand-soft); color: #b7c0ff; flex-shrink: 0; }
+.dev-avatar .ic { width: 20px; height: 20px; }
+.dev-info { flex: 1; min-width: 0; }
+.trusted-devices-list code { font-family: var(--mono); font-size: 11px; color: #b8c1dc; }
+
+/* ---------- Toasts ---------- */
+.toast-container { bottom: 22px; right: 22px; gap: 10px; }
+.toast {
+  min-width: 240px;
+  max-width: 380px;
+  padding: 12px 16px 12px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--brand);
+  background: rgba(17, 21, 34, 0.92);
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.8);
+  animation: toast-in .28s var(--ease);
+}
+.toast-success { border-left-color: var(--ok); }
+.toast-error { border-left-color: var(--bad); }
+.toast-warning { border-left-color: var(--warn); }
+@keyframes toast-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Scrollbars ---------- */
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+
+/* ---------- Narrow windows ----------
+ * Sidebar is 250px + 64px pane padding, so at Electron's 920px minimum the
+ * content column is only ~600px. A fixed 360px QR column used to crush the
+ * status card into ~200px, which made the session info wrap one word per line
+ * and pushed the quick-action tiles past the card edge. Each breakpoint below
+ * gives that column real room instead of squeezing it.
+ */
+.pairing-grid > *,
+.status-cards-grid > *,
+.split-view > * { min-width: 0; }
+
+@media (max-width: 1280px) {
+  .pairing-grid { grid-template-columns: minmax(300px, 340px) 1fr; }
+  .gesture-grid { grid-template-columns: repeat(2, 1fr); }
+  .main-content { padding: 22px 24px; }
+}
+
+/* Status card would drop under ~360px here: stop fighting it, go single column. */
+@media (max-width: 1080px) {
+  .pairing-grid { grid-template-columns: 1fr; }
+  .pairing-grid .qr-card { max-width: 520px; width: 100%; }
+  .split-view { grid-template-columns: 1fr; height: auto; }
+  .split-view > .card { min-height: 300px; }
+  .status-cards-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+}
+
+@media (max-width: 780px) {
+  .main-content { padding: 18px 16px; }
+  .pane-header { flex-wrap: wrap; gap: 12px; }
+  .pane-header .subtitle { max-width: 100%; }
+  .header-tools { flex-wrap: wrap; }
+}
+
+/* ---------- Session info rows: never collapse to one word per line ---------- */
+.session-info .info-row,
+.info-row { flex-wrap: wrap; row-gap: 3px; }
+.info-row > :last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.info-row > .info-label { flex: 0 0 auto; white-space: nowrap; }
+
+/* Quick actions: reflow instead of clipping when the status card narrows. */
+.quick-tiles-grid { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-pane.active, .toast { animation: none; }
+}
+
+/* ---------- Polish pass ---------- */
+:root { color-scheme: dark; }
+.badge, .btn, .tag-secure, .nav-tab { white-space: nowrap; }
+.card-header-row { width: 100%; gap: 12px; }
+.info-row { gap: 20px; }
+.info-row > :last-child { text-align: right; }
+.badge-success-row { gap: 12px; }
+.active-badge-group { gap: 8px; min-width: 0; }
+.pane-header .subtitle { max-width: 560px; }
+.header-tools { flex-shrink: 0; }
+.stream-toggle-box .btn { flex: 0 0 auto; }
+.status-card { min-width: 0; }
+.confirmation-box .prompt-actions .btn { white-space: nowrap; }
+
+/* ---------- Fit fixes for narrow status card ---------- */
+.badge-success-row { flex-wrap: wrap; row-gap: 10px; }
+.badge-success-row .btn { flex-shrink: 0; margin-left: auto; }
+.active-badge-group { flex-wrap: nowrap; }
+.confirmation-box { padding: 20px 16px; }
+.code-display { padding: 14px 8px; }
+#display-confirmation-code { font-size: 34px; letter-spacing: 0.22em; padding-left: 0.22em; }
+.prompt-actions { flex-wrap: wrap; }
+.prompt-actions .btn { flex: 1 1 130px; max-width: none; padding: 11px 14px; }
+.btn-link, .btn-link:hover { border: none !important; background: none !important; box-shadow: none !important; }
+.alert-header { gap: 10px; }
+
+/* ---------- Settings & About ---------- */
+.settings-card, .about-card { max-width: 860px; }
+.settings-card .toggle-row:first-child { padding-top: 0; }
+.settings-info-row { padding-top: 16px; margin-top: 4px; border-top: 1px solid var(--line); }
+.settings-info-row .info-block strong { font-size: 13.5px; color: var(--text-primary); }
+.settings-info-row code { font-family: var(--mono); font-size: 11.5px; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--line); padding: 2px 7px; border-radius: 6px; color: #b8c1dc; }
+.about-brand { display: flex; align-items: center; gap: 16px; }
+.about-brand h3 { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; color: var(--text-primary); }
+.about-links { margin-top: 16px; }
+.about-links .publisher { max-width: 320px; }
+.nav-tab kbd { font-family: var(--mono); font-size: 10px; margin-left: auto; opacity: 0.55; background: rgba(0,0,0,0.3); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; }
+
+/* ---------- Publisher credit ---------- */
+.publisher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(108, 123, 255, 0.12), rgba(76, 201, 240, 0.06));
+  color: var(--text-primary);
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color .18s ease, background .18s ease, transform .15s var(--ease);
+}
+.publisher:hover { border-color: rgba(108, 123, 255, 0.55); background: linear-gradient(135deg, rgba(108, 123, 255, 0.22), rgba(76, 201, 240, 0.10)); transform: translateY(-1px); }
+.publisher:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.publisher-avatar {
+  width: 32px; height: 32px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  font-size: 12px; font-weight: 750; letter-spacing: 0.04em; color: #fff;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  box-shadow: 0 6px 14px -6px rgba(108, 123, 255, 0.8);
+}
+.publisher-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; flex: 1; }
+.publisher-text small { font-size: 10.5px; color: var(--text-muted); letter-spacing: 0.04em; }
+.publisher-text strong { font-size: 13px; font-weight: 650; }
+.publisher-arrow { width: 14px; height: 14px; color: var(--text-muted); transition: color .18s ease, transform .18s ease; }
+.publisher:hover .publisher-arrow { color: var(--text-primary); transform: translate(1px, -1px); }
+
+/* ---------- V2: Phone media grid ---------- */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.media-tile {
+  position: relative;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .16s ease, transform .16s var(--ease);
+}
+.media-tile:hover { border-color: rgba(108, 123, 255, 0.55); transform: translateY(-2px); }
+.media-tile.selected { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand) inset; }
+.media-tile img, .media-tile .media-thumb-placeholder {
+  width: 100%; height: 108px; object-fit: cover; display: block;
+  background: rgba(255, 255, 255, 0.04);
+}
+.media-thumb-placeholder {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 22px;
+}
+.media-tile .media-meta { padding: 7px 9px; }
+.media-tile .media-name {
+  font-size: 11.5px; font-weight: 600; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.media-tile .media-sub { font-size: 10.5px; color: var(--text-muted); }
+.media-tile .media-check {
+  position: absolute; top: 7px; right: 7px; width: 16px; height: 16px;
+  accent-color: var(--brand); cursor: pointer; z-index: 2;
+}
+
+/* ---------- V2: status cards ---------- */
+.status-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* ---------- V2: notification rows ---------- */
+.notif-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 12px; border-bottom: 1px solid var(--line);
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item .notif-body { flex: 1; min-width: 0; }
+.notif-item .notif-title { font-size: 13px; font-weight: 650; color: var(--text-primary); }
+.notif-item .notif-text { font-size: 12px; color: var(--text-muted); word-break: break-word; }
+.notif-item .notif-app { font-size: 10.5px; color: var(--brand-2); letter-spacing: .03em; }
+.notif-item .notif-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+.notif-reply-row { display: flex; gap: 6px; margin-top: 6px; }
+.notif-reply-row input {
+  flex: 1; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--line);
+  border-radius: 8px; color: var(--text-primary); padding: 5px 8px; font-size: 12px;
+}
+
+/* ---------- V2: phone-power block inside the Phone Navigation card ---------- */
+.nav-divider { height: 1px; background: var(--line); margin: 4px 0 14px; }
+.nav-button-group.compact { margin: 0; padding-bottom: 0; border-bottom: none; }
+.nav-button-group.compact .btn { padding: 9px 12px; font-size: 12.5px; }
+
+/* ---------- V2: media browser toolbar (designed filter bar) ---------- */
+.media-toolbar {
+  display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(108, 123, 255, 0.08), rgba(0, 229, 255, 0.05));
+  border: 1px solid rgba(108, 123, 255, 0.22);
+  border-radius: 12px; padding: 10px 12px;
+}
+.media-field { display: flex; flex-direction: column; gap: 4px; }
+.media-field-grow { flex: 1; min-width: 150px; }
+.media-field label {
+  font-size: 10px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-muted);
+}
+.media-field select, .media-field input { padding: 7px 10px; font-size: 12.5px; }
+.media-load-btn { align-self: flex-end; padding: 8px 18px; }
+
+/* ================================================================
+   Professional layout normalization
+   - consistent header action rows (badge + buttons aligned/gapped)
+   - one clear primary action per pane
+   - organized data blocks (battery hero, volume bar)
+   - webcam settings in an aligned grid instead of a tall stack
+   ================================================================ */
+.header-tools { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.header-tools .badge { flex-shrink: 0; }
+.btn { white-space: nowrap; }
+.pane-header .subtitle { max-width: 760px; }
+
+/* Media: toolbar sits inside the card as a filter bar under the card header */
+.media-toolbar { width: 100%; box-sizing: border-box; margin-top: 4px; }
+.media-toolbar .media-load-btn { align-self: flex-end; }
+
+/* Battery / volume data blocks */
+.battery-hero { display: flex; align-items: baseline; gap: 6px; margin: 6px 0 8px; }
+.battery-hero strong {
+  font-size: 34px; font-weight: 800; letter-spacing: -1px;
+  color: var(--text-primary); line-height: 1;
+}
+.battery-hero span { font-size: 14px; color: var(--text-muted); }
+.volume-bar { margin: 8px 0 4px; }
+.status-cards-grid .card { min-width: 0; }
+
+/* Webcam: two-up settings grid, no separator lines, tighter rhythm */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px 16px;
+}
+.settings-grid .settings-info-row {
+  border-top: none; padding-top: 0; margin-top: 0;
+}
+.settings-grid .info-block { display: flex; flex-direction: column; gap: 4px; }
+
+/* Uniform spacing for grouped card action rows */
+.card-header-row { gap: 12px; }
+.card-header-row .header-tools { gap: 8px; }
+
+/* Webcam viewport = the live-stream viewport, exactly.
+   The overrides that used to live here (aspect-ratio: auto; width: 100%)
+   made the webcam box a different size than the phone-screen mirror; by
+   request both containers are now identical (shared .mirror-viewport rules:
+   360:740, height calc(100vh - paddings), max 740px). */
+#tab-webcam .mirror-viewport img {
+  width: 100%;
+  height: 100%;
+  /* Fill the whole box by default (a small letterboxed picture in a huge
+     black frame reads as "broken"), and let the zoom controls crop in. */
+  object-fit: cover;
+  border-radius: 0;
+  background: #000;
+  transform-origin: center;
+  transition: transform .12s ease-out;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+#tab-webcam .mirror-viewport .screen-placeholder { max-width: 420px; }
+
+/* ---------- In-app gallery viewer (images/videos open inside DuoLink) ---------- */
+.media-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: flex;
+  flex-direction: column;
+  background: rgba(6, 8, 14, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.media-viewer.hidden { display: none !important; }
+.media-viewer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  /* The window is frameless: Windows floats its own min/max/close (WCO,
+     ~140px) OVER the page at the top-right. Without this reservation the
+     viewer's own ✕ exit button sat underneath the WCO and was invisible —
+     "where is the X to exit in gallery". Keep the whole action row clear of
+     that zone so ✕ stays visible and separate from the window controls. */
+  padding: 12px 156px 12px 16px;
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+.media-viewer-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.media-viewer-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.media-viewer-actions .btn { min-width: 34px; }
+/* Prominent circular exit — the plain text "Close" was too easy to miss. */
+.media-viewer-close {
+  width: 34px; height: 34px; min-width: 34px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  font-size: 15px; font-weight: 700; line-height: 1;
+  background: rgba(248, 113, 113, 0.14);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #ef4444;
+  transition: background .15s ease, transform .15s ease;
+}
+.media-viewer-close:hover { background: rgba(248, 113, 113, 0.28); transform: scale(1.05); }
+.media-viewer-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  position: relative;
+}
+.media-viewer-stage img,
+.media-viewer-stage video {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 12px;
+  background: #000;
+  object-fit: contain;
+}
+.media-viewer-stage audio { width: min(480px, 90%); }
+.media-viewer-msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13.5px;
+  color: var(--muted);
+  text-align: center;
+  padding: 24px;
+}
+.media-viewer-msg.hidden { display: none; }
+.media-viewer-stage button.media-viewer-close-hit {
+  display: none;
+}
+:root[data-base="light"] .media-viewer { background: rgba(244, 245, 250, 0.96); }
+
+/* ---------- PC-side share picker (the phone's share sheet, drawn here) ---------- */
+.share-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(6, 8, 14, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.share-picker.hidden { display: none !important; }
+.share-picker-card {
+  width: min(560px, 100%);
+  max-height: min(64vh, 560px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  background: var(--surface-1, #12151f);
+  border: 1px solid var(--line, rgba(255,255,255,0.1));
+  border-radius: 18px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+.share-picker-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.share-picker-head h3 { font-size: 15.5px; font-weight: 700; margin-bottom: 4px; }
+.share-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  min-height: 80px;
+  padding: 2px;
+}
+.share-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--surface-2, rgba(255,255,255,0.04));
+  cursor: pointer;
+  font: inherit;
+  color: var(--text-primary, #e8eaf2);
+  transition: border-color .12s ease, background .12s ease, transform .12s ease;
+}
+.share-app:hover {
+  border-color: var(--aqua, #22d3ee);
+  background: var(--surface-3, rgba(255,255,255,0.07));
+  transform: translateY(-1px);
+}
+.share-app img, .share-app .share-app-fallback { width: 40px; height: 40px; object-fit: contain; }
+.share-app .share-app-fallback {
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; background: rgba(255,255,255,0.08);
+  font-size: 17px; font-weight: 700;
+}
+.share-app span {
+  font-size: 11.5px;
+  line-height: 1.25;
+  text-align: center;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.share-picker-status { color: var(--muted); }
+.share-picker-status.is-error { color: var(--danger, #f87171); }
+:root[data-base="light"] .share-picker { background: rgba(230, 232, 240, 0.75); }
+/* Same column layout as .screen-mirror-container (glass.css): the preview
+   column hugs the viewport so the webcam box lands at exactly the size the
+   live-stream viewport has. */
+#tab-webcam .split-view { height: auto; grid-template-columns: auto minmax(260px, 1fr); }
+#tab-webcam .split-view > .card:first-child { justify-self: start; }
+/* Right-hand settings column: it STRETCHES beside the preview (the exact fix
+   the Control Phone panel uses) so the column never ends early and leaves a
+   dead gap under it. The old cap (100vh - 236px) sat ~130px shorter than the
+   preview viewport (100vh - 150px), which baked a gap in no matter what.
+   The divider + OBS block pin to the card bottom (margin-top: auto), so both
+   columns end on the same line; the card scrolls only if content ever
+   exceeds the window. */
+#tab-webcam .mirror-controls {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  /* The cap must sit ABOVE the preview column's height: measured live, the
+     old caps (100vh - 236px, then - 100px) clamped the card short of the
+     preview and re-created a 46px gap. Stretch stops at the grid row on its
+     own, so a generous cap only ever engages as the scroll guard. */
+  max-height: calc(100vh - 20px);
+}
+/* No lump of dead space above the OBS block: free height is spread as even
+   breathing room between sections (space-between + row-gap), and the Torch
+   row spans the leftover grid column so row 2 has no hole. */
+#tab-webcam .mirror-controls { justify-content: space-between; row-gap: 16px; }
+#tab-webcam .settings-grid > .settings-info-row:last-child { grid-column: span 2; }
+@media (max-width: 1080px) {
+  #tab-webcam .split-view { height: auto; }
+  #tab-webcam .mirror-viewport {
+    height: min(var(--phone-h), calc((100cqw - 36px) / var(--phone-ar)));
+    min-height: 0;
+  }
+  #tab-webcam .mirror-controls { max-height: none; }
+}
+
+/* ================================================================
+   Phone Diagnostics container — grouped, glanceable, responsive
+   (was: one flat list of full-width label rows with no status column)
+   ================================================================ */
+#diag-output { display: block; padding: 14px; }
+#diag-output .history-empty { padding: 26px 14px; }
+
+.diag-summary {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  padding: 12px 14px; margin-bottom: 16px;
+  border: 1px solid rgba(108, 123, 255, 0.26);
+  background: linear-gradient(135deg, rgba(108, 123, 255, 0.10), rgba(0, 229, 255, 0.05));
+  border-radius: 12px;
+}
+.diag-summary .summary-stat { display: flex; align-items: baseline; gap: 6px; }
+.diag-summary .summary-stat strong { font-size: 16px; font-weight: 750; color: var(--text-primary); }
+.diag-summary .summary-stat span { font-size: 11.5px; color: var(--text-muted); }
+.diag-summary .summary-spacer { flex: 1; }
+.diag-summary .summary-time { font-size: 11px; color: var(--text-muted); font-family: var(--mono, monospace); }
+
+.diag-section { margin-bottom: 18px; }
+.diag-section:last-child { margin-bottom: 0; }
+.diag-section-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 9px;
+}
+.diag-section-head h4 {
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.diag-section-head .section-count {
+  font-size: 10.5px; font-weight: 650; padding: 2px 7px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid var(--line);
+  color: var(--text-secondary);
+}
+.diag-section-head .section-count.good { color: #34d399; border-color: rgba(52, 211, 153, 0.35); }
+.diag-section-head .section-count.bad { color: #f87171; border-color: rgba(248, 113, 113, 0.35); }
+
+.diag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+  gap: 8px;
+}
+.diag-chip {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px; border-radius: 10px; min-width: 0;
+  background: rgba(0, 0, 0, 0.22); border: 1px solid var(--line);
+  font-size: 12.5px; color: var(--text-primary); text-align: left;
+}
+.diag-chip .diag-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: #64748b; box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.15);
+}
+.diag-chip .diag-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.diag-chip .diag-state { font-size: 10.5px; font-weight: 650; letter-spacing: .02em; flex-shrink: 0; color: var(--text-muted); }
+.diag-chip.ok { background: rgba(52, 211, 153, 0.08); border-color: rgba(52, 211, 153, 0.30); }
+.diag-chip.ok .diag-dot { background: #34d399; box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.16); }
+.diag-chip.ok .diag-state { color: #34d399; }
+.diag-chip.bad { background: rgba(248, 113, 113, 0.08); border-color: rgba(248, 113, 113, 0.32); }
+.diag-chip.bad .diag-dot { background: #f87171; box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.16); }
+.diag-chip.bad .diag-state { color: #f87171; }
+.diag-chip.warn { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.30); }
+.diag-chip.warn .diag-dot { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.16); }
+.diag-chip.warn .diag-state { color: #f59e0b; }
+
+/* Device / Link facts: two-column key-value grid instead of stacked rows */
+.diag-facts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+.diag-fact {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 9px 11px; border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22); border: 1px solid var(--line); min-width: 0;
+}
+.diag-fact .fact-label { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.diag-fact .fact-value {
+  font-family: var(--mono, monospace); font-size: 12.5px; color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+.diag-fact .fact-value.good { color: #34d399; }
+.diag-fact .fact-value.warn { color: #f59e0b; }
+
+.diag-footer {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);
+  font-size: 11.5px; color: var(--text-muted);
+}
+.diag-footer code { font-size: 11px; color: #b8c1dc; }
+
+/* ---------- V2: per-item action buttons (gallery / call log / messages) ---------- */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; flex-shrink: 0;
+  padding: 0; border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(8, 11, 22, 0.72);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.icon-btn .ic { width: 14px; height: 14px; }
+.icon-btn:hover { background: rgba(108, 123, 255, 0.28); border-color: rgba(108, 123, 255, 0.6); }
+.icon-btn:disabled { opacity: .4; cursor: not-allowed; }
+.icon-btn-xs { width: 20px; height: 20px; border-radius: 6px; }
+.icon-btn-xs .ic { width: 11px; height: 11px; }
+.icon-btn-danger:hover { background: rgba(248, 113, 113, 0.26); border-color: rgba(248, 113, 113, 0.6); color: #fca5a5; }
+
+/* Gallery: buttons ride over the thumbnail and appear with the tile. */
+.tile-actions {
+  position: absolute; top: 66px; right: 6px; z-index: 3;
+  display: flex; gap: 5px;
+  opacity: 0; transform: translateY(-3px);
+  transition: opacity .15s ease, transform .15s ease;
+  pointer-events: none;
+}
+.media-tile:hover .tile-actions,
+.media-tile:focus-within .tile-actions,
+.media-tile.selected .tile-actions { opacity: 1; transform: none; pointer-events: auto; }
+
+/* Call log rows: keep the action group pinned to the trailing edge. */
+.history-item .row-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+
+/* Message bubbles: actions sit on the header line, right-aligned. */
+.msg-actions { display: inline-flex; gap: 4px; float: right; margin-left: 10px; }
+.chat-msg .msg-header { display: flow-root; }
+.chat-msg .msg-actions .icon-btn { opacity: 0; transition: opacity .15s ease; }
+.chat-msg:hover .msg-actions .icon-btn,
+.chat-msg:focus-within .msg-actions .icon-btn { opacity: 1; }
+
+/* Toolbar buttons share one height so Delete/Share line up with Load. */
+.media-toolbar .media-load-btn { white-space: nowrap; }
+
+/* Right column of the Overview pairing grid: verification card first, Recent
+   activity stacked directly beneath it instead of spanning the full width. */
+.pairing-side {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+.pairing-side > .card { margin-top: 0; }
+
+/* ---------- Sidebar navigation: professional pass ---------- */
+/* Everything here is scoped to .sidebar because tokens.css (which loads after
+   this sheet) also styles .nav-group / .nav-tab. */
+.sidebar .brand { padding: 6px 8px 16px; margin-bottom: 10px; }
+.sidebar .brand-text h2 { font-size: 16.5px; letter-spacing: 0.1em; }
+.sidebar .brand-badges .badge {
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  background: rgba(52, 211, 153, 0.1);
+  border-color: rgba(52, 211, 153, 0.28);
+  color: var(--ok);
+}
+
+/* Section labels: quieter, wider tracking, hairline above each group. */
+.sidebar .nav-group {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  padding: 15px 10px 7px;
+  margin-top: 7px;
+  border-top: 1px solid var(--line);
+}
+.sidebar .nav-group:first-child { border-top: none; margin-top: 0; padding-top: 6px; }
+
+/* Items: an icon chip on the left instead of a bare glyph. */
+.sidebar .nav-tabs { gap: 3px; }
+.sidebar .nav-tab {
+  gap: 11px;
+  padding: 6px 9px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+}
+.sidebar .nav-tab .tab-icon {
+  width: 26px;
+  height: 24px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.sidebar .nav-tab .tab-icon .ic { width: 14px; height: 14px; }
+.sidebar .nav-tab:hover {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text-primary);
+}
+.sidebar .nav-tab:hover .tab-icon { color: var(--brand); border-color: rgba(108, 123, 255, 0.45); }
+.sidebar .nav-tab.active {
+  background: linear-gradient(90deg, rgba(108, 123, 255, 0.26), rgba(108, 123, 255, 0.06));
+  border-color: rgba(108, 123, 255, 0.4);
+  color: #fff;
+}
+.sidebar .nav-tab.active .tab-icon {
+  background: linear-gradient(135deg, rgba(108, 123, 255, 0.95), rgba(34, 211, 238, 0.6));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 14px -7px rgba(108, 123, 255, 0.95);
+}
+.sidebar .nav-tab.active::before { top: 26%; bottom: 26%; left: -1px; width: 3px; }
+
+/* Footer: calmer, with the status chip reading as a single row. */
+.sidebar .sidebar-footer { padding-top: 12px; margin-top: 8px; }
+.sidebar .indicator-bar {
+  padding: 9px 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Overview: pairing block fills the pane (no dead band below) ---------- */
+/* .main-content becomes a column so the Overview pane can claim the leftover
+   height; every other pane stays a block flex-item and is unaffected. */
+.main-content { display: flex; flex-direction: column; }
+#tab-pairing.active {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+#tab-pairing .pairing-grid { flex: 1 1 auto; align-items: stretch; }
+/* The QR card keeps hugging its content instead of stretching with the column. */
+#tab-pairing .qr-card { align-self: start; }
+#tab-pairing .pairing-side { display: flex; flex-direction: column; gap: 18px; }
+#tab-pairing .status-card { flex: 0 0 auto; }
+#tab-pairing .activity-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+}
+#tab-pairing #activity-feed { flex: 1 1 auto; max-height: none; overflow-y: auto; }
+
+/* ---------- Chat & Files: split fills the pane (no dead band under cards) ----------
+   The fixed 100vh-176px height left a gap whenever the header/linkbar ate a
+   different amount; stretching the flex column removes it and makes both
+   containers as tall as the window allows. */
+#tab-chat-files.active {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+#tab-chat-files .split-view {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+#tab-chat-files .split-view > .card { min-height: 0; }
+#tab-chat-files .files-panel { max-height: none; }

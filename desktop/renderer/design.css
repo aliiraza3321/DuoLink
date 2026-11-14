@@ -1,0 +1,1016 @@
+/* =====================================================================
+   DuoLink — design system layer (loaded last)
+
+   Seven rules this file enforces, on top of everything ui.css already does:
+
+   1. No decorative gradients or glows. Neutral page background, white
+      surfaces, ONE dark accent (#1e2433) for primary actions and the active
+      nav item.
+   2. One line-icon family: the SVG sprite already ships 24px Lucide-style
+      strokes, so icons are normalised to 18px / 1.75 stroke.
+   3. No decorative badges — only status ("Connected", "PING", "TLS pinned").
+   4. No cards inside cards: one surface per section, separated by 1px rules.
+   5. Spacing scale: label→value 2-4px, items in a group 8-12px, sections 24px.
+   6. Nested radii: outer 14px, inner 8px (14 - 6px padding).
+   7. No looping animation. Only 160ms/200ms ease-out on interaction.
+   ===================================================================== */
+
+:root,
+:root[data-base="light"] {
+  --bg: #f4f5f8;
+  --bg-main: #f4f5f8;
+  --surface: #ffffff;
+  --surface-1: #ffffff;
+  --surface-2: #f7f8fa;
+  --surface-3: #eef0f4;
+  --surface-hover: #f2f4f8;
+  --elevated: #ffffff;
+  --text: #14171f;
+  --text-primary: #14171f;
+  --text-secondary: #4b5262;
+  --text-muted: #69707f;
+  --muted: #69707f;
+  --line: #e4e7ee;
+  --line-strong: #d5dae4;
+  --border: #e4e7ee;
+  --border-color: #e4e7ee;
+  --accent-ink: #1e2433;
+  --primary: #1e2433;
+  --accent-primary: #1e2433;
+  --accent-primary-hover: #2b3242;
+  --brand: #1e2433;
+  --brand-2: #1e2433;
+  --brand-soft: #eceef3;
+  --on-primary-btn: #ffffff;
+  --ok: #1e7a4d;
+  --success: #1e7a4d;
+  --warning: #a05a06;
+  --warn: #a05a06;
+  --danger: #b42318;
+  --radius-xl: 14px;
+  --radius-lg: 12px;
+  --radius-md: 8px;
+  --radius-sm: 6px;
+  --shadow-sm: none;
+}
+
+/* Dark keeps the same geometry and hierarchy: neutral charcoal, not navy,
+   and the same single accent (light-on-dark for primary actions). */
+:root[data-base="dark"],
+:root[data-base="midnight"],
+:root[data-base="graphite"] {
+  --bg: #14161c !important;
+  --bg-main: #14161c !important;
+  --surface: #1b1e26 !important;
+  --surface-1: #1b1e26 !important;
+  --surface-2: #21252e !important;
+  --surface-3: #282d38 !important;
+  --surface-hover: #242932 !important;
+  --elevated: #1b1e26 !important;
+  --text: #e9ebf1 !important;
+  --text-primary: #e9ebf1 !important;
+  --text-secondary: #b3bac8 !important;
+  --text-muted: #8f97a6 !important;
+  --muted: #8f97a6 !important;
+  --line: #2b303b !important;
+  --line-strong: #3a4150 !important;
+  --border: #2b303b !important;
+  --border-color: #2b303b !important;
+  --primary: #e9ebf1 !important;
+  --accent-primary: #e9ebf1 !important;
+  --accent-primary-hover: #ffffff !important;
+  --brand: #e9ebf1 !important;
+  --brand-soft: #262b35 !important;
+  --on-primary-btn: #14161c !important;
+  --ok: #4ade9b !important;
+  --success: #4ade9b !important;
+  --warning: #f0b45a !important;
+  --danger: #f0736b !important;
+
+  --accent-ink: #e9ebf1 !important;
+}
+
+/* ---------- 1. flat surfaces: no gradients, no glows, no blur ---------- */
+body,
+.app-layout,
+.main-content,
+.sidebar,
+.titlebar,
+.card,
+.hero-card,
+.status-card,
+.gesture-card,
+.qr-card,
+.quick-tile,
+.quick-controls-card,
+.chat-panel,
+.files-panel,
+.drop-zone,
+.info-box,
+.link-bar,
+.stream-shell,
+.stream-stage,
+.stream-panel,
+.webcam-shell,
+.webcam-preview-card,
+.webcam-settings,
+.modal,
+.app-confirm {
+  background-image: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+body {
+  background-color: var(--bg) !important;
+  color: var(--text-primary);
+}
+
+/* The glass layers painted translucent white and a sweep; both are gone. */
+.sidebar,
+.titlebar,
+.link-bar,
+.card,
+.stream-shell,
+.stream-panel,
+.webcam-settings {
+  background-color: var(--surface) !important;
+}
+
+/* Decorative pseudo-elements (sheen, glossy lens, aurora) off. */
+.sidebar::before,
+.sidebar::after,
+.titlebar::before,
+.link-bar::before,
+.link-bar::after,
+.card::before,
+.card::after,
+.quick-tile::before,
+.quick-tile::after,
+.btn::before,
+.btn::after,
+.stream-panel::before,
+.webcam-preview-card::before,
+.webcam-preview-card::after {
+  content: none !important;
+  background: none !important;
+  animation: none !important;
+}
+
+/* ---------- 7. motion: only on interaction, 160-200ms ease-out ---------- */
+*,
+*::before,
+*::after {
+  animation: none !important;
+}
+.btn,
+.nav-tab,
+.icon-btn,
+.quick-tile,
+.guide-nav-item,
+input,
+select,
+textarea,
+.theme-card {
+  transition: background-color 160ms ease-out, border-color 160ms ease-out,
+    color 160ms ease-out, opacity 160ms ease-out !important;
+}
+
+/* ---------- 6. corners: outer 14, inner 8 ---------- */
+.card,
+.hero-card,
+.status-card,
+.qr-card,
+.chat-panel,
+.files-panel,
+.stream-shell,
+.webcam-shell,
+.link-bar,
+.modal,
+.info-box {
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-xl) !important;
+}
+
+.quick-tile,
+.drop-zone,
+.info-box,
+.stream-panel,
+.btn,
+.nav-tab,
+input,
+select,
+textarea,
+.uri-box input,
+.badge,
+.tag-secure,
+.sp-seg,
+.stream-start-row .btn {
+  border-radius: var(--radius-md) !important;
+}
+
+/* ---------- 4. no cards inside cards ---------- */
+.card .card,
+.card .hero-card,
+.card .status-card,
+.card .quick-tile,
+.card .files-panel,
+.stream-shell .stream-panel,
+.stream-shell .stream-stage,
+.webcam-shell .webcam-settings,
+.webcam-shell .webcam-preview-card {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Sections inside a card are divided by hairlines, not boxes. */
+.card > section + section,
+.card > .card + .card,
+.stream-panel > * + *,
+.webcam-settings > * + * {
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- 5. spacing rhythm ---------- */
+.card { padding: 20px !important; }
+.card > * + * { margin-top: 12px; }
+.card h1, .card h2, .card h3 { margin-bottom: 4px; }
+label, .strip-label, .field-label { margin-bottom: 4px; display: block; }
+.btn + .btn { margin-left: 8px; }
+.stream-panel { gap: 12px !important; }
+.stream-panel .sp-note,
+.stream-panel .sp-sub { margin-top: 4px !important; }
+
+/* ---------- 2. one icon family ---------- */
+.ic,
+.btn .ic,
+.nav-tab .ic,
+.icon-btn .ic,
+summary .ic {
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 1.75 !important;
+  fill: none !important;
+  stroke: currentColor;
+  flex: 0 0 auto;
+}
+.nav-tab .ic, .quick-tile .ic { width: 17px !important; height: 17px !important; }
+
+/* ---------- 1. one accent: primary + active tabs ---------- */
+.btn-primary,
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-ink, var(--primary)) !important;
+  border-color: var(--accent-ink, var(--primary)) !important;
+  color: var(--on-primary-btn) !important;
+  box-shadow: none !important;
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-primary-hover) !important; }
+
+.btn,
+.btn-secondary {
+  background: var(--surface) !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--text-primary) !important;
+}
+.btn:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-hover) !important;
+  border-color: var(--text-muted) !important;
+}
+.btn-success { background: var(--ok) !important; border-color: var(--ok) !important; color: #fff !important; }
+.btn-danger { background: transparent !important; border-color: var(--danger) !important; color: var(--danger) !important; }
+.btn-ghost { background: transparent !important; border-color: transparent !important; }
+
+.nav-tab { color: var(--text-secondary) !important; background: transparent !important; border: 0 !important; }
+.nav-tab:hover { background: var(--surface-hover) !important; color: var(--text-primary) !important; }
+.nav-tab.active {
+  background: var(--brand-soft) !important;
+  color: var(--text-primary) !important;
+  box-shadow: inset 2px 0 0 var(--accent-ink, var(--primary)) !important;
+}
+.nav-badge {
+  background: var(--accent-ink, var(--primary)) !important;
+  color: var(--on-primary-btn) !important;
+  border: 0 !important;
+}
+
+/* Sidebar + titlebar read as one flat panel each. */
+.sidebar { border-right: 1px solid var(--line) !important; }
+.titlebar { border-bottom: 1px solid var(--line) !important; }
+
+/* ---------- top connection strip (was clipping its own badges) ---------- */
+.link-bar {
+  min-height: 48px !important;
+  height: auto !important;
+  padding: 0 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px;
+  overflow: visible !important;
+  border-radius: var(--radius-xl) !important;
+}
+.link-bar .link-node { font-size: 12.5px; color: var(--text-secondary); }
+.link-bar .badge,
+.link-bar .tag-secure {
+  border: 1px solid var(--line-strong) !important;
+  background: var(--surface) !important;
+  color: var(--text-secondary) !important;
+  font-size: 11px !important;
+  height: 24px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px !important;
+}
+.link-bar .tag-secure { color: var(--ok) !important; border-color: color-mix(in srgb, var(--ok) 35%, var(--line)) !important; }
+
+/* ---------- previews: phone-sized, never bigger than the section ---------- */
+/* Previews use the full pane height instead of the old 470px cap, and the
+   pane scrolls when the window is short rather than shrinking them. */
+#tab-screen-mirror,
+#tab-webcam {
+  --preview-h: min(calc(100vh - 150px), 780px);
+  overflow-y: auto;
+}
+#tab-screen-mirror .tab-pane-inner,
+#tab-webcam .tab-pane-inner { overflow: visible; }
+#tab-screen-mirror .mirror-viewport,
+#tab-webcam .webcam-area,
+#tab-webcam .device-frame.webcam-frame,
+#tab-webcam .webcam-viewport {
+  height: var(--preview-h) !important;
+  width: calc(var(--preview-h) * var(--phone-ar, 0.45)) !important;
+  max-width: 100%;
+  background: #0f1116 !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--line) !important;
+  overflow: hidden;
+}
+/* No glossy sweep over the camera picture: the phone image is the content. */
+#tab-webcam .webcam-area::before,
+#tab-webcam .webcam-area::after,
+#tab-webcam .webcam-frame::before,
+#tab-webcam .webcam-frame::after,
+#tab-screen-mirror .mirror-viewport::before,
+#tab-screen-mirror .mirror-viewport::after,
+#tab-screen-mirror .mirror-frame::before {
+  content: none !important;
+  background: none !important;
+  animation: none !important;
+}
+#tab-screen-mirror .stream-stage,
+#tab-webcam .webcam-preview-card {
+  width: max-content !important;
+  max-width: 100%;
+}
+#tab-screen-mirror .stream-shell,
+#tab-webcam .webcam-shell {
+  align-items: start;
+  padding: 14px !important;
+  gap: 20px !important;
+}
+#tab-screen-mirror .stream-panel,
+#tab-webcam .webcam-settings {
+  min-width: 0;
+  max-height: var(--preview-h) !important;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* The handset frame around previews: hairline, no glow, no inner card. */
+.mirror-frame,
+.device-frame,
+.webcam-frame {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* ---------- 3. status only: neutralise decorative chips ---------- */
+.badge.new, .badge.hot, .badge.pro, .badge.beta, .badge.ai { display: none !important; }
+.badge {
+  border: 1px solid var(--line-strong) !important;
+  background: var(--surface-2) !important;
+  color: var(--text-secondary) !important;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.badge-success, .badge-private { color: var(--ok) !important; border-color: color-mix(in srgb, var(--ok) 35%, var(--line)) !important; }
+.badge-warning { color: var(--warning) !important; border-color: color-mix(in srgb, var(--warning) 35%, var(--line)) !important; }
+
+/* ---------- inputs ---------- */
+input, select, textarea, .uri-box input {
+  background: var(--surface) !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--text-secondary) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.uri-box input { font-family: var(--mono); font-size: 11.5px; }
+
+/* Resizable switches read as one dark accent when on. */
+input[type="checkbox"]:checked,
+.switch input:checked + .slider { background-color: var(--accent-ink, var(--primary)) !important; }
+
+/* Scrollbars: neutral, no glow. */
+::-webkit-scrollbar-thumb { background: var(--line-strong); }
+
+/* ---------- hard overrides the theme layers still win ---------- */
+html,
+body,
+.app-layout,
+.main-content,
+.content-area {
+  background-image: none !important;
+  background-color: var(--bg) !important;
+  color: var(--text-primary) !important;
+}
+.sidebar,
+.titlebar,
+.link-bar,
+.card,
+.hero-card,
+.status-card,
+.quick-tile,
+.chat-panel,
+.files-panel,
+.stream-shell,
+.webcam-shell,
+.webcam-settings,
+.modal {
+  background-image: none !important;
+  background-color: var(--surface) !important;
+}
+
+/* The one accent, at higher specificity than the glass button rules. */
+.btn.btn-primary,
+.btn.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-ink, var(--primary)) !important;
+  background-image: none !important;
+  border-color: var(--accent-ink, var(--primary)) !important;
+  color: var(--on-primary-btn) !important;
+}
+.btn.btn-secondary,
+.btn.btn-secondary:hover:not(:disabled) {
+  background-color: var(--surface) !important;
+  background-image: none !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Preview frames: one border on the picture only, never a box in a box. */
+#tab-webcam .webcam-preview-card,
+#tab-webcam .device-frame,
+#tab-webcam .webcam-frame,
+#tab-screen-mirror .stream-stage,
+#tab-screen-mirror .mirror-frame,
+#tab-screen-mirror .device-frame {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* The dark layer paints the navy #131a2b directly on the layout containers;
+   html-scoped selectors outrank it without touching the theme files. */
+html body,
+html .app-layout,
+html .main-content,
+html .content-area {
+  background-color: var(--bg) !important;
+  background-image: none !important;
+}
+
+/* =====================================================================
+   Dark theme — Android glassmorphism (parity with ui/Glass.kt)
+
+   The neutral rules above are the light theme's surface language. Dark keeps
+   the same layout but uses the phone app's recipe: navy #131A2B backdrop with
+   three soft auroras, frosted panels (#181F35 -> #121829 -> #151C30), a 1px
+   white rim that fades top-to-bottom, 22px radius, and a deep soft shadow.
+   ===================================================================== */
+:root:not([data-base="light"]) body {
+  background-color: #131a2b !important;
+  background-image:
+    radial-gradient(58vw 46vw at 2% 0%, rgba(124, 108, 255, .28), transparent 62%),
+    radial-gradient(52vw 42vw at 100% 38%, rgba(34, 211, 238, .18), transparent 64%),
+    radial-gradient(46vw 34vw at 28% 104%, rgba(255, 106, 162, .13), transparent 66%) !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+}
+:root:not([data-base="light"]) .app-layout,
+:root:not([data-base="light"]) .main-content {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Frosted chrome over the auroras. */
+:root:not([data-base="light"]) .sidebar {
+  background: rgba(21, 29, 48, .62) !important;
+  backdrop-filter: blur(22px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(140%) !important;
+  border-right: 1px solid rgba(255, 255, 255, .08) !important;
+}
+:root:not([data-base="light"]) .titlebar {
+  background: rgba(19, 26, 43, .55) !important;
+  backdrop-filter: blur(18px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .07) !important;
+}
+
+/* Glass panels: gradient fill + lit rim in two background layers. */
+:root:not([data-base="light"]) .card,
+:root:not([data-base="light"]) .hero-card,
+:root:not([data-base="light"]) .status-card,
+:root:not([data-base="light"]) .qr-card,
+:root:not([data-base="light"]) .quick-tile,
+:root:not([data-base="light"]) .chat-panel,
+:root:not([data-base="light"]) .files-panel,
+:root:not([data-base="light"]) .settings-card,
+:root:not([data-base="light"]) .settings-card-wide,
+:root:not([data-base="light"]) .guide-section,
+:root:not([data-base="light"]) .info-box,
+:root:not([data-base="light"]) .stream-shell,
+:root:not([data-base="light"]) .webcam-shell,
+:root:not([data-base="light"]) .webcam-settings,
+:root:not([data-base="light"]) .link-bar,
+:root:not([data-base="light"]) .app-confirm,
+:root:not([data-base="light"]) .modal {
+  background-color: transparent !important;
+  background-image:
+    linear-gradient(180deg, #181f35, #121829 55%, #151c30),
+    linear-gradient(160deg, rgba(255, 255, 255, .58), rgba(255, 255, 255, .05) 52%, rgba(255, 255, 255, .20)) !important;
+  background-origin: padding-box, border-box !important;
+  background-clip: padding-box, border-box !important;
+  border: 1px solid transparent !important;
+  border-radius: 22px !important;
+  box-shadow: 0 16px 36px -20px rgba(0, 0, 0, .8), 0 2px 10px rgba(0, 0, 0, .3) !important;
+  backdrop-filter: blur(16px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(130%) !important;
+}
+
+/* Controls sit on the glass: translucent fills, hairline rims. */
+:root:not([data-base="light"]) .btn,
+:root:not([data-base="light"]) .btn-secondary,
+:root:not([data-base="light"]) input,
+:root:not([data-base="light"]) select,
+:root:not([data-base="light"]) textarea {
+  background-color: rgba(255, 255, 255, .06) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, .12) !important;
+  color: #e9ebf1 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+:root:not([data-base="light"]) .btn:hover:not(:disabled),
+:root:not([data-base="light"]) .btn-secondary:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, .11) !important;
+}
+:root:not([data-base="light"]) .btn.btn-primary {
+  background-image: linear-gradient(135deg, #7c6cff, #5b8cff 60%, #22d3ee) !important;
+  border: 1px solid rgba(255, 255, 255, .22) !important;
+  color: #0b1020 !important;
+  box-shadow: 0 8px 22px -12px rgba(88, 116, 255, .85) !important;
+}
+:root:not([data-base="light"]) .nav-tab.active {
+  background: rgba(255, 255, 255, .09) !important;
+  color: #ffffff !important;
+  box-shadow: inset 2px 0 0 #8b7bff !important;
+}
+:root:not([data-base="light"]) .nav-badge {
+  background-image: linear-gradient(135deg, #7c6cff, #22d3ee) !important;
+  color: #0b1020 !important;
+}
+:root:not([data-base="light"]) .link-bar .badge,
+:root:not([data-base="light"]) .link-bar .tag-secure {
+  background: rgba(255, 255, 255, .06) !important;
+  border-color: rgba(255, 255, 255, .14) !important;
+  color: #cfd6e6 !important;
+}
+:root:not([data-base="light"]) .tag-secure { color: #6ee7b7 !important; }
+
+/* Previews keep the phone's own black screen, not a glass panel. */
+:root:not([data-base="light"]) #tab-screen-mirror .mirror-viewport,
+:root:not([data-base="light"]) #tab-webcam .webcam-viewport {
+  background: #0b0f18 !important;
+  border: 1px solid rgba(255, 255, 255, .10) !important;
+}
+
+
+/* The link / latency card is an Overview element. Other pages start with their
+   own header, so the bar is hidden there instead of repeating it. */
+.link-bar.is-hidden {
+  display: none !important;
+}
+
+
+/* ---- Switches: one track, one thumb, one accent -------------------------
+   The old layers each positioned the thumb differently (top:50% + translateY
+   vs bottom:3px), so a partial override made it jump and stretch. Every
+   position property is pinned here so the thumb only ever slides sideways. */
+.switch {
+  width: 40px !important;
+  height: 22px !important;
+  flex: 0 0 40px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.switch .slider {
+  border-radius: 999px !important;
+  /* Plain rgba: color-mix() resolved to an opaque near-white here and made an
+     OFF switch look ON. */
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  transition: background-color 180ms ease-out !important;
+}
+.switch .slider::before {
+  top: 3px !important;
+  bottom: auto !important;
+  left: 3px !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin: 0 !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  box-shadow: 0 1px 2px rgba(6, 10, 20, 0.3) !important;
+  transform: none !important;
+  transition: transform 180ms ease-out !important;
+}
+.switch input:checked + .slider {
+  /* background-COLOR as well: an older rule set that property with
+     --accent-ink, which is near-white in the dark theme, so ON looked OFF. */
+  background: var(--primary) !important;
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+.switch input:checked + .slider::before {
+  transform: translateX(20px) !important;
+}
+.switch input:focus-visible + .slider {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---- Media volume card: the bar was invisible and the row floated ------ */
+.volume-bar {
+  height: 6px !important;
+  border-radius: 999px;
+  margin: 12px 0 14px !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+.volume-bar .progress-bar-fill {
+  border-radius: 999px;
+  background: var(--primary);
+}
+.quick-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 0 !important;
+}
+.quick-buttons-row .btn {
+  flex: 1 1 96px;
+  justify-content: center;
+}
+
+/* Light theme: the same switch, inverted track. */
+:root[data-base="light"] .switch .slider {
+  background: rgba(15, 23, 42, 0.18) !important;
+}
+:root[data-base="light"] .volume-bar {
+  background: rgba(15, 23, 42, 0.14) !important;
+}
+
+/* Dark theme's --primary is near-white (it is a text token there), so the ON
+   track needs the actual brand violet or it reads as OFF. */
+:root[data-base="dark"] .switch input:checked + .slider {
+  background: #7c6cff !important;
+  background-color: #7c6cff !important;
+  border-color: #7c6cff !important;
+}
+
+/* Phone palette (Theme.kt / Glass.kt): bg #0B0D14 with violet + cyan + rose
+   aurora glows, and glass cards #181F35 -> #121829 -> #151C30. The desktop dark
+   theme uses the same values so both apps read as one product. */
+:root[data-base="dark"] {
+  --phone-bg: #0b0d14;
+  --phone-violet: #7c6cff;
+  --phone-cyan: #22d3ee;
+  --phone-rose: #ff6aa2;
+  --phone-glass: linear-gradient(180deg, #141a2c, #0f1421 55%, #121826);
+  --phone-glass-edge: rgba(255, 255, 255, 0.11);
+  --ink: #12151f;        /* phone SurfaceDark: inner wells */
+  --ink-raised: #181c29; /* phone ElevatedDark */
+}
+
+/* Page: the phone's aurora over the same near-black ink. */
+:root[data-base="dark"],
+:root[data-base="dark"] body,
+body.dark-theme {
+  background-color: var(--phone-bg) !important;
+  background-image:
+    radial-gradient(46% 40% at 16% 10%, rgba(124, 108, 255, 0.26), transparent 70%),
+    radial-gradient(44% 38% at 90% 46%, rgba(34, 211, 238, 0.14), transparent 70%),
+    radial-gradient(42% 36% at 42% 98%, rgba(255, 106, 162, 0.11), transparent 72%) !important;
+  background-attachment: fixed !important;
+}
+:root[data-base="dark"] .sidebar,
+:root[data-base="dark"] .titlebar,
+:root[data-base="dark"] .link-bar,
+:root[data-base="dark"] .tab-pane {
+  background: transparent !important;
+  background-image: none !important;
+}
+/* Glass panels: the phone's card gradient, its rim light and its drop shadow. */
+:root[data-base="dark"] .card,
+:root[data-base="dark"] .panel,
+:root[data-base="dark"] .settings-panel,
+:root[data-base="dark"] .device-card,
+:root[data-base="dark"] .status-card,
+:root[data-base="dark"] .quick-tile,
+:root[data-base="dark"] .stat-card,
+:root[data-base="dark"] .guide-step,
+:root[data-base="dark"] .health-cell,
+:root[data-base="dark"] .active-session-box,
+:root[data-base="dark"] .trusted-devices-list .toggle-row,
+:root[data-base="dark"] .file-transfer-box {
+  background: var(--phone-glass) !important;
+  background-image: var(--phone-glass) !important;
+  border: 1px solid var(--phone-glass-edge) !important;
+  border-radius: 20px !important;
+  box-shadow:
+    0 18px 44px -24px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
+/* Inner wells: the phone paints these as translucent black, not glass, so a
+   panel never looks like a card stacked on a card. */
+:root[data-base="dark"] .info-row,
+:root[data-base="dark"] .session-info,
+:root[data-base="dark"] .drop-zone,
+:root[data-base="dark"] .settings-kbd,
+:root[data-base="dark"] #settings-userdata-path,
+:root[data-base="dark"] #settings-log-path,
+:root[data-base="dark"] .diag-fact,
+:root[data-base="dark"] .transfer-history .history-list,
+:root[data-base="dark"] .chat-messages,
+:root[data-base="dark"] #clipboard-preview,
+:root[data-base="dark"] .webcam-area,
+:root[data-base="dark"] .webcam-frame,
+:root[data-base="dark"] #webcam-viewport {
+  background: rgba(0, 0, 0, 0.24) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  border-radius: 16px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ---- Chat & Files: the send-files block -------------------------------
+   `.file-transfer-box` had no padding, so its "Send Files to Phone" label sat
+   on top of the border and the panel read as if text was missing; the transfer
+   list itself collapsed to 0px, which hid the empty-state line. Give the block
+   real insets, keep its headings clear of the edge, and make sure the history
+   list always has room. */
+.file-transfer-box {
+  padding: 14px 14px 12px !important;
+  border-radius: 16px !important;
+}
+/* Keep the whole section on screen at the default window size: the panel used
+   to scroll by ~50px, which is exactly what hid "Recent File Transfers". */
+#tab-chat-files .files-panel { padding: 16px !important; }
+#tab-chat-files #clipboard-preview { height: 46px !important; min-height: 46px !important; }
+.file-transfer-box > label,
+.transfer-history > label {
+  display: block !important;
+  margin: 0 0 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary) !important;
+}
+.file-transfer-box .drop-zone {
+  margin: 0 0 8px !important;
+  padding: 12px 14px !important;
+  border-radius: 14px !important;
+}
+.file-transfer-box .drop-icon { margin-bottom: 6px !important; }
+.file-transfer-box .drop-zone p { margin-bottom: 8px !important; }
+.file-transfer-box .file-send-row { margin: 0 0 14px !important; }
+.transfer-history { margin-top: 0 !important; }
+/* ---- Settings: no clipped cards ----------------------------------------
+   The two columns are taller than the window, so the page scrolls - but the
+   cards must never clip their own content, and the scrollbar has to be visible
+   so the page does not look cut off at the bottom edge. */
+.main-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+.main-content::-webkit-scrollbar { width: 10px; }
+.main-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+  background-clip: content-box;
+}
+/* Both settings columns are the SAME height: the grid row stretches to the
+   taller card and the shorter one fills it, so the two boxes end on one line
+   instead of one trailing off past the other (or past the window edge). */
+#tab-settings .settings-grid-2 {
+  align-items: stretch !important;
+  overflow: visible !important;
+}
+/* A generic `.card + .card { margin-top: 12px }` used to push the right column
+   12px lower than the left one. */
+#tab-settings .settings-grid-2 > .settings-card + .settings-card {
+  margin-top: 0 !important;
+}
+#tab-settings .settings-grid-2 > .settings-card {
+  height: 100% !important;
+  max-height: none !important;
+  align-self: stretch !important;
+  overflow: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+#tab-settings .settings-card { padding: 14px 16px !important; }
+#tab-settings .settings-row { padding: 9px 0 !important; }
+
+/* ---- Settings: compact cards + readable diagnostics ---------------------
+   (a) The two columns were tall and airy; they are trimmed to a tighter
+       rhythm. (b) Permission names in the diagnostics list - "Accessibility
+       (remote input)", "Media / storage access" - were clipped by a
+       single-line ellipsis, so the label now wraps instead of being cut. */
+#tab-settings .settings-grid-2 { gap: 14px !important; }
+/* Trim the header and the card's internal rhythm so both columns end inside
+   the window instead of running past the bottom edge. */
+#tab-settings .pane-header { padding-bottom: 6px !important; margin-bottom: 10px !important; }
+#tab-settings .settings-card > * + * { margin-top: 9px !important; }
+#tab-settings .toggle-row { padding: 9px 0 !important; }
+#tab-settings .settings-toggle-row { padding: 8px 0 !important; }
+#tab-settings .settings-group-label { margin: 9px 0 3px !important; }
+#tab-settings .settings-group-label:first-child { margin-top: 0 !important; }
+#tab-settings .health-stats { padding: 2px 2px 12px !important; gap: 14px !important; }
+#tab-settings .health-cell strong { font-size: 16px !important; }
+#tab-settings .settings-footer { padding: 13px 18px !important; margin-top: 14px !important; }
+
+/* Budget rows must never push the card past the pane edge: the four stats
+   reflow to two columns and the volume buttons wrap instead of being clipped. */
+#tab-settings { overflow-x: clip; }
+#tab-settings .card {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+#tab-settings .health-stats {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+  min-width: 0;
+}
+#tab-settings .health-cell { min-width: 0; }
+#tab-settings .health-cell .hint { white-space: normal !important; overflow-wrap: anywhere; }
+#tab-settings .quick-buttons-row {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)) !important;
+  gap: 8px !important;
+  width: 100%;
+  min-width: 0;
+}
+#tab-settings .quick-buttons-row .btn { min-width: 0 !important; }
+#tab-settings .card-header-row { min-width: 0; flex-wrap: wrap; gap: 8px; }
+#tab-settings .status-cards-grid { min-width: 0; }
+
+.diag-grid { grid-template-columns: repeat(auto-fit, minmax(208px, 1fr)) !important; gap: 7px !important; }
+.diag-chip { align-items: flex-start !important; padding: 8px 10px !important; }
+.diag-chip .diag-dot { margin-top: 5px; }
+.diag-chip .diag-label {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+.diag-chip .diag-state { align-self: center; }
+
+/* ---- Sidebar brand: the wordmark was overflowing its own block ----------
+   Several stylesheets set `.brand-text h2` at once; the winner had a big font
+   with a tight line box, so the glyph tops drew above the sidebar's clipped
+   edge and "DuoLink" looked cut off. Pin one size and give the block room. */
+.sidebar .brand {
+  padding: 4px 8px 10px !important;
+  align-items: center !important;
+}
+.sidebar .brand-text { min-width: 0 !important; }
+.sidebar .brand-text h2 {
+  font-size: 15px !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+  letter-spacing: 0.07em !important;
+}
+.sidebar .brand-badges { margin-top: 4px !important; }
+.sidebar .brand-badges .badge { font-size: 9.5px !important; line-height: 1.4 !important; }
+
+/* ---- Session info: a quiet spec sheet, not a stack of boxes -------------
+   The grey pills around the session id and the fingerprint read as stray
+   inputs. They are plain right-aligned values now, with hairline dividers
+   under each row and monospace only where it helps (ids, fingerprint). */
+:root[data-base="dark"] .session-info {
+  background: var(--phone-glass) !important;
+  background-image: var(--phone-glass) !important;
+  border: 1px solid var(--phone-glass-edge) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 18px 44px -26px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  padding: 2px 16px !important;
+}
+:root[data-base="dark"] .session-info .info-row {
+  display: grid !important;
+  grid-template-columns: minmax(92px, max-content) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0 !important;
+  background: none !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+:root[data-base="dark"] .session-info .info-row:last-child {
+  border-bottom: 0 !important;
+}
+:root[data-base="dark"] .session-info .info-label {
+  color: rgba(232, 234, 242, 0.55) !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+:root[data-base="dark"] .session-info .info-row > strong,
+:root[data-base="dark"] .session-info .info-row > .text-accent,
+:root[data-base="dark"] .session-info .info-row > code {
+  justify-self: end;
+  text-align: right;
+  min-width: 0;
+  font-size: 12.5px !important;
+  color: rgba(232, 234, 242, 0.92) !important;
+}
+:root[data-base="dark"] .session-info .info-row > code {
+  background: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
+  color: rgba(232, 234, 242, 0.82) !important;
+}
+
+/* SMS bubbles: the "To +92… • just now" line and the per-bubble actions were
+   painted in a dark slate that vanished on the violet outgoing bubble. Keep
+   them light so the header always reads. */
+:root[data-base="dark"] .chat-msg .msg-header,
+:root[data-base="dark"] .chat-msg .msg-header span,
+:root[data-base="dark"] .chat-msg .msg-actions .icon-btn {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+:root[data-base="dark"] .chat-msg .msg-actions .icon-btn svg {
+  stroke: rgba(255, 255, 255, 0.78) !important;
+}
+
+.transfer-history .history-list {
+  min-height: 52px;
+  max-height: 132px;
+  border-radius: 12px !important;
+  display: flex;
+  flex-direction: column;
+}
+.transfer-history .history-empty {
+  margin: auto;
+  padding: 14px 12px;
+  text-align: center;
+  font-size: 12.5px;
+}
+
+/* The camera / mirror previews were pinned to pure black further up this file;
+   same ink colour wins here because this rule comes last. */
+:root:not([data-base="light"]) #tab-webcam .webcam-area,
+:root:not([data-base="light"]) #tab-webcam .webcam-frame,
+:root:not([data-base="light"]) #tab-webcam .webcam-viewport,
+:root:not([data-base="light"]) #tab-screen-mirror .mirror-viewport,
+:root:not([data-base="light"]) #tab-screen .device-frame {
+  background: var(--ink) !important;
+}

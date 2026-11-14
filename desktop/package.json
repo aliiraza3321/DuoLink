@@ -1,0 +1,54 @@
+{
+  "name": "duolink-desktop",
+  "version": "1.0.0",
+  "description": "DuoLink - Two screens. One system. Secure local Wi-Fi pairing and two-way control between Windows PC and Android.",
+  "author": {
+    "name": "Ali Raza",
+    "url": "https://aliiraza.netlify.app/"
+  },
+  "homepage": "https://aliiraza.netlify.app/",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/smoke.test.js",
+    "rebuild-native": "electron-builder install-app-deps",
+    "dist": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "@nut-tree-fork/nut-js": "4.2.6",
+    "express": "4.21.2",
+    "multer": "1.4.5-lts.1",
+    "qrcode": "1.5.4",
+    "selfsigned": "2.4.1",
+    "ws": "8.18.0"
+  },
+  "devDependencies": {
+    "electron": "31.3.1",
+    "electron-builder": "24.13.3"
+  },
+  "build": {
+    "appId": "com.duolink.desktop",
+    "productName": "DuoLink",
+    "copyright": "Copyright © 2026 Ali Raza",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "publisherName": "Ali Raza",
+      "icon": "renderer/assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "renderer/assets/icon.ico",
+      "uninstallerIcon": "renderer/assets/icon.ico",
+      "runAfterFinish": false,
+      "installerHeader": "build/installerHeader.bmp",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/uninstallerSidebar.bmp"
+    }
+  }
+}

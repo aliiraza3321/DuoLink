@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- 1. INTERNET: Required to connect to the PC's local HTTPS/WSS server over LAN Wi-Fi -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Jarvis voice assistant: microphone for speech recognition, vibration for Find My Phone -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- "set a timer" opens the clock app's timer -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+
+    <!-- Android 11+ package visibility: lets the app discover the speech recogniser and text-to-speech engine -->
+    <queries>
+        <intent><action android:name="android.speech.RecognitionService" /></intent>
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+        <intent><action android:name="android.intent.action.MAIN" /></intent>
+    </queries>
+
+    <!-- 2. ACCESS_NETWORK_STATE: Required to monitor local Wi-Fi state and trigger automatic backoff reconnects -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- 3. ACCESS_WIFI_STATE: Required to verify Wi-Fi link status and acquire WifiManager.WifiLock -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- 4. CAMERA: Required for QR scanning AND the phone-webcam feature -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- 5. WAKE_LOCK: Required to acquire partial wake lock while connected so OS doze does not drop the WebSocket -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- 6. FOREGROUND_SERVICE: Required to maintain persistent background connection with ongoing notification -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <!-- 7. FOREGROUND_SERVICE_DATA_SYNC: Required on Android 14+ (API 34) for continuous bi-directional file/clipboard sync -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!-- 8. FOREGROUND_SERVICE_MEDIA_PROJECTION: Required on Android 14+ (API 34) for MediaProjection live screen sharing -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+
+    <!-- 9. FOREGROUND_SERVICE_CAMERA: Required on Android 14+ (API 34) for the phone-webcam camera service -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+
+    <!-- 10. POST_NOTIFICATIONS: Required on Android 13+ (API 33) to display foreground service notifications and quick actions -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 11. REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: Required to prompt user to whitelist app against aggressive OEM battery killers -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- ============ V2: Calls (answer/reject/end + call log recents) ============ -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <!-- WRITE_CALL_LOG: separate dangerous permission from READ; the PC's
+         "delete this call" button requests it the first time it is used. -->
+    <uses-permission android:name="android.permission.WRITE_CALL_LOG" />
+    <!-- PROCESS_OUTGOING_CALLS is deprecated; call-log read covers recents -->
+
+    <!-- ============ V2: SMS / Messages ============ -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <!-- WRITE_SMS: needed only by the PC's "delete this message" button. -->
+    <uses-permission android:name="android.permission.WRITE_SMS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+
+    <!-- ============ V2: Media browser (photos/videos/audio) ============ -->
+    <!-- Android 13+ (API 33) granular media permissions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <!-- Android 12 and below -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.PhonePCPair"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:usesCleartextTraffic="false"
+        tools:targetApi="34">
+
+        <!-- Main UI Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.PhonePCPair">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Support deep linking from phonepair://pair URIs -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="phonepair" android:host="pair" />
+            </intent-filter>
+        </activity>
+
+        <!-- Background Persistent Connection & Sync Service -->
+        <service
+            android:name=".service.PairingForegroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Screen Mirror MediaProjection Service -->
+        <service
+            android:name=".control.ScreenCaptureService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+
+        <!-- Accessibility Service for Phase 4 PC -> Phone Touch & Typing Gestures -->
+        <service
+            android:name=".control.PhoneAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- ============ V2: Notification mirroring ============ -->
+        <!-- User must enable this in Settings > Notification access -->
+        <service
+            android:name=".feature.PhoneNotificationListener"
+            android:label="DuoLink notification mirror"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <!-- ============ V2: Phone webcam (PC drives the phone camera) ============ -->
+        <service
+            android:name=".feature.WebcamService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="camera" />
+
+        <!-- ============ V2: outgoing SMS delivery reports ============ -->
+        <receiver
+            android:name=".feature.SmsSentReceiver"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

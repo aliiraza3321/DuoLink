@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">    <!-- img-src blob: is required for the webcam + screen-mirror previews, which
+         paint live frames as blob: object URLs (same-origin, created in-app).
+         duo-media: is the app's own protocol for received files, so gallery
+         images/videos open INSIDE DuoLink instead of an external player. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data: blob: duo-media: https://127.0.0.1:* https://localhost:*; media-src 'self' blob: duo-media:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'none';">
+  <title>DuoLink</title>
+  <meta name="author" content="Ali Raza">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="glass.css">
+  <link rel="stylesheet" href="pro.css">
+  <!-- Design tokens LAST so its :root values and [data-theme] overrides win. -->
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="glassy.css">
+  <link rel="stylesheet" href="ui.css">
+  <link rel="stylesheet" href="minimal.css?v=21">
+  <link rel="stylesheet" href="dark-glass.css?v=4">
+  <link rel="stylesheet" href="design.css">
+</head>
+<body class="dark-theme">
+  <!-- Overlay title bar (titleBarStyle: hidden in main.js). Drag region +
+       page title; native min/max/close float at the right via WCO. -->
+  <div class="titlebar" role="banner" aria-hidden="false">
+    <span class="titlebar-title" id="titlebar-page-title">Overview</span>
+    <span class="titlebar-spacer"></span>
+    <button id="btn-titlebar-killswitch" class="btn btn-xs btn-danger" title="Kill switch: disable all remote control from the phone">
+      <svg class="ic " aria-hidden="true"><use href="#i-alert"/></svg> Kill switch
+    </button>
+  </div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+<symbol id="i-pointer" viewBox="0 0 24 24"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51z"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2.5"/><path d="M12 18h.01"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+<symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-vol-down" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></symbol>
+<symbol id="i-vol-up" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+<symbol id="i-vol-mute" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9z"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></symbol>
+<symbol id="i-square" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="3"/></symbol>
+<symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></symbol>
+<symbol id="i-move" viewBox="0 0 24 24"><path d="m5 9-3 3 3 3"/><path d="m9 5 3-3 3 3"/><path d="m15 19-3 3-3-3"/><path d="m19 9 3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></symbol>
+<symbol id="i-scroll" viewBox="0 0 24 24"><path d="m8 7 4-4 4 4"/><path d="m8 17 4 4 4-4"/><path d="M12 3v18"/></symbol>
+<symbol id="i-timer" viewBox="0 0 24 24"><path d="M10 2h4"/><path d="M12 14l3-3"/><circle cx="12" cy="14" r="8"/></symbol>
+<symbol id="i-slides" viewBox="0 0 24 24"><path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-bell-off" viewBox="0 0 24 24"><path d="M8.7 3A6 6 0 0 1 18 8c0 2.2.4 4 1 5.3"/><path d="M17 17H3s3-2 3-9a4.7 4.7 0 0 1 .3-1.7"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="m2 2 20 20"/></symbol>
+<symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/></symbol>
+<symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17 21h4v-4"/></symbol>
+<symbol id="i-play-pause" viewBox="0 0 24 24"><path d="m4 4 9 8-9 8z"/><path d="M17 4v16M21 4v16"/></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+<symbol id="i-prev" viewBox="0 0 24 24"><path d="M19 20 9 12l10-8z"/><path d="M5 19V5"/></symbol>
+<symbol id="i-next" viewBox="0 0 24 24"><path d="m5 4 10 8-10 8z"/><path d="M19 5v14"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+<symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/></symbol>
+<symbol id="i-rotate" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3.5-7.1"/><path d="M21 3v6h-6"/></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></symbol>
+<symbol id="i-handset" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.9-3.9"/></symbol>
+</defs></svg>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><img src="assets/icon.png" width="36" height="36" alt="DuoLink" style="border-radius:9px;display:block"></div>
+        <div class="brand-text">
+          <h2>DuoLink</h2>
+          <div style="font-size:10px;opacity:0.7;margin-top:1px">Two screens. One system.</div>
+          <div class="brand-badges">
+            <span class="badge" id="lan-ip-badge">LAN: ...</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" aria-label="Sections">
+        <div class="nav-group">Connect</div>
+        <button class="nav-tab active" data-tab="tab-pairing">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-grid"/></svg></span> Overview
+        </button>
+        <button class="nav-tab" data-tab="tab-trusted">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-shield"/></svg></span> Trusted Devices
+        </button>
+
+        <div class="nav-group">Communicate</div>
+        <button class="nav-tab" data-tab="tab-messages">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-send"/></svg></span> Messages
+          <span class="nav-badge hidden" id="nav-badge-messages" aria-label="Unread messages">0</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-calls">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-handset"/></svg></span> Calls
+        </button>
+        <button class="nav-tab" data-tab="tab-notifications">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-bell"/></svg></span> Notifications
+          <span class="nav-badge hidden" id="nav-badge-notifications" aria-label="Unread notifications">0</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-chat-files">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-folder"/></svg></span> Chat &amp; Files
+        </button>
+
+        <div class="nav-group">Control</div>
+        <button class="nav-tab" data-tab="tab-screen-mirror">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-phone"/></svg></span> Phone Screen
+        </button>
+
+        <div class="nav-group">Media</div>
+        <button class="nav-tab" data-tab="tab-media">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-image"/></svg></span> Gallery
+        </button>
+        <button class="nav-tab" data-tab="tab-webcam">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-camera"/></svg></span> Webcam
+        </button>
+
+        <div class="nav-group">System</div>
+        <button class="nav-tab" data-tab="tab-settings">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-gear"/></svg></span> Settings
+        </button>
+        <button class="nav-tab" data-tab="tab-guide">
+          <span class="tab-icon"><svg class="ic " aria-hidden="true"><use href="#i-book"/></svg></span> Guide
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="indicator-bar">
+          <div class="status-dot disconnected" id="global-status-dot"></div>
+          <span id="global-status-text">Disconnected</span>
+        </div>
+        <div id="killswitch-indicator" class="killswitch-pill hidden">
+          <svg class="ic " aria-hidden="true"><use href="#i-alert"/></svg> KILL SWITCH ACTIVE
+        </div>
+        <div class="footer-actions">
+          <!-- Reset Rate Limit moved to Settings → Advanced (spec 6.1) -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Link bar card: [PC] ━━●━━ [phone] with latency + TLS-pinned (spec 6.1 / mockup) -->
+      <div class="link-bar" id="link-bar" role="status" aria-label="Link status">
+        <span class="link-node" id="link-pc-name">This PC</span>
+        <span class="link-wire" aria-hidden="true"><i class="wire-line"></i><span class="wire-dot"></span><i class="wire-line"></i></span>
+        <span class="link-node" id="link-phone-name">No phone</span>
+        <span class="link-spacer"></span>
+        <span class="badge badge-latency" id="latency-badge">Ping: …</span>
+        <span class="tag-secure"><svg class="ic " aria-hidden="true"><use href="#i-lock"/></svg> TLS pinned</span>
+      </div>
+
+      <!-- TAB 1: OVERVIEW (pairing + live status; spec 6.2.1) -->
+      <section id="tab-pairing" class="tab-pane active">
+        <div class="pane-header">
+          <div>
+            <h1>Overview</h1>
+            <p class="subtitle">Two screens. One system. Secure local Wi-Fi link with TLS public-key pinning — no cloud, no internet.</p>
+          </div>
+          <div class="header-tools">
+            <button id="btn-quick-health" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-activity"/></svg> Test Connection</button>
+          </div>
+        </div>
+
+        <!-- Hero card: phone at a glance -->
+        <div class="card hero-card">
+          <div class="hero-block">
+            <span class="hero-label">Connected phone</span>
+            <h2 id="hero-phone-name">No phone connected</h2>
+            <p class="hint hero-model" id="hero-model"></p>
+            <p class="hint" id="hero-session-line">Pair your phone to see live status here.</p>
+          </div>
+          <div class="hero-block hero-battery">
+            <span class="hero-label">Battery</span>
+            <div class="battery-hero"><strong id="phone-battery-pct">—</strong><span>%</span><span id="phone-battery-badge" class="badge">Waiting…</span></div>
+            <div class="progress-bar-bg"><div id="phone-battery-fill" class="progress-bar-fill" style="width:0%"></div></div>
+            <p class="hint" style="margin-top:6px"><span id="phone-battery-text">No battery data yet</span></p>
+          </div>
+          <div class="hero-block">
+            <span class="hero-label">Permissions</span>
+            <p class="hint" id="perm-summary" style="margin:4px 0 8px">Not checked yet</p>
+            <button id="btn-perm-fix" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-gear"/></svg> Fix</button>
+          </div>
+        </div>
+
+        <!-- Phone control: the single switch that used to live on the removed
+             "Use Phone as Remote" page, plus the PC-side media keys it needs. -->
+        <div class="card control-strip">
+          <div class="control-strip-main">
+            <div class="control-strip-text">
+              <div class="strip-title">Phone control</div>
+              <p class="hint">Allow the paired phone to move the cursor, type, and use media keys on this PC.</p>
+            </div>
+            <label class="switch" title="Allow the phone to control this PC">
+              <input type="checkbox" id="toggle-allow-control">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="control-strip-tools">
+            <span class="strip-label">PC volume</span>
+            <div class="media-key-row">
+              <button id="btn-vol-down" class="btn btn-icon btn-ghost" title="Volume down"><svg class="ic " aria-hidden="true"><use href="#i-vol-down"/></svg></button>
+              <button id="btn-vol-mute" class="btn btn-icon btn-ghost" title="Mute"><svg class="ic " aria-hidden="true"><use href="#i-vol-mute"/></svg></button>
+              <button id="btn-play-pause" class="btn btn-icon btn-ghost" title="Play / pause"><svg class="ic " aria-hidden="true"><use href="#i-play-pause"/></svg></button>
+              <button id="btn-vol-up" class="btn btn-icon btn-ghost" title="Volume up"><svg class="ic " aria-hidden="true"><use href="#i-vol-up"/></svg></button>
+            </div>
+            <button id="btn-lock-pc" class="btn btn-secondary btn-sm" title="Lock this Windows session"><svg class="ic " aria-hidden="true"><use href="#i-lock"/></svg> Lock PC</button>
+            <button id="btn-trigger-killswitch" class="btn btn-danger btn-sm" title="Kill switch: Ctrl + Alt + Shift + Q">
+              <svg class="ic " aria-hidden="true"><use href="#i-alert"/></svg> Kill control
+            </button>
+          </div>
+        </div>
+
+        <div class="pairing-grid">
+          <!-- QR Card (shown only when no device is paired, or on demand) -->
+          <div class="card qr-card" id="qr-card">
+            <div class="card-header-row">
+              <h3>One-Time Pairing QR</h3>
+              <span class="tag-secure"><svg class="ic " aria-hidden="true"><use href="#i-lock"/></svg> TLS Pinned</span>
+            </div>
+            <div class="qr-container">
+              <img id="qr-code-img" alt="Scan QR Code to Pair" src="" />
+              <div id="qr-loading-overlay" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>Generating secure crypto token...</span>
+              </div>
+            </div>
+
+            <div class="qr-timer-bar">
+              <span id="qr-countdown">Expires in: 180s</span>
+              <button id="btn-refresh-qr" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Refresh QR</button>
+            </div>
+
+            <div class="manual-details">
+              <label>Direct Pairing URI (for manual entry on phone):</label>
+              <div class="uri-box">
+                <input type="text" id="manual-uri-input" readonly value="..." />
+                <button id="btn-copy-uri" class="btn btn-icon" title="Copy URI"><svg class="ic " aria-hidden="true"><use href="#i-copy"/></svg></button>
+              </div>
+              <div class="cert-fp">
+                <span>TLS SHA-256 Fingerprint:</span>
+                <code id="cert-fingerprint-text">...</code>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column: verification on top, Recent activity stacked right
+               beneath it (the feed used to sit full-width under both columns). -->
+          <div class="pairing-side">
+
+          <!-- Pairing Status & Confirmation Card -->
+          <div class="card status-card">
+            <div class="card-header-row">
+              <h3>Pairing Session & Verification</h3>
+              <span id="session-badge" class="badge">Awaiting Phone</span>
+            </div>
+
+            <!-- Idle Instructions View -->
+            <div id="session-idle-view" class="status-box">
+              <div class="steps-flow">
+                <div class="step-item">
+                  <div class="step-num">1</div>
+                  <div class="step-content">
+                    <strong>Ensure Same Wi-Fi</strong>
+                    <p>Make sure your phone and laptop are on the same local Wi-Fi router.</p>
+                  </div>
+                </div>
+                <div class="step-item">
+                  <div class="step-num">2</div>
+                  <div class="step-content">
+                    <strong>Scan QR Code</strong>
+                    <p>Open the DuoLink app on your phone and point camera at the QR code.</p>
+                  </div>
+                </div>
+                <div class="step-item">
+                  <div class="step-num">3</div>
+                  <div class="step-content">
+                    <strong>Verify & Approve</strong>
+                    <p>Verify the 6-digit confirmation code below and click Approve.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Confirmation Prompt Modal/Box (Shown when phone initiates) -->
+            <div id="confirmation-box" class="confirmation-box hidden">
+              <div class="alert-header">
+                <span class="pulse-ring"></span>
+                <h4>Pairing Request Received!</h4>
+              </div>
+              <p class="device-prompt">Inbound device: <strong id="prompt-device-name">Android Phone</strong></p>
+              <div class="code-display">
+                <span id="display-confirmation-code">000000</span>
+              </div>
+              <p class="code-hint">Verify this 6-digit number matches the code shown on your phone screen.</p>
+              
+              <div id="confirm-error-msg" class="confirm-error hidden"></div>
+
+              <div class="prompt-actions">
+                <button id="btn-approve-pairing" class="btn btn-success btn-lg"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg> Approve Pairing</button>
+                <button id="btn-reject-pairing" class="btn btn-danger btn-lg"><svg class="ic " aria-hidden="true"><use href="#i-x"/></svg> Decline</button>
+              </div>
+              <div class="prompt-sub-actions">
+                <button id="btn-dismiss-confirm" class="btn btn-link btn-xs">Dismiss / Cancel</button>
+              </div>
+            </div>
+
+            <!-- Active Session Details -->
+            <div id="active-session-box" class="active-session-box hidden">
+              <div class="badge-success-row">
+                <div class="active-badge-group">
+                  <span class="badge badge-success"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg> Paired &amp; Connected</span>
+                  <span id="active-timer" class="badge badge-time">00:00</span>
+                </div>
+                <button id="btn-disconnect-active" class="btn btn-danger btn-sm">Disconnect</button>
+              </div>
+              <div class="session-info">
+                <div class="info-row">
+                  <span class="info-label">Connected Phone:</span>
+                  <strong id="active-phone-name">Samsung Galaxy</strong>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Session ID:</span>
+                  <code id="active-session-id">...</code>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Security:</span>
+                  <span class="text-accent">TLS WSS • SHA-256 Public Key Pinned</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Fingerprint:</span>
+                  <code id="active-fingerprint">…</code>
+                </div>
+              </div>
+              <div class="header-tools" style="margin-top:10px">
+                <button id="btn-pair-another" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-qr"/></svg> Pair another device</button>
+              </div>
+
+              <!-- Quick Control Tiles -->
+              <div class="quick-tiles-grid">
+                <button class="quick-tile" id="tile-send-clip">
+                  <span class="tile-icon"><svg class="ic " aria-hidden="true"><use href="#i-clipboard"/></svg></span>
+                  <span>Push Clipboard</span>
+                </button>
+                <button class="quick-tile" id="tile-open-chat">
+                  <span class="tile-icon"><svg class="ic " aria-hidden="true"><use href="#i-chat"/></svg></span>
+                  <span>Open Chat</span>
+                </button>
+                <button class="quick-tile" id="tile-send-file">
+                  <span class="tile-icon"><svg class="ic " aria-hidden="true"><use href="#i-folder"/></svg></span>
+                  <span>Send File</span>
+                </button>
+                <button class="quick-tile" id="tile-screenshot">
+                  <span class="tile-icon"><svg class="ic " aria-hidden="true"><use href="#i-camera"/></svg></span>
+                  <span>Screenshot</span>
+                </button>
+                <button class="quick-tile" id="tile-find-phone">
+                  <span class="tile-icon"><svg class="ic " aria-hidden="true"><use href="#i-pin"/></svg></span>
+                  <span>Find Phone</span>
+                </button>
+                <button class="quick-tile" id="tile-lock-phone">
+                  <span class="tile-icon"><svg class="ic " aria-hidden="true"><use href="#i-lock"/></svg></span>
+                  <span>Lock Phone</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        <!-- Recent activity feed (Copy code for detected OTPs) -->
+        <div class="card activity-card">
+          <div class="card-header-row"><h3>Recent activity</h3></div>
+          <div id="activity-feed" class="history-list" style="max-height:26vh;overflow:auto">
+            <div class="history-empty">Nothing yet — pairing, transfers and one-time codes appear here.</div>
+          </div>
+        </div>
+
+          </div><!-- /.pairing-side -->
+        </div><!-- /.pairing-grid -->
+      </section>
+
+      <!-- TAB 2: CHAT & FILES -->
+      <section id="tab-chat-files" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h1>Two-Way Chat & File Exchange</h1>
+            <p class="subtitle">Transfer text, clipboard contents, and files up to 5GB over high-speed local LAN.</p>
+          </div>
+          <div class="header-tools">
+            <button id="btn-clear-chat" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-trash"/></svg> Clear Chat</button>
+          </div>
+        </div>
+
+        <div class="split-view">
+          <!-- Chat Panel -->
+          <div class="card chat-panel">
+            <div class="card-header-row">
+              <h3>Local LAN Chat</h3>
+              <span class="badge badge-private"><svg class="ic " aria-hidden="true"><use href="#i-lock"/></svg> Private Wi-Fi</span>
+            </div>
+            <div id="chat-messages" class="chat-messages">
+              <div class="chat-msg system">Connected to local network. Messages never touch any cloud servers.</div>
+            </div>
+            <div class="chat-input-row">
+              <input type="text" id="chat-input" placeholder="Type a message or paste a URL for phone..." />
+              <button id="btn-send-chat" class="btn btn-primary">Send <svg class="ic " aria-hidden="true"><use href="#i-send"/></svg></button>
+            </div>
+          </div>
+
+          <!-- Files & Clipboard Panel -->
+          <div class="card files-panel">
+            <div class="card-header-row">
+              <h3>Clipboard & Fast File Sharing</h3>
+            </div>
+            <div class="clipboard-box">
+              <div class="clipboard-header">
+                <label>Clipboard Sync</label>
+                <label class="auto-sync-label">
+                  <input type="checkbox" id="toggle-auto-clipboard"> Auto-Sync Clipboard
+                </label>
+              </div>
+              <div class="clipboard-actions">
+                <button id="btn-send-clipboard" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-upload"/></svg> Push PC Clipboard to Phone</button>
+                <button id="btn-read-clipboard" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-download"/></svg> Show PC clipboard</button>
+              </div>
+              <textarea id="clipboard-preview" rows="2" placeholder="Clipboard content preview..."></textarea>
+            </div>
+
+            <hr class="divider">
+
+            <div class="file-transfer-box">
+              <label>Send Files to Phone (Max 5GB)</label>
+              <div id="drop-zone" class="drop-zone">
+                <span class="drop-icon"><svg class="ic " aria-hidden="true"><use href="#i-upload"/></svg></span>
+                <p>Drag & Drop files here or</p>
+                <button id="btn-select-file" class="btn btn-primary btn-sm">Choose files</button>
+              </div>
+              <div class="file-send-row">
+                <button id="btn-open-received" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-folder"/></svg> Open Received Files Folder</button>
+              </div>
+
+              <div id="transfer-progress-container" class="transfer-progress hidden">
+                <div class="progress-info">
+                  <span id="transfer-filename">Uploading...</span>
+                  <span id="transfer-percentage">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div id="transfer-progress-fill" class="progress-bar-fill"></div>
+                </div>
+              </div>
+
+              <!-- Transfer History List -->
+              <div class="transfer-history">
+                <label>Recent File Transfers</label>
+                <div id="transfer-history-list" class="history-list">
+                  <div class="history-empty">No file transfers in this session yet.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PHONE SCREEN: live mirror + remote control -->
+      <section id="tab-screen-mirror" class="tab-pane">
+        <div class="pane-header stream-head">
+          <div>
+            <h1>Control Phone</h1>
+            <p class="subtitle">The phone's screen live on this PC — tap, swipe, scroll and type straight into it.</p>
+          </div>
+          <div class="header-tools">
+            <button id="btn-open-screen-window" class="btn btn-secondary btn-sm" title="Show the phone screen in its own window"><svg class="ic " aria-hidden="true"><use href="#i-external"/></svg> Open window</button>
+
+            <button id="btn-stream-hud" class="btn btn-secondary btn-sm" title="Show live fps, bitrate and ping"><svg class="ic " aria-hidden="true"><use href="#i-activity"/></svg> Stats</button>
+            <button id="btn-capture-screenshot" class="btn btn-secondary btn-sm" title="Save the current frame as a PNG"><svg class="ic " aria-hidden="true"><use href="#i-camera"/></svg> Save Screenshot</button>
+            <button id="btn-mirror-fullscreen" class="btn btn-secondary btn-sm" title="Fullscreen (Esc to exit)"><svg class="ic " aria-hidden="true"><use href="#i-maximize"/></svg> Fullscreen</button>
+          </div>
+        </div>
+
+        <div class="stream-shell">
+          <div class="stream-stage">
+            <div class="device-area mirror-stage">
+              <div class="device-frame" id="mirror-device">
+                <div class="mirror-viewport" id="mirror-viewport">
+                  <canvas id="screen-canvas" width="360" height="740"></canvas>
+                  <div id="screen-placeholder" class="screen-placeholder">
+                    <span class="placeholder-icon"><svg class="ic " aria-hidden="true"><use href="#i-phone"/></svg></span>
+                    <strong>No stream</strong>
+                    <p>Grant screen capture on the phone, then press Start Stream.</p>
+                  </div>
+                  <div id="mirror-popout-note" class="screen-placeholder mirror-popout-note hidden">
+                    <span class="placeholder-icon"><svg class="ic " aria-hidden="true"><use href="#i-external"/></svg></span>
+                    <strong>Shown in its own window</strong>
+                    <p>Close that window to see the phone screen here again.</p>
+                  </div>
+                  <!-- Frames paused (rotation, heavy game, Wi-Fi blip): the last
+                       picture stays on screen behind this note instead of going black. -->
+                  <div id="mirror-stale-note" class="mirror-stale-note hidden">
+                    <span class="stale-dot"></span>
+                    <strong>Reconnecting…</strong>
+                  </div>
+                  <!-- Live stream telemetry: measured fps, bitrate and link ping. -->
+                  <div id="stream-hud" class="stream-hud hidden" aria-live="off">
+                    <span><b id="hud-fps">—</b> fps</span>
+                    <span><b id="hud-mbps">—</b> Mbps</span>
+                    <span><b id="hud-ping">—</b> ms</span>
+                    <span><b id="hud-res">—</b></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="stream-panel">
+            <div class="sp-head">
+              <div>
+                <h2>Phone Navigation</h2>
+                <p class="sp-sub">Drive the phone without touching it.</p>
+              </div>
+              <span id="mirror-stream-badge" class="badge">Idle</span>
+            </div>
+
+            <div class="sp-block">
+              <span class="sp-label">System keys</span>
+              <div class="sp-seg" role="group" aria-label="Phone system keys">
+                <button id="btn-phone-back" class="sp-seg-btn" title="Back" disabled><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg> Back</button>
+                <button id="btn-phone-home" class="sp-seg-btn" title="Home" disabled><svg class="ic " aria-hidden="true"><use href="#i-home"/></svg> Home</button>
+                <button id="btn-phone-recents" class="sp-seg-btn" title="Recents" disabled><svg class="ic " aria-hidden="true"><use href="#i-square"/></svg> Recents</button>
+              </div>
+            </div>
+
+            <div class="sp-block">
+              <span class="sp-label">Stream</span>
+              <div class="sp-stream-row sp-row-single">
+                <button id="btn-start-stream" class="btn btn-primary sp-main"><svg class="ic " aria-hidden="true"><use href="#i-play"/></svg> Start stream</button>
+              </div>
+              <div class="sp-stream-row">
+                <button id="btn-stop-stream" class="btn btn-secondary sp-main" disabled><svg class="ic " aria-hidden="true"><use href="#i-pause"/></svg> Stop</button>
+                <button id="btn-find-phone" class="btn btn-secondary sp-find" title="Ring the phone loudly" aria-label="Find my phone"><svg class="ic " aria-hidden="true"><use href="#i-pin"/></svg><span id="find-phone-label">Find My Phone</span></button>
+              </div>
+              <p class="hint sp-hint" id="stream-hint">Click the picture to tap, drag to swipe, wheel to scroll, right-click for Back.</p>
+            </div>
+
+            <div class="sp-block">
+              <div class="sp-block-head">
+                <span class="sp-label">Type on phone</span>
+                <span class="sp-note">opens the phone keyboard</span>
+              </div>
+              <label class="sp-input" for="type-on-phone-input">
+                <svg class="ic " aria-hidden="true"><use href="#i-keyboard"/></svg>
+                <input type="text" id="type-on-phone-input" placeholder="Click here, then type…" autocomplete="off" spellcheck="false">
+              </label>
+            </div>
+
+            <div class="sp-block">
+              <div class="sp-block-head">
+                <span class="sp-label">Phone power</span>
+                <span class="sp-note">needs Accessibility</span>
+              </div>
+              <div class="sp-power">
+                <button id="btn-phone-lock" class="sp-power-btn" title="Lock the phone"><svg class="ic " aria-hidden="true"><use href="#i-lock"/></svg> Lock</button>
+                <button id="btn-phone-restart" class="sp-power-btn" title="Restart (needs the Accessibility Service)"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Restart</button>
+                <button id="btn-phone-shutdown" class="sp-power-btn" title="Shut down (needs the Accessibility Service)"><svg class="ic " aria-hidden="true"><use href="#i-square"/></svg> Shut down</button>
+              </div>
+            </div>
+
+            <div class="stream-readout sp-readout">
+              <span class="stream-stat"><i class="stat-dot" id="stream-live-dot"></i><span id="stream-state-text">Idle</span></span>
+              <span>Picture <b id="mirror-resolution">—</b></span>
+              <span>Frames <b id="mirror-fps">—</b></span>
+              <span>Orientation <b id="mirror-orientation">—</b></span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- TAB 5: NOTIFICATIONS -->
+      <section id="tab-notifications" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h1>Android Notifications</h1>
+            <p class="subtitle">Live mirror of your phone's notifications.</p>
+          </div>
+          <div class="header-tools">
+            <span id="notif-unread-badge" class="badge">0</span>
+            <button id="btn-notif-pause" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-bell-off"/></svg> Pause Sync</button>
+            <button id="btn-notif-clear" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-trash"/></svg> Clear All</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div id="notif-filter-row" class="header-tools" style="flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+          <div id="notif-list" class="history-list" style="max-height:60vh;overflow:auto">
+            <div class="history-empty">No notifications mirrored yet. On your phone: Settings → Special app access → Notification access → DuoLink.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: MESSAGES (SMS) -->
+      <section id="tab-messages" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h1>Messages (SMS)</h1>
+            <p class="subtitle">Read and reply to SMS through the paired phone. SMS only — use Notifications for WhatsApp replies.</p>
+          </div>
+          <div class="header-tools">
+            <button id="btn-sms-refresh" class="btn btn-primary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Refresh</button>
+          </div>
+        </div>
+
+        <!-- Full-width search bar: filters the conversation list live and
+             narrows the open thread's messages to matching bubbles. -->
+        <div class="search-bar" role="search">
+          <svg class="ic " aria-hidden="true"><use href="#i-search"/></svg>
+          <input type="text" id="sms-search" placeholder="Search messages and conversations…" autocomplete="off">
+          <button id="sms-search-clear" class="search-bar-clear hidden" title="Clear search"><svg class="ic " aria-hidden="true"><use href="#i-x"/></svg></button>
+        </div>
+
+        <div class="split-view">
+          <div class="card">
+            <div class="card-header-row"><h3>Conversations</h3><span id="sms-unread-badge" class="badge">0 unread</span></div>
+            <div id="sms-thread-list" class="history-list" style="max-height:64vh;overflow:auto">
+              <div class="history-empty">Loading conversations…</div>
+            </div>
+          </div>
+          <div class="card chat-panel">
+            <div class="card-header-row"><h3 id="sms-thread-title">Select a conversation</h3></div>
+            <div id="sms-messages" class="chat-messages">
+              <div class="chat-msg system">Pick a thread on the left to read and reply.</div>
+            </div>
+            <div class="chat-input-row">
+              <input type="text" id="sms-input" placeholder="Reply via SMS…" disabled>
+              <button id="btn-sms-send" class="btn btn-primary" disabled>Send <svg class="ic " aria-hidden="true"><use href="#i-send"/></svg></button>
+            </div>
+            <div id="sms-send-status" class="hint" style="min-height:16px"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 7: CALLS -->
+      <section id="tab-calls" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h1>Calls</h1>
+            <p class="subtitle">See who's calling, answer or reject from the PC, dial out, and browse recent calls.</p>
+          </div>
+          <div class="header-tools">
+            <button id="btn-call-recents" class="btn btn-primary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Load Recents</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header-row"><h3>Live Call State</h3><span id="call-state-badge" class="badge">IDLE</span></div>
+          <div id="call-active-row" class="toggle-row">
+            <div class="dev-info">
+              <h4 id="call-caller">No active call</h4>
+              <p class="hint" id="call-caller-sub">State syncs from the phone in real time (needs the Phone permission).</p>
+            </div>
+            <div class="header-tools">
+              <button id="btn-call-answer" class="btn btn-success btn-sm" disabled>Answer</button>
+              <button id="btn-call-reject" class="btn btn-danger btn-sm" disabled>Reject / End</button>
+            </div>
+          </div>
+
+          <!-- Dial field -->
+          <div class="dial-row">
+            <input type="tel" id="call-dial-input" placeholder="Dial a number…" autocomplete="off">
+            <button id="btn-call-dial" class="btn btn-primary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-send"/></svg> Call</button>
+          </div>
+
+          <!-- Collapsible blue info box (not a red warning) -->
+          <details class="info-box">
+            <summary><svg class="ic " aria-hidden="true"><use href="#i-info"/></svg> About Bluetooth call audio</summary>
+            <p>DuoLink mirrors call state and controls, but Android only lets the default dialer own call audio. To hear the call on your PC, pair the phone to Windows via Bluetooth (Hands-Free Profile) — then Windows routes call audio to the PC speakers/mic.</p>
+          </details>
+        </div>
+
+        <div class="card">
+          <div class="card-header-row"><h3>Recent Calls</h3></div>
+          <div id="call-recents-list" class="history-list" style="max-height:44vh;overflow:auto">
+            <div class="history-empty">Click "Load Recents" to fetch the phone's call log (needs the Call log permission on the phone).</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 8: PHONE MEDIA -->
+      <section id="tab-media" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h1>Phone Media Browser</h1>
+            <p class="subtitle">Browse photos, videos, audio and documents on the phone — preview thumbnails instantly, open or download the full file.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header-row">
+            <h3 id="media-count">No items loaded</h3>
+            <div class="header-tools">
+              <button id="btn-media-open" class="btn btn-secondary btn-sm" disabled>Open Selected</button>
+              <button id="btn-media-download" class="btn btn-secondary btn-sm" disabled>Download Selected</button>
+            </div>
+          </div>
+          <div class="media-toolbar">
+            <div class="media-field">
+              <label for="media-kind">Category</label>
+              <select id="media-kind" class="uri-box">
+                <option value="images">Photos</option>
+                <option value="videos">Videos</option>
+                <option value="audio">Audio</option>
+                <option value="all">All media</option>
+              </select>
+            </div>
+            <div class="media-field">
+              <label for="media-sort">Sort by</label>
+              <select id="media-sort" class="uri-box">
+                <option value="date_desc">Newest first</option>
+                <option value="date_asc">Oldest first</option>
+                <option value="name">By name</option>
+                <option value="size_desc">By size</option>
+              </select>
+            </div>
+            <div class="media-field media-field-grow">
+              <label for="media-search">Search</label>
+              <input type="text" id="media-search" placeholder="Filter by name…" class="uri-box">
+            </div>
+            <button id="btn-media-load" class="btn btn-primary media-load-btn"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Load</button>
+            <button id="btn-media-share" class="btn btn-secondary media-load-btn" disabled title="Open the ticked items on this PC (nothing pops up on the phone)"><svg class="ic " aria-hidden="true"><use href="#i-external"/></svg> Share on PC</button>
+            <button id="btn-media-delete" class="btn btn-danger media-load-btn" disabled title="Delete the ticked items from the phone"><svg class="ic " aria-hidden="true"><use href="#i-trash"/></svg> Delete</button>
+          </div>
+          <div id="media-grid" class="media-grid">
+            <div class="history-empty">Pick a category and press Load. On the phone, grant media access when prompted.</div>
+          </div>
+          <div id="media-transfer-status" class="hint" style="min-height:16px;margin-top:8px"></div>
+        </div>
+      </section>
+
+      <!-- PHONE WEBCAM -->
+      <section id="tab-webcam" class="tab-pane">
+        <div class="pane-header stream-head">
+          <div>
+            <h1>Webcam</h1>
+            <p class="subtitle">The phone's camera as a webcam on this PC — or in OBS, Zoom and Teams.</p>
+          </div>
+        </div>
+        <div class="webcam-shell">
+          <div class="webcam-preview-card">
+            <div class="webcam-area">
+              <div class="device-frame webcam-frame" id="webcam-frame">
+                <div class="webcam-viewport" id="webcam-viewport">
+                  <img id="webcam-preview" alt="Phone webcam preview" decoding="async">
+                  <div class="viewfinder" aria-hidden="true">
+                    <span class="vf vf-tl"></span><span class="vf vf-tr"></span>
+                    <span class="vf vf-bl"></span><span class="vf vf-br"></span>
+                    <span class="vf-cross"></span>
+                  </div>
+                  <div id="webcam-placeholder" class="screen-placeholder">
+                    <span class="placeholder-icon"><svg class="ic " aria-hidden="true"><use href="#i-camera"/></svg></span>
+                    <strong>Camera off</strong>
+                    <p>Pick a camera and press Start. The phone asks for camera permission the first time.</p>
+                  </div>
+                  <div class="webcam-hud hidden" id="webcam-hud">
+                    <span class="hud-live"><i></i>LIVE</span>
+                    <span class="hud-specs" id="webcam-hud-specs">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="card webcam-settings">
+            <div class="webcam-settings-head">
+              <div class="strip-title">Stream settings</div>
+              <span id="webcam-status-badge" class="badge">Inactive</span>
+            </div>
+            <div class="field-grid">
+              <label class="field">
+                <span>Camera</span>
+                <select id="webcam-camera" class="text-input">
+                  <option value="back">Rear</option>
+                  <option value="front">Front</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Resolution</span>
+                <select id="webcam-resolution" class="text-input">
+                  <option value="640x480" selected>640 × 480</option>
+                  <option value="1280x720">1280 × 720</option>
+                  <option value="1920x1080">1920 × 1080</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Frame rate</span>
+                <select id="webcam-fps" class="text-input">
+                  <option value="10">10 fps</option>
+                  <option value="15">15 fps</option>
+                  <option value="24">24 fps</option>
+                  <option value="30" selected>30 fps</option>
+                  <option value="60">60 fps</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>JPEG quality</span>
+                <select id="webcam-quality" class="text-input">
+                  <option value="50">Low (50)</option>
+                  <option value="70">Medium (70)</option>
+                  <option value="85" selected>High (85)</option>
+                </select>
+              </label>
+            </div>
+
+            <p class="hint webcam-hint">30 fps is the smoothest over Wi-Fi: 60 fps halves each frame's exposure time and doubles the bytes, which reads as lag rather than smoothness.</p>
+
+            <div class="settings-toggle-row">
+              <div>
+                <div class="toggle-title">Torch</div>
+                <p class="hint">Ignored when the selected camera has no flash.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="webcam-torch">
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <div class="stream-start-row">
+              <button id="btn-webcam-start" class="btn btn-primary"><svg class="ic " aria-hidden="true"><use href="#i-play"/></svg> Start webcam</button>
+              <button id="btn-webcam-stop" class="btn btn-secondary"><svg class="ic " aria-hidden="true"><use href="#i-pause"/></svg> Stop</button>
+            </div>
+
+            <div class="webcam-obs">
+              <div class="strip-label">Use in OBS, Zoom or Teams</div>
+              <p class="hint">OBS → Sources → + → Media Source → Input URL. Then start OBS Virtual Camera and pick it in your meeting app.</p>
+              <div class="uri-box">
+                <input type="text" id="webcam-mjpeg-url" readonly value="…">
+                <button id="btn-webcam-copy" class="btn btn-icon" title="Copy stream URL"><svg class="ic " aria-hidden="true"><use href="#i-copy"/></svg></button>
+              </div>
+              <p class="hint">The URL carries a session token that rotates every time you copy it.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Device Status tab removed: battery/permissions live in Overview,
+           volume + diagnostics live in Settings → Phone health and permissions. -->
+
+      <!-- TAB 11: TRUSTED DEVICES -->
+      <section id="tab-trusted" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h1>Trusted Devices Registry</h1>
+            <p class="subtitle">Manage phones that have completed pairing. Paired devices reconnect automatically and securely.</p>
+          </div>
+          <div class="header-tools">
+            <button id="btn-refresh-trusted" class="btn btn-primary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Refresh List</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div id="trusted-devices-list" class="trusted-devices-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: SETTINGS -->
+      <section id="tab-settings" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h1>Settings</h1>
+            <p class="subtitle">Privacy, connection behaviour and accessibility preferences. Stored locally on this PC only.</p>
+          </div>
+        </div>
+
+        <!-- Two-column card grid (mockup): General | Security and privacy -->
+        <div class="settings-grid-2">
+          <div class="card settings-card settings-card-wide">
+            <div class="settings-group-label">General</div>
+
+            <div class="toggle-row" style="border-top:none;padding-top:6px">
+              <div>
+                <h3>Start with Windows</h3>
+                <p class="hint">Launch DuoLink automatically when you sign in.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-start-with-windows">
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <div class="toggle-row" style="border-top:none">
+              <div>
+                <h3>Minimise to tray</h3>
+                <p class="hint">Closing the window keeps DuoLink running in the background.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-minimise-to-tray" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+                    <div class="settings-group-label" style="margin-top:18px">Appearance</div>
+            <p class="hint">Themes apply instantly on this PC and are remembered between restarts.</p>
+
+            <div id="theme-gallery" class="theme-gallery" role="radiogroup" aria-label="Application theme">
+              <button type="button" class="theme-card" role="radio" aria-checked="false" data-theme-id="dark">
+                <span class="theme-preview"><i class="tp-side"></i><i class="tp-body"><b></b><b></b><b></b></i><em class="tp-accent"></em></span>
+                <span class="theme-name">Dark</span>
+              </button>
+              <button type="button" class="theme-card" role="radio" aria-checked="false" data-theme-id="light">
+                <span class="theme-preview"><i class="tp-side"></i><i class="tp-body"><b></b><b></b><b></b></i><em class="tp-accent"></em></span>
+                <span class="theme-name">Light</span>
+              </button>
+            </div>
+
+            <div class="settings-toggle-row">
+              <div>
+                <strong>Follow Windows appearance</strong>
+                <p class="hint">Use the Windows light or dark mode instead of a fixed theme.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-follow-system">
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <div class="settings-toggle-row">
+              <div>
+                <strong>Reduce motion</strong>
+                <p class="hint">Turns off page transitions and hover animations.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-reduce-motion">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+
+
+          <div class="card settings-card settings-card-wide">
+            <div class="settings-group-label">Security and privacy</div>
+
+            <div class="toggle-row" style="border-top:none;padding-top:6px">
+              <div>
+                <h3>Auto-sync PC clipboard to phone</h3>
+                <p class="hint">New clipboard content on this PC is pushed to the phone automatically.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-settings-auto-clipboard">
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <div class="settings-info-row settings-flex-row">
+              <div class="info-block">
+                <strong>Kill switch</strong>
+                <p class="hint">Emergency stop: disables all remote control from the phone.</p>
+              </div>
+              <code class="settings-kbd">Ctrl + Alt + Shift + Q</code>
+            </div>
+
+            <div class="settings-info-row settings-flex-row">
+              <div class="info-block">
+                <strong>Received files folder</strong>
+                <p class="hint">Files sent from the phone land in this folder.</p>
+              </div>
+              <button id="btn-open-received-settings" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-folder"/></svg> Downloads\DuoLink</button>
+            </div>
+
+            <div class="settings-group-label" style="margin-top:18px">PC file access</div>
+            <div class="settings-toggle-row" style="border-top:none">
+              <div>
+                <strong>Allow my phone to browse this PC</strong>
+                <p class="hint" id="file-access-hint">Off — the phone cannot see any files on this PC.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-file-access">
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <div id="file-access-drives" class="file-access-drives"></div>
+            <p class="hint">Access ends the moment this switch is turned off, when the phone disconnects, or when you un-pair the device in Trusted Devices.</p>
+
+            <div class="settings-info-row">
+              <div class="info-block">
+                <strong>Data &amp; privacy</strong>
+                <p class="hint">No cloud, no telemetry. Session secrets live in <code id="settings-userdata-path">…</code> · log at <code id="settings-log-path">…</code>.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phone health and permissions -->
+        <div class="card settings-card settings-card-wide" style="margin-top:16px">
+          <div class="card-header-row">
+            <strong>Phone health and permissions</strong>
+            <div class="header-tools">
+              <button id="btn-diag-refresh" class="btn btn-primary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Run diagnostics</button>
+            </div>
+          </div>
+
+          <div class="health-stats">
+            <div class="health-cell">
+              <span class="health-label">Phone</span>
+              <strong id="health-phone">—</strong>
+              <span class="hint" id="health-phone-sub">Not connected</span>
+            </div>
+            <div class="health-cell">
+              <span class="health-label">Battery</span>
+              <strong id="health-battery">—</strong>
+              <span class="hint" id="health-battery-sub">Waiting for the phone</span>
+            </div>
+            <div class="health-cell">
+              <span class="health-label">Latency</span>
+              <strong id="health-latency">—</strong>
+              <span class="hint">TLS pinned · local Wi-Fi</span>
+            </div>
+            <div class="health-cell">
+              <span class="health-label">Permissions</span>
+              <strong id="health-perms">Not checked</strong>
+              <span class="hint" id="health-perms-sub">Run diagnostics to verify</span>
+            </div>
+          </div>
+
+          <div class="status-cards-grid" style="margin-top:4px">
+            <div class="card">
+              <div class="card-header-row"><h3>Media volume</h3><span id="phone-volume-badge" class="badge">—</span></div>
+              <div class="progress-bar-bg volume-bar"><div id="phone-volume-fill" class="progress-bar-fill" style="width:0%"></div></div>
+              <div class="quick-buttons-row">
+                <button id="btn-phone-vol-down" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-vol-down"/></svg> Down</button>
+                <button id="btn-phone-vol-mute" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-vol-mute"/></svg> Mute</button>
+                <button id="btn-phone-vol-unmute" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-vol-up"/></svg> Unmute</button>
+                <button id="btn-phone-vol-up" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-vol-up"/></svg> Up</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="diag-output" class="history-list" style="max-height:40vh;overflow:auto;margin-top:12px">
+            <div class="history-empty">Press <strong>Run diagnostics</strong> to query permissions, service states and device info from the connected phone.</div>
+          </div>
+        </div>
+
+        <!-- Footer strip (mockup) -->
+        <div class="card settings-footer">
+          <div>
+            <strong>DuoLink 1.0.0 · no cloud, no telemetry</strong>
+            <p class="hint"><code>Ctrl + 1…9</code> switch sections · Reset the pairing rate limit if a phone is being told to wait.</p>
+          </div>
+          <div class="header-tools">
+            <button id="btn-reset-rate-limit" class="btn btn-outline btn-sm" title="Reset rate limit and clear connection queue">
+              <svg class="ic " aria-hidden="true"><use href="#i-refresh"/></svg> Reset Rate Limit
+            </button>
+            <button id="btn-open-log" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-folder"/></svg> Open log</button>
+            <button id="btn-check-updates" class="btn btn-secondary btn-sm"><svg class="ic " aria-hidden="true"><use href="#i-external"/></svg> Check for updates</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- GUIDE: the old About page, rebuilt as a task-oriented manual -->
+      <section id="tab-guide" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h1>Guide</h1>
+            <p class="subtitle">How DuoLink works, page by page — plus fixes for the usual connection problems.</p>
+          </div>
+        </div>
+
+        <div class="guide-hero">
+          <div class="guide-hero-brand">
+            <img src="assets/icon.png" alt="" width="44" height="44">
+            <div>
+              <h2>DuoLink</h2>
+              <p>Phone and PC on your own Wi-Fi — screen, camera, files and messages, with no account and no cloud.</p>
+            </div>
+          </div>
+          <div class="guide-hero-chips">
+            <span class="guide-chip"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg> TLS pinned</span>
+            <span class="guide-chip"><svg class="ic" aria-hidden="true"><use href="#i-maximize"/></svg> 1080p · 60 fps</span>
+            <span class="guide-chip"><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg> Local network</span>
+          </div>
+        </div>
+
+        <div class="guide-layout">
+          <nav class="guide-nav" aria-label="Guide sections">
+            <button class="guide-nav-item active" data-guide="guide-start"><svg class="ic " aria-hidden="true"><use href="#i-zap"/></svg> Getting started</button>
+            <button class="guide-nav-item" data-guide="guide-mirror"><svg class="ic " aria-hidden="true"><use href="#i-phone"/></svg> Screen mirroring</button>
+            <button class="guide-nav-item" data-guide="guide-webcam"><svg class="ic " aria-hidden="true"><use href="#i-camera"/></svg> Webcam</button>
+            <button class="guide-nav-item" data-guide="guide-chat"><svg class="ic " aria-hidden="true"><use href="#i-chat"/></svg> Chat &amp; files</button>
+            <button class="guide-nav-item" data-guide="guide-media"><svg class="ic " aria-hidden="true"><use href="#i-play"/></svg> Media player</button>
+            <button class="guide-nav-item" data-guide="guide-settings"><svg class="ic " aria-hidden="true"><use href="#i-gear"/></svg> Settings</button>
+            <button class="guide-nav-item" data-guide="guide-fix"><svg class="ic " aria-hidden="true"><use href="#i-alert"/></svg> Troubleshooting</button>
+            <button class="guide-nav-item" data-guide="guide-dev"><svg class="ic " aria-hidden="true"><use href="#i-info"/></svg> Developer</button>
+          </nav>
+
+          <div class="guide-content">
+            <article class="guide-section active" id="guide-start">
+              <h2>Getting started</h2>
+              <p class="guide-lede">DuoLink connects an Android phone to this PC over your own Wi-Fi. Everything — screen, files, messages, clipboard — travels directly between the two devices. There is no account and no cloud.</p>
+
+              <div class="guide-steps">
+                <div class="guide-step">
+                  <span class="guide-step-num">1</span>
+                  <div>
+                    <h3>Put both devices on one network</h3>
+                    <p>Join the same Wi-Fi on the phone and the PC. Guest networks and public hotspots usually block device-to-device traffic; a home network or the phone's hotspot works.</p>
+                  </div>
+                </div>
+                <div class="guide-step">
+                  <span class="guide-step-num">2</span>
+                  <div>
+                    <h3>Scan the pairing QR</h3>
+                    <p>Open <strong>Overview</strong> on the PC and the <strong>Pair</strong> tab in the Android app. Point the phone at the QR code. The code is single-use and expires after three minutes.</p>
+                  </div>
+                </div>
+                <div class="guide-step">
+                  <span class="guide-step-num">3</span>
+                  <div>
+                    <h3>Confirm the six-digit code</h3>
+                    <p>The same number appears on both screens. If it matches, approve on the PC. The phone is now remembered and reconnects automatically on the same network.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="guide-note">
+                <svg class="ic " aria-hidden="true"><use href="#i-shield"/></svg>
+                <p>The certificate fingerprint is pinned on both sides. A device impersonating the PC on your network cannot complete a reconnect.</p>
+              </div>
+
+              <h3 class="guide-subhead">What each page is for</h3>
+              <div class="guide-table">
+                <div class="guide-row"><strong>Overview</strong><span>Pairing, live phone status, quick actions and the phone-control switch.</span></div>
+                <div class="guide-row"><strong>Phone Screen</strong><span>Live mirror with touch control, orientation following and screen capture.</span></div>
+                <div class="guide-row"><strong>Chat &amp; Files</strong><span>Text chat, clipboard push and files in both directions.</span></div>
+                <div class="guide-row"><strong>Messages / Calls / Notifications</strong><span>SMS, call state and mirrored Android notifications.</span></div>
+                <div class="guide-row"><strong>Gallery</strong><span>Browse the phone's photos and videos; open them in the built-in player.</span></div>
+                <div class="guide-row"><strong>Webcam</strong><span>The phone camera as an MJPEG feed for OBS and meeting apps.</span></div>
+              </div>
+            </article>
+
+            <article class="guide-section" id="guide-mirror">
+              <h2>Screen mirroring</h2>
+              <p class="guide-lede">The phone publishes its screen as a live JPEG stream; this PC renders the newest frame it has. The picture follows the phone's rotation, so a landscape game fills a landscape window without reconnecting.</p>
+
+              <h3 class="guide-subhead">Start a stream</h3>
+              <ol class="guide-list">
+                <li>Open <strong>Phone Screen</strong> and press <strong>Start stream</strong>.</li>
+                <li>Accept Android's screen-share prompt on the handset. On Android 14+ choose <em>entire screen</em>.</li>
+                <li>For remote taps and typing, enable the DuoLink Accessibility Service in Android settings.</li>
+              </ol>
+
+              <h3 class="guide-subhead">Controlling the phone</h3>
+              <div class="guide-table">
+                <div class="guide-row"><strong>Click</strong><span>Tap at that point</span></div>
+                <div class="guide-row"><strong>Drag</strong><span>Swipe</span></div>
+                <div class="guide-row"><strong>Wheel</strong><span>Scroll the phone screen</span></div>
+                <div class="guide-row"><strong>Right-click</strong><span>Back</span></div>
+              </div>
+              <p>Use the <strong>Back</strong>, <strong>Home</strong> and <strong>Recents</strong> buttons in the side panel for navigation, and <strong>Type on phone</strong> to send the PC keyboard into the phone's active field.</p>
+
+              <h3 class="guide-subhead">Orientation and window modes</h3>
+              <p>Rotation is detected from the frames themselves. Portrait frames get a tall window; landscape frames get a wide one, and <strong>Pop out</strong> gives the phone its own resizable window that stays in step with rotation. <strong>Fullscreen</strong> hides the rest of the app; press <kbd>Esc</kbd> to return.</p>
+
+              <h3 class="guide-subhead">Getting a smoother picture</h3>
+              <ul class="guide-list">
+                <li>Use the 5 GHz band when the router offers it. 2.4 GHz is shared and adds jitter.</li>
+                <li>Keep the phone within line of sight; a wall or a microwave between phone and router shows up as dropped frames.</li>
+                <li>The stream adapts on its own: when the link backs up it lowers JPEG quality, then resolution, then frame rate, and climbs back when the link clears. The status bar shows the picture size and real frame rate it is achieving.</li>
+                <li>Close battery savers that throttle background work on the phone; the app already holds a wake lock while mirroring.</li>
+              </ul>
+            </article>
+
+            <article class="guide-section" id="guide-webcam">
+              <h2>Phone as a webcam</h2>
+              <p class="guide-lede">The phone camera is published as an MJPEG stream on this PC. OBS (or any app that accepts a network video URL) can display it, and OBS Virtual Camera exposes it to Zoom, Teams and Meet.</p>
+              <ol class="guide-list">
+                <li>Open <strong>Webcam</strong>, pick the camera, resolution, frame rate and JPEG quality.</li>
+                <li>Press <strong>Start webcam</strong> and allow camera access on the phone.</li>
+                <li>In OBS: <em>Sources → + → Media Source → uncheck Local File → paste the URL</em>.</li>
+                <li>Start <strong>OBS Virtual Camera</strong>, then select it as the camera in your meeting app.</li>
+              </ol>
+              <div class="guide-note">
+                <svg class="ic " aria-hidden="true"><use href="#i-info"/></svg>
+                <p>DuoLink streams up to <strong>1080p at 60 fps</strong>. Use 60 fps for motion (handheld walk-throughs, demonstrations) and 30 fps for stationary shots; if the preview stutters, drop resolution before quality — pixels cost far more bandwidth than JPEG quality.</p>
+              </div>
+            </article>
+
+            <article class="guide-section" id="guide-chat">
+              <h2>Chat, clipboard and files</h2>
+              <p class="guide-lede">Messages and files travel over the authenticated session only. Nothing is uploaded anywhere.</p>
+
+              <h3 class="guide-subhead">From the PC</h3>
+              <ul class="guide-list">
+                <li><strong>Chat &amp; Files</strong> — type a message, or drag files onto the drop area to send them to the phone's Downloads/DuoLink folder.</li>
+                <li><strong>Push PC clipboard</strong> sends the current clipboard text; auto-sync is a switch in the same panel.</li>
+                <li>Transfers show live progress and stay listed in the transfer history. A failed transfer is removed rather than left half-written.</li>
+              </ul>
+
+              <h3 class="guide-subhead">Browsing PC files from the phone</h3>
+              <p>On the phone, open <strong>Share → PC Files</strong>. You get the folders the PC has approved, with breadcrumbs, file size and type, and buttons to download to the phone, upload from the phone, create a folder, rename, delete and refresh.</p>
+              <ul class="guide-list">
+                <li>Every local drive (C:, D:, removable disks) is reachable while <strong>Settings → PC file access</strong> is on. Turn it off and the phone's browser closes immediately.</li>
+                <li>Windows permissions are respected: protected system folders, files held open by another program and folders your Windows account cannot read are reported, never bypassed.</li>
+                <li>Paths are resolved and checked on the PC side, so <code>..</code> sequences cannot escape the authorized drives.</li>
+                <li>Delete asks on the phone first and moves the item to the Windows Recycle Bin unless you explicitly pick permanent delete.</li>
+              </ul>
+            </article>
+
+            <article class="guide-section" id="guide-media">
+              <h2>Media player</h2>
+              <p class="guide-lede">The <strong>Gallery</strong> page lists the phone's photos, videos and audio. Selecting an item opens the player over the app.</p>
+              <div class="guide-table">
+                <div class="guide-row"><strong>Previous / Next</strong><span>Step through the items currently loaded in the gallery</span></div>
+                <div class="guide-row"><strong>Play / Pause</strong><span>Control the open video or audio track</span></div>
+                <div class="guide-row"><strong>Mute</strong><span>Silence the player; pressing it again restores the previous level</span></div>
+                <div class="guide-row"><strong>Volume</strong><span>Raise or lower the player volume in 10% steps, or drag the slider</span></div>
+              </div>
+              <p>Keyboard: <kbd>Space</kbd> play/pause · <kbd>←</kbd> <kbd>→</kbd> previous/next · <kbd>↑</kbd> <kbd>↓</kbd> volume · <kbd>M</kbd> mute · <kbd>Esc</kbd> close.</p>
+              <p>Downloads land in the received-files folder and open from there; the player is not a cloud service, so a file must be transferred before it can play.</p>
+            </article>
+
+            <article class="guide-section" id="guide-settings">
+              <h2>Settings</h2>
+              <h3 class="guide-subhead">Appearance</h3>
+              <p>DuoLink ships with two themes: Dark and Light. Both are the same interface with a different surface and accent palette, so nothing moves when you switch. The choice is stored on this PC. <strong>Follow Windows appearance</strong> hands the decision to Windows, and <strong>Reduce motion</strong> turns off page transitions.</p>
+
+              <h3 class="guide-subhead">Connection behaviour</h3>
+              <ul class="guide-list">
+                <li><strong>Start with Windows</strong> and <strong>Minimise to tray</strong> decide how the app behaves when you sign in or close the window.</li>
+                <li><strong>Trusted Devices</strong> lists every phone that has paired; revoking one removes its session secret immediately.</li>
+                <li>The kill switch (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Q</kbd>) disables phone-to-PC input everywhere, including the Overview switch.</li>
+              </ul>
+
+              <h3 class="guide-subhead">PC file access</h3>
+              <p>One switch authorizes the phone's file browser for the whole PC. It can then browse every drive, open folders, search, download, upload, rename, copy, move and delete. Deleting needs confirmation on the phone; the item goes to the Recycle Bin unless permanent delete is chosen. Files the phone sends without a destination arrive in the received-files folder shown above.</p>
+            </article>
+
+            <article class="guide-section" id="guide-fix">
+              <h2>Troubleshooting</h2>
+              <div class="guide-table guide-table-fix">
+                <div class="guide-row guide-row-head"><strong>Problem</strong><strong>What to do</strong></div>
+                <div class="guide-row"><strong>Phone cannot find the PC</strong><span>Check both devices are on the same SSID, not a guest network. Allow DuoLink through Windows Firewall on private networks (TCP 3000).</span></div>
+                <div class="guide-row"><strong>QR code expired</strong><span>Tokens last three minutes. Press <em>Refresh QR</em> on the Overview page and scan again.</span></div>
+                <div class="guide-row"><strong>Wrong PC address</strong><span>The app skips VPN, WSL and Hyper-V adapters. If more than one physical adapter exists, set <code>LAN_IP</code> before launch to pin the address.</span></div>
+                <div class="guide-row"><strong>Certificate error after reinstall</strong><span>A reinstall generates a new self-signed certificate. Forget the PC on the phone and pair again.</span></div>
+                <div class="guide-row"><strong>Mirror is black</strong><span>Banking, password and DRM apps set FLAG_SECURE; Android returns black for them by design. Otherwise re-grant screen capture.</span></div>
+                <div class="guide-row"><strong>Mirror stutters</strong><span>Move closer to the router, prefer 5 GHz, close the phone's battery saver, and stop other large transfers during a game.</span></div>
+                <div class="guide-row"><strong>Taps do nothing</strong><span>Enable the DuoLink Accessibility Service on the phone; the mirror itself keeps working without it.</span></div>
+                <div class="guide-row"><strong>Phone drops in background</strong><span>Set DuoLink to unrestricted battery use (Samsung, Xiaomi, Oppo and Vivo all hide this under different names) and allow autostart.</span></div>
+                <div class="guide-row"><strong>Phone shows no drives</strong><span>Turn on Settings → PC file access on the PC. If it is on and still empty, the phone is not connected: check the connection pill at the bottom of the sidebar.</span></div>
+              </div>
+              <div class="guide-note">
+                <svg class="ic " aria-hidden="true"><use href="#i-folder"/></svg>
+                <p>The diagnostic log lives in the app data folder; <strong>Settings → Open log</strong> opens it, and <strong>Run diagnostics</strong> reports phone permissions, service state and latency.</p>
+              </div>
+            </article>
+
+            <article class="guide-section" id="guide-dev">
+              <h2>Developer</h2>
+              <div class="about-brand">
+                <img src="assets/publisher.png" width="52" height="52" alt="Ali Raza">
+                <div>
+                  <h3>Ali Raza</h3>
+                  <p class="hint">Full-stack developer · Windows and Android</p>
+                </div>
+              </div>
+              <p class="guide-lede">DuoLink is built as a local-first tool: an Electron desktop app and a native Kotlin app, talking over a pinned TLS WebSocket on your own network. The design goal is that every feature works with the Wi-Fi off the internet — and that nothing leaves the two devices.</p>
+              <div class="guide-table">
+                <div class="guide-row"><strong>Desktop</strong><span>Electron 31 · Node 20 · <code>ws</code>, <code>express</code>, <code>@nut-tree-fork/nut-js</code></span></div>
+                <div class="guide-row"><strong>Android</strong><span>Kotlin · Jetpack Compose · CameraX · MediaProjection</span></div>
+                <div class="guide-row"><strong>Transport</strong><span>WSS on port 3000 with a pinned SHA-256 certificate fingerprint</span></div>
+              </div>
+              <p><a href="https://aliiraza.netlify.app/" target="_blank" rel="noopener noreferrer" class="guide-link">Portfolio →</a></p>
+              <p class="hint" id="about-version">DuoLink 1.0.0 · no cloud, no telemetry</p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <div id="share-picker" class="share-picker hidden" role="dialog" aria-modal="true" aria-label="Share to an app">
+    <div class="share-picker-card">
+      <div class="share-picker-head">
+        <div>
+          <h3>Share from your phone</h3>
+          <p class="hint">Pick an app — the phone shares straight to it, nothing appears on the handset.</p>
+        </div>
+        <button id="share-picker-close" class="btn btn-secondary btn-sm">Cancel</button>
+      </div>
+      <div id="share-picker-grid" class="share-picker-grid">
+        <div class="history-empty">Asking the phone for apps…</div>
+      </div>
+      <div id="share-picker-status" class="hint" style="min-height:16px"></div>
+    </div>
+  </div>
+
+  <div id="media-viewer" class="media-viewer hidden" role="dialog" aria-modal="true" aria-label="Media player">
+    <div class="media-viewer-bar">
+      <span id="media-viewer-name" class="media-viewer-name"></span>
+      <div class="media-viewer-actions">
+        <button id="media-viewer-ext" class="btn btn-secondary btn-sm" title="Open in the default Windows app">Open externally</button>
+        <button id="media-viewer-close" class="media-viewer-close" title="Exit the player (Esc)" aria-label="Exit the player"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span class="media-viewer-close-label">Exit</span></button>
+      </div>
+    </div>
+    <div class="media-viewer-stage" id="media-viewer-stage">
+      <img id="media-viewer-img" alt="">
+      <video id="media-viewer-video" playsinline></video>
+      <audio id="media-viewer-audio"></audio>
+      <div id="media-viewer-msg" class="media-viewer-msg hidden"></div>
+    </div>
+    <!-- Real transport controls: every button drives the <video>/<audio>
+         element through the MediaPlayer helpers in renderer.js. -->
+    <div class="media-player-bar" id="media-player-bar">
+      <button id="media-viewer-prev" class="mp-btn" title="Previous (←)" aria-label="Previous"><svg class="ic " aria-hidden="true"><use href="#i-prev"/></svg></button>
+      <button id="media-viewer-play" class="mp-btn mp-btn-primary" title="Play / pause (Space)" aria-label="Play or pause"><svg class="ic" aria-hidden="true"><use href="#i-play"/></svg></button>
+      <button id="media-viewer-next" class="mp-btn" title="Next (→)" aria-label="Next"><svg class="ic " aria-hidden="true"><use href="#i-next"/></svg></button>
+      <span class="mp-time" id="media-viewer-time">0:00 / 0:00</span>
+      <div class="mp-volume">
+        <button id="media-viewer-mute" class="mp-btn" title="Mute / unmute (M)" aria-label="Mute"><svg class="ic " aria-hidden="true"><use href="#i-vol-up"/></svg></button>
+        <button id="media-viewer-vol-down" class="mp-btn mp-btn-sm" title="Volume down (↓)" aria-label="Volume down"><svg class="ic " aria-hidden="true"><use href="#i-vol-down"/></svg></button>
+        <input type="range" id="media-viewer-volume" min="0" max="100" value="100" aria-label="Player volume">
+        <button id="media-viewer-vol-up" class="mp-btn mp-btn-sm" title="Volume up (↑)" aria-label="Volume up"><svg class="ic " aria-hidden="true"><use href="#i-vol-up"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-app confirmation dialog. window.confirm() shows Chromium's grey
+       system box, which ignores the app theme entirely. -->
+  <div id="app-confirm-backdrop" class="app-confirm-backdrop hidden">
+    <div class="app-confirm" role="alertdialog" aria-modal="true" aria-labelledby="app-confirm-title" aria-describedby="app-confirm-message">
+      <div class="app-confirm-header">
+        <span class="app-confirm-icon" id="app-confirm-icon"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <h2 id="app-confirm-title">Are you sure?</h2>
+      </div>
+      <p id="app-confirm-message" class="app-confirm-message"></p>
+      <div class="app-confirm-actions">
+        <button type="button" id="app-confirm-cancel" class="btn btn-secondary">Cancel</button>
+        <button type="button" id="app-confirm-ok" class="btn btn-primary">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="h264-mirror.js"></script>
+  <script src="renderer.js"></script>
+  <script src="glass.js"></script>
+</body>
+</html>

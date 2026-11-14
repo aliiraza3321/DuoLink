@@ -1,0 +1,597 @@
+/* =====================================================================
+   DuoLink — minimal layer
+   ---------------------------------------------------------------------
+   Loaded last. One flat surface, one hairline, one accent. No gradients,
+   glows, glass or decorative containers: the older stylesheets stay in
+   place for structure, this file flattens everything they draw.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 1. tokens */
+:root,
+:root[data-theme="dark"] {
+  --bg: #0a0b0e;
+  --bg-main: #0a0b0e;
+  --surface: #101218;
+  --surface-1: #101218;
+  --surface-2: #171a22;
+  --surface-3: #1e222c;
+  --elevated: #12141b;
+  --bg-card: #101218;
+  --bg-sidebar: #0a0b0e;
+  --bg-input: #0b0d12;
+  --line: rgba(255, 255, 255, .07);
+  --line-strong: rgba(255, 255, 255, .13);
+  --border: rgba(255, 255, 255, .07);
+  --border-color: rgba(255, 255, 255, .07);
+  --text: #e7e9ef;
+  --text-primary: #e7e9ef;
+  --muted: #868b9b;
+  --text-secondary: #868b9b;
+  --text-muted: #6b7080;
+  --primary: #7c6cff;
+  --accent-primary: #7c6cff;
+
+  /* Kill the decorative layers the old sheets referenced. */
+  --glass-fill: none;
+  --glass-edge: none;
+  --glass-drop: none;
+  --card-shadow: none;
+  --soft-shadow: none;
+  --toast-fill: #161922;
+  --stage-bg: #0b0d12;
+  --input-fill: #0b0d12;
+  --list-fill: transparent;
+  /* One accent, no two-tone blends: the "gradient" is the flat accent so
+     anything that clips text or fills a control with it still gets white-on-
+     accent contrast. */
+  --gradient-brand: linear-gradient(90deg, #7c6cff, #7c6cff);
+  --on-gradient: #ffffff;
+  --scroll-thumb: rgba(255, 255, 255, .1);
+  --scroll-thumb-hover: rgba(255, 255, 255, .18);
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 14px;
+}
+
+:root[data-base="light"] {
+  --bg: #f6f7f9;
+  --bg-main: #f6f7f9;
+  --surface: #ffffff;
+  --surface-1: #ffffff;
+  --surface-2: #f1f3f7;
+  --surface-3: #e8ebf1;
+  --elevated: #ffffff;
+  --bg-card: #ffffff;
+  --bg-sidebar: #f6f7f9;
+  --bg-input: #ffffff;
+  --line: rgba(15, 18, 30, .08);
+  --line-strong: rgba(15, 18, 30, .14);
+  --border: rgba(15, 18, 30, .08);
+  --border-color: rgba(15, 18, 30, .08);
+  --text: #12151f;
+  --text-primary: #12151f;
+  --muted: #5b6078;
+  --text-secondary: #5b6078;
+  --text-muted: #6b7080;
+  --stage-bg: #f1f3f7;
+  --input-fill: #ffffff;
+  --toast-fill: #ffffff;
+}
+
+/* ------------------------------------------------------------ 2. base page */
+html, body { background: var(--bg); }
+body { color: var(--text); -webkit-font-smoothing: antialiased; }
+.aurora { display: none; }
+.app-layout { background: transparent; }
+.main-content { background: transparent; }
+.titlebar { background: transparent; border-bottom: 1px solid var(--line); }
+
+/* --------------------------------------------------------------- 3. sidebar */
+.sidebar {
+  background: transparent;
+  border-right: 1px solid var(--line);
+  box-shadow: none;
+}
+.brand { padding-bottom: 14px; }
+.brand-text h2 { font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+.brand-badges { margin-top: 6px; }
+.brand-badges .badge,
+#lan-ip-badge {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .02em;
+  text-transform: none;
+}
+.nav-tabs { gap: 1px; }
+.nav-group {
+  margin: 16px 0 4px;
+  padding: 0 10px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.nav-tab {
+  background-image: none !important;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.nav-tab::before,
+.nav-tab::after { display: none; }
+.nav-tab:hover { background: var(--surface-2); color: var(--text); }
+.nav-tab.active {
+  background: var(--surface-2) !important;
+  border: 0 !important;
+  background-image: none !important;
+  color: var(--text);
+  box-shadow: none !important;
+}
+.nav-tab.active .tab-icon { color: var(--primary); }
+.nav-tab .tab-icon { color: inherit; opacity: .85; }
+.nav-badge {
+  background: var(--surface-3);
+  color: var(--text);
+  border: 0;
+  font-size: 9.5px;
+  border-radius: 999px;
+}
+.sidebar-footer {
+  border-top: 1px solid var(--line);
+  padding: 10px 4px 2px;
+}
+.sidebar-footer .badge,
+.sidebar-footer .indicator-bar,
+.sidebar-footer > * {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-muted);
+  font-size: 11px;
+  padding-left: 0;
+  padding-right: 0;
+}
+.sidebar-footer .status-dot { width: 6px; height: 6px; }
+.sidebar-footer #global-status-text { font-size: 11.5px; }
+
+/* ---------------------------------------------------------- 4. page headers */
+.tab-pane { padding: 22px 26px 26px; }
+.pane-header { margin-bottom: 18px; }
+.pane-header h1 {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  color: var(--text);
+}
+.pane-header .subtitle {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 70ch;
+}
+.header-tools { gap: 8px; }
+
+/* ------------------------------------------------------- 5. surfaces /cards */
+.card,
+.control-strip,
+.qr-card,
+.quick-tile,
+.settings-card,
+.settings-card-wide,
+.hero-card,
+.info-box,
+.guide-section,
+.share-picker-card,
+.file-transfer-box,
+.mirror-stage,
+.pairing-side .card {
+  background: var(--surface);
+  background-image: none !important;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: none;
+  background-image: none;
+}
+.card { padding: 16px; }
+.card-header-row { margin-bottom: 12px; }
+.card-header-row h2,
+.card h2,
+.strip-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.card-header-row h3 { font-size: 13px; font-weight: 550; }
+
+/* Link bar: one quiet row, not a raised pill. */
+.link-bar,
+.indicator-bar {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 0 12px;
+  margin-bottom: 16px;
+}
+.link-node { font-size: 12px; color: var(--muted); }
+.link-node strong, .link-node b { color: var(--text); font-weight: 550; }
+.link-wire { background: var(--line-strong); }
+.link-spacer { background: var(--line-strong); }
+
+/* --------------------------------------------------------------- 6. buttons */
+.btn,
+.sp-main,
+.sp-seg-btn,
+.mp-btn,
+.quick-btn,
+.guide-nav-item {
+  background-image: none;
+  box-shadow: none;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-weight: 550;
+  letter-spacing: 0;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.btn { height: 34px; padding: 0 14px; gap: 7px; }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 11.5px; }
+.btn-icon { width: 30px; height: 30px; padding: 0; }
+
+.btn-primary,
+.mp-btn-primary {
+  background: var(--primary);
+  background-image: none !important;
+  border: 1px solid var(--primary);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled),
+.mp-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 86%, #ffffff);
+  border-color: transparent;
+}
+.btn-secondary,
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+}
+.btn-secondary:hover:not(:disabled),
+.btn-ghost:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+.btn-danger {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--danger) 55%, transparent);
+  color: var(--danger);
+}
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+.btn:disabled { opacity: .45; box-shadow: none; }
+.btn .ic { width: 14px; height: 14px; }
+
+/* --------------------------------------------------- 7. badges, chips, pills */
+.badge {
+  background: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  box-shadow: none;
+}
+.badge-success { border-color: color-mix(in srgb, var(--success) 45%, transparent); color: var(--success); }
+.badge-danger { border-color: color-mix(in srgb, var(--danger) 45%, transparent); color: var(--danger); }
+.badge-warn { border-color: color-mix(in srgb, var(--warning) 45%, transparent); color: var(--warning); }
+.guide-chip, .hero-label, .settings-group-label, .sp-label, .strip-label {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.killswitch-pill {
+  background: none;
+  border: 1px solid var(--line-strong);
+  box-shadow: none;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* -------------------------------------------------------- 8. inputs / fields */
+.text-input,
+textarea,
+input[type="text"],
+input[type="password"],
+input[type="number"],
+select,
+.uri-box input,
+.sp-input {
+  background: var(--bg-input);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  box-shadow: none;
+  color: var(--text);
+  font-size: 12.5px;
+  height: 34px;
+}
+input:focus, select:focus, textarea:focus, .sp-input:focus-within {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+select option, select optgroup {
+  background: var(--surface);
+  color: var(--text);
+}
+.field > span, .field > label, .sp-label + * { color: var(--muted); }
+.info-box {
+  background: var(--surface-2) !important;
+  border-color: var(--line) !important;
+  color: var(--text);
+}
+.field > span { font-size: 11px; font-weight: 500; }
+.field-grid { gap: 10px 12px; }
+.hint, .sp-note, .sp-sub, .sp-hint {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+#tab-webcam .uri-box { background: transparent; border: 0; box-shadow: none; }
+#tab-webcam .uri-box input { font-family: var(--mono); font-size: 11px; }
+
+/* Media filter bar: hairline row instead of a tinted panel. */
+.media-toolbar {
+  background: none !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--line) !important;
+  border-radius: 0;
+  padding: 0 0 12px;
+  margin-bottom: 14px;
+}
+.media-field-grow { flex: 1 1 180px; }
+.media-field select, .media-field input {
+  background: var(--bg-input);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+}
+.media-load-btn { white-space: nowrap; }
+.media-grid .history-empty { grid-column: 1 / -1; padding: 28px 0; text-align: center; }
+
+/* Inner scrollers are separated by one hairline, never boxed inside a card. */
+.chat-messages,
+.history-list {
+  border: 0 !important;
+  border-top: 1px solid var(--line) !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+}
+.switch .slider {
+  background: var(--surface-3);
+  box-shadow: none;
+}
+.switch input:checked + .slider { background: var(--primary); }
+
+/* ------------------------------------------------------ 9. in-card structure */
+.info-row, .settings-info-row, .guide-row, .health-cell, .guide-step {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+.info-row:last-child, .guide-row:last-child, .settings-info-row:last-child { border-bottom: 0; }
+.step-item {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 12px 0;
+}
+.step-item:last-child { border-bottom: 0; }
+.step-num, .guide-step-num {
+  background: none;
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  box-shadow: none;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.step-item.is-active .step-num { border-color: var(--primary); color: var(--primary); }
+.qr-container, .qr-card { background: var(--surface-2); border: 1px solid var(--line); box-shadow: none; }
+.progress-bar-bg { background: var(--surface-3); }
+.progress-bar-fill { background: var(--primary); box-shadow: none; }
+.pulse-ring { display: none; }
+
+/* --------------------------------------------------- 10. stream control rail */
+#tab-screen-mirror .stream-stage,
+.stream-stage {
+  background: var(--bg) !important;
+  border: 0;
+  box-shadow: none;
+}
+.device-frame, .mirror-frame {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+.mirror-viewport {
+  box-shadow: none;
+  border: 0;
+  background: #000;
+  border-radius: 24px;
+}
+.sp-head { margin-bottom: 14px; }
+.sp-head h2 { font-size: 13px; font-weight: 600; }
+.sp-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+.sp-block {
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 12px 0;
+  margin: 0;
+}
+.sp-block:first-of-type { border-top: 0; padding-top: 0; }
+.sp-block-head { margin-bottom: 6px; }
+.sp-seg { background: var(--surface-2); border: 0; border-radius: var(--r-sm); padding: 2px; gap: 2px; }
+.sp-seg-btn { height: 28px; background: none; border: 0; color: var(--muted); font-size: 11.5px; }
+.sp-seg-btn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
+.sp-seg-btn.is-active, .sp-seg-btn.active { background: var(--surface); color: var(--text); box-shadow: none; }
+.sp-input { padding: 0 10px; gap: 8px; }
+.sp-power-btn {
+  background: none;
+  border: 1px solid var(--line-strong);
+  box-shadow: none;
+  color: var(--muted);
+}
+.sp-power-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+.sp-readout { border-top: 1px solid var(--line); background: none; font-size: 10.5px; }
+.stream-hud, .webcam-hud {
+  background: rgba(10, 11, 14, .72);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  box-shadow: none;
+  font-size: 10px;
+  letter-spacing: 0;
+  backdrop-filter: none;
+}
+.hud-live i { background: var(--danger); box-shadow: none; }
+.mirror-stale-note { background: rgba(10, 11, 14, .8); border: 1px solid var(--line-strong); box-shadow: none; }
+
+/* Reserve the scrollbar's lane: without it a long page narrows the content box
+   by 10px while the children keep their full width, and the right-hand column
+   is clipped by exactly that much. */
+.main-content { scrollbar-gutter: stable; }
+
+/* --------------------------------------------------------- 11. webcam screen */
+/* Layout is unchanged from the base sheets (handset frame on the left, the
+   settings card beside it). This sheet only adds the border the section was
+   missing: both panels are outlined so they read as two framed blocks. */
+/* Size containment gives the wrapper a max-content width of 0, which collapsed
+   the handset to nothing; the viewport already carries the phone's own size. */
+#tab-webcam .webcam-area { container-type: normal; width: max-content; }
+#tab-webcam .webcam-preview-card {
+  width: max-content;
+  border: 1px solid color-mix(in srgb, var(--text-secondary) 45%, transparent) !important;
+  border-radius: 24px;
+  padding: 10px;
+}
+#tab-webcam .webcam-viewport {
+  border: 1px solid color-mix(in srgb, var(--text-secondary) 45%, transparent) !important;
+}
+#tab-webcam .webcam-settings {
+  border: 1px solid color-mix(in srgb, var(--text-secondary) 45%, transparent) !important;
+  border-radius: 18px;
+  padding: 16px !important;
+}
+#tab-webcam .webcam-settings .strip-title { margin-bottom: 2px; }
+#tab-webcam .webcam-obs { border-top: 1px solid var(--line); }
+#tab-webcam .webcam-obs .strip-label { display: block; margin-bottom: 6px; }
+#tab-webcam .webcam-obs .uri-box { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; margin: 10px 0 6px; }
+
+
+/* ------------------------------------------------------------ 12. media grid */
+.quick-tile { background: var(--surface); }
+.quick-tile:hover { border-color: var(--line-strong); background: var(--surface-2); }
+.tile-icon { background: none; border: 1px solid var(--line-strong); box-shadow: none; }
+
+/* ---------------------------------------------------------- 13. scroll/misc */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: content-box; }
+::selection { background: color-mix(in srgb, var(--primary) 30%, transparent); }
+
+/* Tighter, single-line rows instead of boxed-in groups. */
+.settings-flex-row, .settings-toggle-row, .info-row { box-shadow: none !important; }
+.settings-grid-2 { gap: 12px; }
+.guide-layout { gap: 16px; }
+.guide-nav-item { background: none; border: 0; border-radius: 7px; color: var(--muted); }
+.guide-nav-item.active { background: var(--surface-2); color: var(--text); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ================= Light-theme legibility ================= */
+/* The dark theme paints coloured state text (#34d399 / #f87171 / #f59e0b) that
+   drops to ~1.9:1 on a white card. Same meaning, readable tones in light. */
+:root[data-base="light"] .diag-chip.ok .diag-state,
+:root[data-base="light"] .diag-section-head .section-count.good,
+:root[data-base="light"] .diag-fact .fact-value.good { color: #047857; }
+:root[data-base="light"] .diag-chip.bad .diag-state,
+:root[data-base="light"] .diag-section-head .section-count.bad,
+:root[data-base="light"] .diag-fact .fact-value.bad { color: #b91c1c; }
+:root[data-base="light"] .diag-chip.warn .diag-state,
+:root[data-base="light"] .diag-fact .fact-value.warn { color: #b45309; }
+
+/* Several button rules hard-code white text for the dark theme. On a light
+   surface that is white-on-white - most visibly the pairing buttons. */
+:root[data-base="light"] .btn-secondary,
+:root[data-base="light"] .btn-secondary:hover,
+:root[data-base="light"] .btn-ghost:hover,
+:root[data-base="light"] .nav-tab,
+:root[data-base="light"] .quick-tile,
+:root[data-base="light"] .guide-nav-item { color: var(--text-primary); }
+:root[data-base="light"] .btn-success,
+:root[data-base="light"] .btn-success:hover { color: #05341f; }
+:root[data-base="light"] .btn-danger,
+:root[data-base="light"] .btn-danger:hover { color: #b91c1c; }
+
+/* Phone Screen: handset and control rail end on the same line and the whole
+   card fits the window (it used to run ~20px past the bottom edge). */
+#tab-screen-mirror { --phone-h: min(820px, calc(100vh - 286px)); }
+#tab-screen-mirror .stream-shell { align-items: stretch; }
+#tab-screen-mirror .stream-head { margin: 0 0 10px; }
+#tab-screen-mirror .stream-shell { padding: 14px !important; }
+#tab-screen-mirror .stream-panel {
+  min-height: 0;
+  max-height: 100%;
+  gap: 6px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+#tab-screen-mirror .stream-panel .sp-note,
+#tab-screen-mirror .stream-panel .sp-sub { line-height: 1.35; }
+/* Collapsible info boxes tint their summary with the dark theme's cyan,
+   which is 1.6:1 on a light card. */
+:root[data-base="light"] details.info-box > summary,
+:root[data-base="light"] .info-box > summary { color: var(--text-primary); }
+/* The connection strip clipped its own badges: a fixed 35px box with
+   12px of bottom padding cut "PING" and "TLS pinned" in half.
+   Let it size to its content and centre the row instead. */
+.link-bar {
+  height: auto;
+  min-height: 44px;
+  padding-bottom: 0;
+  align-items: center;
+  overflow: visible;
+}

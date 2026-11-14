@@ -1,0 +1,2371 @@
+/**
+ * DuoLink — desktop design system (loads LAST, after glassy.css).
+ *
+ * Purpose: make the window read like real Windows software — compact controls,
+ * flat surfaces, one accent, no aurora / no glass blur / no decorative
+ * gradients. Every colour comes from the tokens in tokens.css so all eight
+ * palettes stay consistent.
+ */
+
+/* ---------- 1. Kill the decorative layer ---------- */
+.aurora,
+.aurora *,
+.bg-orbs,
+.orb { display: none !important; }
+
+html,
+body {
+  background: var(--bg) !important;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body::before,
+body::after { display: none !important; }
+
+.app-layout { background: transparent !important; }
+::selection { background: color-mix(in srgb, var(--primary) 38%, transparent); color: var(--text-primary); }
+
+/* Windows-like scrollbars, themed */
+* { scrollbar-color: var(--border-strong, var(--line)) transparent; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-secondary) 26%, transparent);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--text-secondary) 46%, transparent); background-clip: padding-box; }
+
+/* ---------- 2. Chrome: titlebar + sidebar ---------- */
+.titlebar {
+  height: 36px;
+  min-height: 36px;
+  background: var(--bg) !important;
+  border-bottom: 1px solid var(--line);
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+.titlebar .titlebar-title { font-size: 11.5px; letter-spacing: 0.02em; color: var(--text-secondary); font-weight: 500; }
+.titlebar-btn { width: 32px; height: 36px; border-radius: 0; color: var(--text-secondary); }
+.titlebar-btn:hover { background: var(--surface-2); color: var(--text-primary); }
+.titlebar-btn.close:hover { background: #c42b1c; color: #fff; }
+
+.sidebar {
+  width: 224px;
+  padding: 0 8px 8px;
+  margin: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  height: calc(100vh - 36px);
+  background: var(--bg-sidebar) !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+.brand {
+  padding: 12px 8px 10px;
+  margin: 0 0 6px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-icon,
+.brand-icon img { width: 26px; height: 26px; border-radius: 7px; box-shadow: none !important; }
+.brand-text h2 { font-size: 13.5px; font-weight: 700; letter-spacing: 0.06em; }
+.brand-badges { margin-top: 3px; gap: 4px; }
+.brand .badge { font-size: 9px; padding: 1px 5px; }
+
+.nav-tabs { gap: 1px; padding-top: 8px; overflow-y: auto; }
+.nav-group { padding: 10px 8px 4px; }
+.nav-group-label,
+.nav-group > h4 {
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-secondary) 80%, transparent);
+  margin: 0;
+}
+.sidebar .nav-tab,
+.nav-tab {
+  gap: 9px;
+  height: 30px;
+  padding: 0 9px;
+  margin: 0;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  font-size: 12.5px;
+  font-weight: 450;
+  color: var(--text-secondary);
+  background: transparent;
+  transition: background 120ms ease, color 120ms ease;
+}
+.nav-tab .ic { width: 15px; height: 15px; opacity: 0.9; }
+.nav-tab:hover { background: var(--surface-2); color: var(--text-primary); transform: none; }
+.nav-tab.active {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text-primary);
+  font-weight: 550;
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+.nav-tab.active::before { display: none; }
+.nav-tab.active .ic,
+.nav-tab.active .tab-icon { color: var(--primary); }
+.nav-tab kbd { display: none; }
+
+.sidebar-footer { padding: 8px 4px 4px; border-top: 1px solid var(--line); gap: 6px; }
+.indicator-bar { padding: 7px 9px; border-radius: 5px; background: var(--surface-1); font-size: 11.5px; }
+.indicator-bar .status-dot { width: 7px; height: 7px; }
+.killswitch-pill { height: 28px; border-radius: 5px; font-size: 11px; letter-spacing: 0.03em; }
+
+/* ---------- 3. Content column ---------- */
+.main-content {
+  padding: 0;
+  background: var(--bg) !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+.main-content > .tab-pane { padding: 20px 24px 40px; max-width: 1320px; }
+
+.pane-header {
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.pane-header h1 {
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  line-height: 1.25;
+}
+.pane-header .subtitle,
+.subtitle {
+  max-width: 720px;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.header-tools { align-self: center; }
+.header-tools .btn { height: 28px; }
+
+h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+h3, .card h3, .card-header-row h3 { font-size: 13px; font-weight: 600; letter-spacing: 0; }
+h4, .card h4 { font-size: 12.5px; font-weight: 600; }
+p, .hint, .muted { font-size: 12px; line-height: 1.55; color: var(--text-secondary); }
+.hint { margin-top: 3px; }
+
+/* ---------- 4. Surfaces ---------- */
+.card,
+.hero-card,
+.quick-tile,
+.status-card,
+.gesture-card,
+.qr-card,
+.confirmation-box,
+.active-session-box,
+.quick-controls-card,
+.chat-panel,
+.files-panel,
+.drop-zone,
+.link-bar,
+.settings-block,
+.stream-shell,
+.guide-section {
+  background: var(--surface-1) !important;
+  background-image: none !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 7px;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+.card { padding: 14px 16px; }
+.card-header-row { margin-bottom: 10px; }
+.card + .card, .card + .settings-block { margin-top: 12px; }
+.dashboard-grid,
+.grid-2,
+.grid-3 { gap: 12px; }
+
+.divider { height: 1px; background: var(--line); border: 0; margin: 12px 0; }
+.status-card { padding: 12px 14px; }
+.quick-tile { padding: 12px; border-radius: 6px; }
+.quick-tile:hover { border-color: var(--border-strong, var(--line)); background: var(--surface-2) !important; }
+.status-card .stat-value,
+.big-number { font-size: 20px; font-weight: 650; letter-spacing: -0.02em; }
+
+/* ---------- 5. Controls ---------- */
+.btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 550;
+  letter-spacing: 0;
+  gap: 6px;
+  box-shadow: none;
+  text-shadow: none;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.btn:hover:not(:disabled) { background: var(--surface-hover, var(--surface-2)); border-color: var(--border-strong, var(--line)); filter: none; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn .ic, .btn svg { width: 14px; height: 14px; }
+.btn-sm { height: 26px; padding: 0 9px; font-size: 11.5px; border-radius: 5px; }
+.btn-lg { height: 34px; padding: 0 16px; font-size: 13px; }
+.btn-primary {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--on-primary-btn, #fff) !important;
+  box-shadow: none;
+}
+.btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-secondary { background: var(--surface-2); color: var(--text-primary); }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+.btn-ghost:hover:not(:disabled) { background: var(--surface-2); color: var(--text-primary); }
+.btn-danger { background: transparent; border-color: color-mix(in srgb, #e5484d 55%, var(--line)); color: #e5484d; }
+.btn-danger:hover:not(:disabled) { background: color-mix(in srgb, #e5484d 14%, transparent); border-color: #e5484d; }
+.btn:disabled { opacity: 0.45; }
+.icon-btn {
+  width: 28px; height: 28px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text-primary); }
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+.btn:focus-visible, .nav-tab:focus-visible, .icon-btn:focus-visible { outline-offset: 1px; }
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+textarea,
+select,
+.uri-box input,
+.chat-input-row input,
+.field input,
+.field select {
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  box-shadow: none;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+textarea { height: auto; min-height: 64px; padding: 7px 9px; }
+input:focus, textarea:focus, select:focus { border-color: var(--primary); background: var(--surface-1); outline: none; }
+select {
+  appearance: none;
+  padding-right: 26px;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 13px) 13px, calc(100% - 9px) 13px;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); }
+/* Native <select> popups are drawn by Chromium with the OS palette, not the
+   page's: in dark mode the option list came out white-on-white and the text
+   was invisible. Paint the list with the app's own surface/text colours. */
+select option,
+select optgroup {
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
+/* Settings rows: label left, control right, like Windows Settings */
+.settings-block { padding: 14px 16px; margin-bottom: 12px; }
+.settings-block > h3 { margin-bottom: 10px; }
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 34px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.setting-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.setting-row .setting-label { font-size: 12.5px; font-weight: 500; color: var(--text-primary); }
+.setting-row .hint { margin-top: 1px; max-width: 520px; }
+
+/* Switch */
+.toggle, .switch { width: 36px; height: 20px; border-radius: 10px; }
+.toggle-slider, .switch-slider { border-radius: 10px; }
+.toggle-slider::before, .switch-slider::before { width: 14px; height: 14px; border-radius: 50%; }
+
+.badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 6. Settings lists ---------- */
+.settings-group-label {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+}
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.settings-toggle-row strong { font-size: 12.5px; font-weight: 550; }
+.settings-toggle-row .hint { margin-top: 2px; max-width: 520px; }
+.settings-toggle-row:first-of-type { border-top: 0; }
+.settings-kbd {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+.settings-info-row { padding: 9px 0; border-top: 1px solid var(--line); }
+.settings-flex-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+
+/* Shared folders (Settings → Phone file access) */
+.shared-folder-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.shared-folder-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-2);
+}
+.shared-folder-row .ic { width: 14px; height: 14px; color: var(--text-secondary); flex: 0 0 auto; }
+.shared-folder-path {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
+.shared-folder-row .btn { flex: 0 0 auto; }
+.shared-folder-empty {
+  padding: 10px;
+  border: 1px dashed var(--line);
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ---------- 7. Theme gallery ---------- */
+.theme-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-2);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.theme-card:hover { border-color: var(--border-strong, var(--text-secondary)); }
+.theme-card[aria-checked="true"] {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+  background: var(--surface-1);
+}
+.theme-preview {
+  position: relative;
+  display: block;
+  height: 44px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--tp-bg);
+  border: 1px solid var(--tp-line);
+}
+.theme-preview .tp-side {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 14px;
+  background: var(--tp-side-bg);
+  border-right: 1px solid var(--tp-line);
+}
+.theme-preview .tp-body { position: absolute; inset: 5px 6px 5px 20px; display: flex; flex-direction: column; gap: 4px; }
+.theme-preview .tp-body b { display: block; height: 5px; border-radius: 2px; background: var(--tp-chip); }
+.theme-preview .tp-body b:nth-child(2) { width: 72%; }
+.theme-preview .tp-body b:nth-child(3) { width: 46%; }
+.theme-preview .tp-accent {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  width: 14px;
+  height: 5px;
+  border-radius: 2px;
+  background: var(--tp-accent);
+}
+.theme-name { font-size: 11.5px; font-weight: 550; color: var(--text-primary); }
+/* Swatch values are literal on purpose: they preview a palette that is not
+   currently applied, so they must not read from the live theme variables. */
+.theme-card[data-theme-id="dark"]      { --tp-bg:#12151f; --tp-side-bg:#0b0d14; --tp-line:#262b3a; --tp-chip:#3a4154; --tp-accent:#7c6cff; }
+.theme-card[data-theme-id="light"]     { --tp-bg:#ffffff; --tp-side-bg:#f3f4f8; --tp-line:#dfe2ea; --tp-chip:#d3d7e2; --tp-accent:#6354f0; }
+.theme-card[data-theme-id="midnight"]  { --tp-bg:#0b101a; --tp-side-bg:#06090f; --tp-line:#1c2534; --tp-chip:#2a3648; --tp-accent:#4f8cff; }
+.theme-card[data-theme-id="ocean"]     { --tp-bg:#0a1a26; --tp-side-bg:#06111a; --tp-line:#173242; --tp-chip:#204657; --tp-accent:#14b8a6; }
+.theme-card[data-theme-id="cyberpunk"] { --tp-bg:#150a23; --tp-side-bg:#0c0714; --tp-line:#33184d; --tp-chip:#472263; --tp-accent:#e0348f; }
+.theme-card[data-theme-id="purple"]    { --tp-bg:#1a0f2b; --tp-side-bg:#120a1f; --tp-line:#372052; --tp-chip:#4a2c69; --tp-accent:#a855f7; }
+.theme-card[data-theme-id="emerald"]   { --tp-bg:#081a15; --tp-side-bg:#05110e; --tp-line:#143a2f; --tp-chip:#1c5142; --tp-accent:#10b981; }
+.theme-card[data-theme-id="graphite"]  { --tp-bg:#1a1d21; --tp-side-bg:#141619; --tp-line:#2c3138; --tp-chip:#3d444d; --tp-accent:#94a3b8; }
+
+/* ---------- 8. Guide ---------- */
+.guide-layout {
+  display: grid;
+  grid-template-columns: 196px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.guide-nav {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-right: 10px;
+  border-right: 1px solid var(--line);
+}
+.guide-nav-item {
+  display: block;
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.guide-nav-item:hover { background: var(--surface-2); color: var(--text-primary); }
+.guide-nav-item.active {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text-primary);
+  font-weight: 550;
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+.guide-content { min-width: 0; }
+.guide-section { display: none; padding: 18px 20px; }
+.guide-section.active { display: block; }
+.guide-section h2 { margin: 0 0 4px; font-size: 16px; font-weight: 650; }
+.guide-lede { margin: 0 0 14px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; max-width: 660px; }
+.guide-subhead {
+  margin: 18px 0 6px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.guide-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.guide-step {
+  display: flex;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+.guide-step:first-child { border-top: 0; padding-top: 2px; }
+.guide-step-num {
+  flex: 0 0 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+.guide-note {
+  margin: 12px 0 0;
+  padding: 9px 11px;
+  border-left: 2px solid var(--primary);
+  border-radius: 0 4px 4px 0;
+  background: var(--surface-2);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.guide-note strong { color: var(--text-primary); font-weight: 600; }
+.guide-list { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; line-height: 1.7; color: var(--text-secondary); }
+.guide-link { color: var(--primary); text-decoration: none; font-weight: 500; }
+.guide-link:hover { text-decoration: underline; }
+.guide-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+.guide-row { border-top: 1px solid var(--line); }
+.guide-row td { padding: 7px 10px 7px 0; vertical-align: top; color: var(--text-secondary); line-height: 1.5; }
+.guide-row td:first-child { width: 38%; color: var(--text-primary); font-weight: 500; }
+.guide-row-head td {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-top: 0;
+}
+.about-brand { display: flex; align-items: center; gap: 12px; }
+.about-brand img { width: 44px; height: 44px; border-radius: 10px; }
+
+/* ---------- 9. Phone screen ---------- */
+.stream-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 264px;
+  gap: 12px;
+  /* The stage height comes from the handset itself (--phone-h), so it must
+     not stretch to the settings column: a short window used to leave a dead
+     strip under the phone's status bar. */
+  align-items: start;
+  height: auto;
+  min-height: 430px;
+  padding: 0 !important;
+  background: none !important;
+  border: 0 !important;
+}
+.stream-stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-1);
+}
+.mirror-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: color-mix(in srgb, var(--bg) 72%, #000);
+}
+.mirror-viewport canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  border-radius: 2px;
+  outline: 1px solid color-mix(in srgb, #fff 8%, transparent);
+  outline-offset: -1px;
+  cursor: crosshair;
+  touch-action: none;
+}
+.mirror-viewport canvas.hidden { display: none; }
+.stream-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-1);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+.stream-stat { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.stream-stat b { font-weight: 550; color: var(--text-primary); font-family: var(--mono); font-size: 11px; }
+.stream-spacer { flex: 1; }
+.stat-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  flex: 0 0 auto;
+  transition: background 160ms ease;
+}
+.stat-dot.live { background: #2fbf71; box-shadow: 0 0 0 3px color-mix(in srgb, #2fbf71 18%, transparent); }
+.stat-dot.wait { background: #e0a13c; }
+.stat-dot.error { background: #e5484d; }
+.stream-statusbar .btn-xs { height: 22px; padding: 0 8px; font-size: 11px; gap: 5px; margin-left: 4px; }
+.stream-statusbar .btn-xs .ic { width: 12px; height: 12px; }
+
+.screen-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--bg) 92%, #000);
+  padding: 20px;
+}
+.screen-placeholder.hidden { display: none; }
+.screen-placeholder .placeholder-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 4px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+.screen-placeholder .placeholder-icon .ic { width: 18px; height: 18px; }
+.screen-placeholder strong { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+.screen-placeholder p { max-width: 280px; font-size: 11.5px; line-height: 1.5; color: var(--text-secondary); }
+.mirror-stale-note {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-1) 92%, transparent);
+  font-size: 11.5px;
+  color: var(--text-primary);
+}
+.mirror-stale-note.hidden { display: none; }
+.stale-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #e0a13c;
+  animation: pulse-soft 1.4s ease-in-out infinite;
+}
+
+/* Stream control panel */
+.stream-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 12px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-1);
+}
+.stream-start-row { display: flex; gap: 6px; }
+.stream-start-row .btn { flex: 1; justify-content: center; }
+.stream-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.stream-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  cursor: pointer;
+  padding: 0;
+}
+.stream-details > summary::-webkit-details-marker { display: none; }
+.stream-details > summary .chev { width: 12px; height: 12px; color: var(--text-secondary); transition: transform 140ms ease; }
+.stream-details[open] > summary .chev { transform: rotate(180deg); }
+.stream-details[open] > summary { margin-bottom: 6px; }
+.strip-label {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.strip-title { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+.nav-button-group { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav-button-group .btn { justify-content: center; }
+.btn-ctrl { width: 34px; height: 30px; padding: 0 !important; }
+.nav-button-group.compact .btn { flex: 1; }
+
+/* Fullscreen mirror (F11 / button) */
+.stream-shell.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  height: auto;
+  padding: 0 !important;
+  background: #000 !important;
+  grid-template-columns: 1fr;
+}
+.stream-shell.is-fullscreen .stream-panel { display: none; }
+.stream-shell.is-fullscreen .stream-stage { border: 0; border-radius: 0; background: #000; }
+.stream-shell.is-fullscreen .device-area { background: #000; }
+.stream-shell.is-fullscreen .stream-statusbar {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: color-mix(in srgb, #000 70%, transparent);
+  border-top: 1px solid color-mix(in srgb, #fff 10%, transparent);
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.stream-shell.is-fullscreen:hover .stream-statusbar { opacity: 1; }
+
+/* ---------- 10. Webcam ---------- */
+.webcam-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 304px;
+  gap: 12px;
+  align-items: start;
+}
+.webcam-preview-card { padding: 0; overflow: hidden; }
+.webcam-viewport {
+  aspect-ratio: 16 / 9;
+  max-height: 54vh;
+  min-height: 220px;
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+}
+.webcam-viewport img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.webcam-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.field > span { font-size: 11px; color: var(--text-secondary); }
+.field select, .field input { width: 100%; }
+.webcam-settings .settings-toggle-row { padding: 6px 0; }
+.webcam-settings .stream-start-row { margin-top: 2px; }
+.webcam-obs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.uri-box { display: flex; gap: 4px; }
+.uri-box input { min-width: 0; flex: 1; font-family: var(--mono); font-size: 11px; }
+.btn-icon { width: 30px; padding: 0 !important; justify-content: center; }
+
+/* ---------- 11. Media player ---------- */
+.media-viewer { background: color-mix(in srgb, #000 84%, transparent); }
+/* Right padding must clear the frameless window's native min/max/close strip
+   (~140px), or the player's own ✕ is drawn underneath it and invisible. */
+.media-viewer-bar { height: 46px; padding: 0 156px 0 14px; border-bottom: 1px solid color-mix(in srgb, #fff 10%, transparent); }
+
+/* Exit control: a labelled red pill instead of a bare icon. `.icon-btn` (also
+   in this file) used to strip the circle's background and border, leaving an
+   invisible button in the bar - the "there is no X to exit" report. */
+#media-viewer .media-viewer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  height: 32px;
+  min-width: 0;
+  padding: 0 13px;
+  white-space: nowrap;
+  border: 1px solid rgba(248, 113, 113, .55);
+  border-radius: 999px;
+  background: rgba(248, 113, 113, .18);
+  color: #f87171;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 1;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+#media-viewer .media-viewer-close .ic { width: 14px; height: 14px; }
+#media-viewer .media-viewer-close:hover {
+  background: rgba(248, 113, 113, .34);
+  border-color: rgba(248, 113, 113, .8);
+  color: #fecaca;
+}
+#media-viewer .media-viewer-close:focus-visible {
+  outline: 2px solid rgba(248, 113, 113, .7);
+  outline-offset: 2px;
+}
+.media-viewer-name { font-size: 12.5px; font-weight: 500; color: #f2f4f8; }
+.media-viewer-stage { min-height: 0; }
+.media-viewer-stage img,
+.media-viewer-stage video { max-width: 100%; max-height: calc(100vh - 128px); object-fit: contain; }
+.media-player-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-1);
+}
+.mp-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.mp-btn:hover { background: var(--surface-2); border-color: var(--line); }
+.mp-btn .ic { width: 16px; height: 16px; }
+.mp-btn-primary { background: var(--primary); color: var(--on-primary-btn, #fff); }
+.mp-btn-primary:hover { background: var(--primary); filter: brightness(1.1); border-color: transparent; }
+.mp-btn-sm .ic { width: 13px; height: 13px; }
+.mp-btn.is-active { color: var(--primary); }
+.mp-time {
+  margin-left: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.mp-volume { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.mp-volume input[type="range"] {
+  width: 96px;
+  height: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* ---------- 12. Overlays, toasts, tooltips ---------- */
+.modal-backdrop,
+.confirm-backdrop,
+#confirm-dialog {
+  background: color-mix(in srgb, #000 55%, transparent);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: overlay-in 140ms ease-out;
+}
+.modal,
+.confirmation-box {
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  box-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.55);
+  animation: dialog-in 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.toast,
+.toast-item,
+#toast-container > * {
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: 12px;
+  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.6);
+  animation: toast-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+[title] { position: relative; }
+
+kbd {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+/* ---------- 13. Overview phone-control strip ---------- */
+.control-strip { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 12px 16px; }
+.control-strip-main { display: flex; align-items: center; gap: 16px; flex: 1 1 320px; min-width: 0; }
+.control-strip-text { min-width: 0; }
+.control-strip-text .hint { max-width: 480px; }
+.control-strip-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.media-key-row { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-2); }
+.media-key-row .btn-icon { width: 26px; height: 24px; border-radius: 4px; }
+.media-key-row .btn-icon .ic { width: 13px; height: 13px; }
+.control-strip .strip-label { margin-right: 2px; }
+
+/* ---------- 14. Motion ---------- */
+@keyframes pane-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.985); } to { opacity: 1; transform: none; } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.tab-pane.active { animation: pane-in 170ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.theme-switching,
+.theme-switching * {
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease !important;
+}
+.spinner, .loading-spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--line);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+.progress-bar, .progress-track { border-radius: 4px; overflow: hidden; background: var(--surface-2); }
+.progress-bar > span, .progress-fill { background: var(--primary); transition: width 120ms linear; }
+
+/* Respect the user's Windows "animation effects" setting and the in-app toggle */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+:root[data-reduce-motion="1"] *,
+:root[data-reduce-motion="1"] *::before,
+:root[data-reduce-motion="1"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ---------- 15. Responsive ---------- */
+@media (max-width: 1180px) {
+  .theme-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .webcam-shell { grid-template-columns: minmax(0, 1fr) 276px; }
+}
+@media (max-width: 1040px) {
+  .sidebar { width: 200px; }
+  .main-content > .tab-pane { padding: 16px 18px 32px; }
+  .stream-shell { grid-template-columns: minmax(0, 1fr) 232px; height: auto; }
+  .webcam-shell { grid-template-columns: minmax(0, 1fr); }
+  .webcam-settings { max-width: none; }
+  .guide-layout { grid-template-columns: 168px minmax(0, 1fr); gap: 14px; }
+}
+@media (max-width: 860px) {
+  .theme-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stream-shell { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .stream-stage { height: auto; }
+  .stream-panel { overflow: visible; }
+  .guide-layout { grid-template-columns: minmax(0, 1fr); }
+  .guide-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0 0 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .guide-nav-item { width: auto; }
+  .pane-header { flex-direction: column; align-items: stretch; }
+}
+
+/* =====================================================================
+   16. Polish pass: webcam stage, Overview fit, colour-swatch themes
+   ===================================================================== */
+
+/* ---- Webcam: one 16:9 screen, nothing overlapping ---- */
+#tab-webcam .webcam-viewport {
+  position: relative;
+  background: color-mix(in srgb, var(--bg) 86%, #000);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+/* The preview <img> is hidden until real frames arrive (renderer sets
+   display:block inline). Without this it painted as a black box next to the
+   placeholder, which is what split the card into two rectangles. */
+#webcam-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  display: none;
+  background: #000;
+}
+#tab-webcam .screen-placeholder {
+  max-width: none;
+  width: 100%;
+  padding: 24px;
+  background: transparent;
+}
+#tab-webcam .screen-placeholder .placeholder-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+}
+#tab-webcam .webcam-preview-card { display: flex; flex-direction: column; }
+#tab-webcam .webcam-preview-card .stream-statusbar { margin-top: auto; }
+
+/* ---- Overview: the pairing columns must never overflow ---- */
+.pairing-grid { grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); column-gap: 20px; }
+.pairing-grid > * { min-width: 0; }
+.control-strip { row-gap: 10px; }
+.control-strip-main { flex: 1 1 300px; }
+.control-strip-tools { margin-left: auto; }
+.qr-card,
+.pairing-grid .status-card { min-width: 0; }
+@media (max-width: 1240px) {
+  .pairing-grid { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
+  .pairing-grid .qr-card { max-width: 460px; width: 100%; }
+}
+
+/* ---- Themes: colour swatches instead of preview cards ---- */
+.theme-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 6px 0 16px;
+}
+.theme-gallery .theme-card {
+  width: 72px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+  align-items: center;
+  gap: 7px;
+}
+.theme-gallery .theme-card:hover { background: transparent; transform: translateY(-1px); }
+.theme-gallery .theme-card[aria-checked="true"] { background: transparent; box-shadow: none; }
+.theme-gallery .theme-preview { display: none; }
+.theme-gallery .theme-card::before {
+  content: "";
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--tp-accent) 0 50%, var(--tp-bg) 50% 100%);
+  box-shadow: inset 0 0 0 1px var(--tp-line), 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.theme-gallery .theme-card:hover::before { transform: scale(1.06); }
+.theme-gallery .theme-card[aria-checked="true"]::before {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--tp-accent), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.theme-gallery .theme-name { font-size: 10.5px; font-weight: 500; color: var(--text-secondary); text-align: center; }
+.theme-gallery .theme-card[aria-checked="true"] .theme-name { color: var(--text-primary); font-weight: 600; }
+
+/* =====================================================================
+   17. Guide: a proper manual page, not a wall of text
+   ===================================================================== */
+.guide-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--primary) 12%, transparent), transparent 58%),
+    var(--surface-1);
+}
+.guide-hero-brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.guide-hero-brand img { width: 42px; height: 42px; border-radius: 11px; flex: 0 0 auto; }
+.guide-hero-brand h2 { margin: 0 0 2px; font-size: 16px; font-weight: 650; letter-spacing: -0.01em; }
+.guide-hero-brand p { margin: 0; max-width: 620px; font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
+.guide-hero-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.guide-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface-2);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.guide-chip .ic { width: 12px; height: 12px; color: var(--primary); }
+
+.guide-layout { grid-template-columns: 214px minmax(0, 1fr); gap: 18px; }
+.guide-nav {
+  position: sticky;
+  top: 4px;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-1);
+}
+.guide-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-size: 12.5px;
+  font-weight: 450;
+  color: var(--text-secondary);
+}
+.guide-nav-item .ic { width: 14px; height: 14px; opacity: 0.8; }
+.guide-nav-item:hover { background: var(--surface-2); color: var(--text-primary); }
+.guide-nav-item.active {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 32%, transparent);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: none;
+}
+.guide-nav-item.active .ic { color: var(--primary); opacity: 1; }
+
+.guide-section {
+  padding: 22px 24px 20px;
+  border-radius: 8px;
+  background: var(--surface-1);
+}
+.guide-section.active { animation: guide-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes guide-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: none; }
+}
+.guide-section h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+.guide-lede {
+  margin: 0 0 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  max-width: 760px;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+.guide-subhead {
+  margin: 20px 0 8px;
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
+}
+.guide-steps { gap: 8px; }
+.guide-step {
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-2);
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.guide-step:first-child { padding-top: 11px; border-top: 1px solid var(--line); }
+.guide-step:hover { border-color: var(--line-strong); background: var(--surface-1); }
+.guide-step h3 { margin: 0 0 2px; font-size: 12.5px; font-weight: 600; }
+.guide-step p { margin: 0; font-size: 12px; line-height: 1.55; color: var(--text-secondary); }
+.guide-step-num {
+  flex: 0 0 22px;
+  height: 22px;
+  border: 1px solid color-mix(in srgb, var(--primary) 34%, transparent);
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  color: var(--text-primary);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.guide-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, var(--primary) 26%, transparent);
+  border-left: 2px solid var(--primary);
+  border-radius: 0 6px 6px 0;
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+.guide-note .ic { flex: 0 0 15px; width: 15px; height: 15px; margin-top: 1px; color: var(--primary); }
+.guide-note p { margin: 0; font-size: 12px; line-height: 1.55; color: var(--text-secondary); }
+
+/* The page table is divs, not a <table>: two real columns with separators. */
+.guide-table { display: block; margin-top: 4px; }
+.guide-table .guide-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 190px) minmax(0, 1fr);
+  gap: 16px;
+  padding: 8px 2px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.guide-table .guide-row:first-child { border-top: 0; }
+.guide-table .guide-row strong { font-weight: 600; color: var(--text-primary); }
+.guide-table .guide-row span { color: var(--text-secondary); min-width: 0; }
+.guide-list { font-size: 12.5px; line-height: 1.7; }
+.guide-link { text-decoration: underline; text-underline-offset: 2px; }
+.about-brand img { border: 1px solid var(--line); }
+
+/* =====================================================================
+   18. Motion: quick, restrained, and disablable
+   ===================================================================== */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes nav-in {
+  from { opacity: 0.4; transform: translateX(-3px); }
+  to { opacity: 1; transform: none; }
+}
+
+.tab-pane.active > .pane-header,
+.tab-pane.active > .guide-hero,
+.tab-pane.active > .card,
+.tab-pane.active > .settings-block,
+.tab-pane.active > .pairing-grid,
+.tab-pane.active > .control-strip,
+.tab-pane.active > .stream-shell,
+.tab-pane.active > .webcam-shell,
+.tab-pane.active > .guide-layout {
+  animation: rise-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.tab-pane.active > :nth-child(2) { animation-delay: 25ms; }
+.tab-pane.active > :nth-child(3) { animation-delay: 50ms; }
+.tab-pane.active > :nth-child(4) { animation-delay: 70ms; }
+.tab-pane.active > :nth-child(5) { animation-delay: 90ms; }
+.tab-pane.active > :nth-child(n+6) { animation-delay: 105ms; }
+
+.card,
+.settings-block,
+.quick-tile,
+.guide-step,
+.theme-card,
+.nav-tab {
+  transition: background-color 130ms ease, border-color 130ms ease,
+    box-shadow 160ms ease, transform 130ms ease, color 130ms ease;
+}
+.card:hover { border-color: var(--line-strong); }
+.quick-tile:hover { transform: translateY(-1px); }
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(1px) scale(0.995); }
+.icon-btn:hover { transform: none; }
+.nav-tab.active { animation: nav-in 180ms ease-out; }
+.theme-gallery .theme-card[aria-checked="true"]::before { animation: swatch-pop 200ms cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+@keyframes swatch-pop {
+  from { transform: scale(0.88); }
+  to { transform: scale(1); }
+}
+.guide-nav-item.active { animation: nav-in 160ms ease-out; }
+
+/* Windows users who turn animations off get instant state changes. */
+@media (prefers-reduced-motion: reduce) {
+  .tab-pane.active > *,
+  .nav-tab.active,
+  .theme-gallery .theme-card[aria-checked="true"]::before { animation: none !important; }
+}
+
+/* Phone-control strip: keep the switch beside its label instead of floating
+   in the middle of the card, with the media keys right-aligned. */
+.control-strip-main { flex: 0 1 auto; }
+.control-strip-text .hint { max-width: 380px; }
+@media (max-width: 1120px) {
+  .control-strip-main { flex: 1 1 100%; }
+}
+
+/* =====================================================================
+   19. Device stages — the phone screen lives inside a real handset frame,
+   and the webcam feed inside a camera monitor. Both stages are always
+   dark (a screen bezel is black in every palette), so no theme tint.
+   ===================================================================== */
+.device-area {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  /* Handset sits at the start of the stage, not floating in the middle of
+     empty backdrop (screen on the left, controls on the right). */
+  justify-content: flex-start;
+  padding: 18px;
+  container-type: size;
+  background: var(--stage-bg, radial-gradient(120% 100% at 15% 0%, #ffffff 0%, #eef2f9 46%, #dde5f1 100%));
+}
+.device-frame {
+  position: relative;
+  /* No chassis/bezel: the screen itself is the handset, only its corners
+     are rounded. */
+  padding: 0;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 30px;
+  background: transparent;
+  box-shadow:
+    0 30px 60px -30px rgba(15, 23, 42, 0.5),
+    0 2px 8px rgba(15, 23, 42, 0.18);
+}
+.device-frame::after { display: none; }
+.mirror-stage .mirror-viewport {
+  /* Height follows the real phone aspect: fit by height in portrait, by
+     width in landscape. --ar is updated from the frame size in JS. */
+  --ar: 0.45;
+  position: relative;
+  flex: 0 0 auto;
+  width: auto;
+  /* Full handset height (6.7" logical screen) unless the stage is narrower
+     than the phone, in which case fit by width. */
+  height: min(var(--phone-h), calc((100cqw - 36px) / var(--ar)));
+  aspect-ratio: var(--ar);
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 30px;
+  background: #000;
+  box-shadow: 0 0 0 1px rgba(9, 12, 20, 0.16), 0 18px 44px -24px rgba(9, 12, 20, 0.6);
+}
+/* The mirror stage is only as tall as the handset + bezel + stage padding. */
+.mirror-stage {
+  flex: 0 0 auto;
+  height: calc(var(--phone-h) + 36px);
+}
+.mirror-stage .mirror-viewport canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  outline: 0;
+}
+/* No chassis parts: the punch-hole dot belonged to the removed bezel. */
+.device-cam { display: none; }
+/* Placeholder copy has to be legible on the black bezel in light themes. */
+.mirror-stage .screen-placeholder,
+.webcam-area .screen-placeholder {
+  color: #97a3b6;
+  background: radial-gradient(90% 80% at 50% 30%, #171d29 0%, #0a0d13 100%);
+}
+.mirror-stage .screen-placeholder strong,
+.webcam-area .screen-placeholder strong { color: #eef2fa; }
+.mirror-stage .screen-placeholder .placeholder-icon,
+.webcam-area .screen-placeholder .placeholder-icon {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e6;
+}
+
+/* Webcam phone: the same handset chassis as the mirror, standing portrait.
+   The camera feed fills the screen (cover), like a phone camera app; the
+   MJPEG/OBS output is untouched and still carries the full frame. */
+.webcam-area {
+  container-type: size;
+  flex: 0 0 auto;
+  /* Same phone as the mirror, not a smaller monitor-sized preview. */
+  height: calc(var(--phone-h) + 36px);
+  padding: 18px;
+}
+.webcam-area .device-frame {
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  padding: 0;
+  border-radius: 30px;
+}
+#tab-webcam .webcam-area .webcam-viewport {
+  position: relative;
+  flex: 0 0 auto;
+  width: auto;
+  height: min(var(--phone-h), calc((100cqw - 36px) / var(--phone-ar)));
+  max-height: none;
+  min-height: 0;
+  aspect-ratio: var(--phone-ar);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 30px;
+  background: #000;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), inset 0 0 44px rgba(0, 0, 0, 0.55);
+}
+#tab-webcam .webcam-area .webcam-viewport img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  background: #000;
+}
+.viewfinder {
+  position: absolute;
+  inset: 13px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.webcam-frame.is-live .viewfinder { opacity: 0.72; }
+.vf {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+}
+.vf-tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 5px 0 0 0; }
+.vf-tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 5px 0 0; }
+.vf-bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 5px; }
+.vf-br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 5px 0; }
+.vf-cross {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  opacity: 0.7;
+}
+.vf-cross::before,
+.vf-cross::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.75);
+}
+.vf-cross::before { left: 50%; top: 0; width: 1px; height: 100%; }
+.vf-cross::after { top: 50%; left: 0; height: 1px; width: 100%; }
+.webcam-hud {
+  position: absolute;
+  top: 13px;
+  left: 13px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(5, 8, 13, 0.62);
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: #e8eef9;
+}
+.webcam-hud.hidden { display: none; }
+.hud-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.hud-live i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff4d5e;
+  box-shadow: 0 0 0 3px rgba(255, 77, 94, 0.22);
+  animation: pulse-soft 1.6s ease-in-out infinite;
+}
+.hud-specs {
+  padding-left: 9px;
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  color: #b9c4d6;
+  font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-live i { animation: none; }
+  .viewfinder, .device-frame { transition: none; }
+}
+
+/* The two preview tabs are focus surfaces: their page header is gone (the
+   window title and sidebar already name them), so the handset gets the full
+   pane height. The header actions now live in the stream status bar. */
+#tab-screen-mirror,
+#tab-webcam { padding: 10px 16px 10px; }
+.stream-statusbar .btn {
+  height: 22px;
+  min-height: 22px;
+  padding: 0 8px !important;
+  border-radius: 5px;
+  font-size: 10.5px;
+}
+.stream-statusbar .btn .ic { width: 12px; height: 12px; }
+.stream-statusbar .badge { height: 18px; padding: 0 6px; font-size: 10px; }
+
+/* =====================================================================
+   20. Layout repairs — switches, strip alignment, key rows, theme swatches
+   ===================================================================== */
+
+/* One switch size everywhere: 40×22 track, 16px knob, 22px travel. The
+   legacy layers sized the track 36×20 but moved the knob 20px, so the knob
+   hung outside the pill. */
+.switch {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 22px;
+  vertical-align: middle;
+}
+.switch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+.switch .slider {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-3, var(--surface-2));
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.switch .slider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  transform: translateY(-50%);
+  transition: transform 170ms cubic-bezier(0.22, 0.9, 0.3, 1.15);
+}
+.switch input:checked + .slider {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.switch input:checked + .slider::before { transform: translate(18px, -50%); }
+.switch input:focus-visible + .slider {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Control strip: label + switch on the left, media keys on the right. */
+.control-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 12px 16px;
+  /* Was glued to the pairing cards underneath. */
+  margin-bottom: 16px;
+}
+.control-strip-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.control-strip-text { display: flex; flex-direction: column; gap: 2px; }
+.control-strip-text .hint { max-width: 460px; }
+.control-strip-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+@media (max-width: 1180px) {
+  .control-strip { grid-template-columns: minmax(0, 1fr); }
+  .control-strip-tools { justify-content: flex-start; }
+}
+
+/* Stream panel buttons: equal halves for Start/Stop, three equal keys. */
+.stream-start-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.stream-start-row .btn {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+}
+.nav-button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+.nav-keys {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+.btn-ctrl {
+  width: auto;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px !important;
+}
+.nav-button-group .btn-ctrl { min-width: 0; }
+.nav-keys .btn-ctrl { height: 34px; padding: 0 !important; }
+.btn-wide { width: 100%; justify-content: center; }
+.nav-button-group.compact { flex-direction: row; }
+.nav-button-group.compact .btn { flex: 1 1 0; height: 32px; }
+
+/* Pairing cards keep their natural height instead of stretching to the
+   tallest sibling, which used to leave a tall empty QR card. */
+.pairing-grid { align-items: start; }
+
+/* Theme swatches: a real three-colour chip (accent / card / background)
+   instead of eight near-identical dark rectangles. */
+.theme-card[data-theme-id="dark"]      { --tp-bg:#0b0d14; --tp-card:#181c29; --tp-line:#2a3040; --tp-accent:#7c6cff; }
+.theme-card[data-theme-id="light"]     { --tp-bg:#eef1f7; --tp-card:#ffffff; --tp-line:#cfd6e4; --tp-accent:#2563eb; }
+.theme-card[data-theme-id="midnight"]  { --tp-bg:#050a16; --tp-card:#101d33; --tp-line:#1e3352; --tp-accent:#3b82f6; }
+.theme-card[data-theme-id="ocean"]     { --tp-bg:#e6f3f9; --tp-card:#ffffff; --tp-line:#bcdbe7; --tp-accent:#0e7490; }
+.theme-card[data-theme-id="cyberpunk"] { --tp-bg:#0a0410; --tp-card:#200d39; --tp-line:#43196b; --tp-accent:#ff2d95; }
+.theme-card[data-theme-id="purple"]    { --tp-bg:#f3edff; --tp-card:#ffffff; --tp-line:#d6c6f3; --tp-accent:#7c3aed; }
+.theme-card[data-theme-id="emerald"]   { --tp-bg:#04140f; --tp-card:#0b3126; --tp-line:#15543f; --tp-accent:#22c55e; }
+.theme-card[data-theme-id="graphite"]  { --tp-bg:#eeeeea; --tp-card:#fbfbf8; --tp-line:#cdcdc4; --tp-accent:#b45309; }
+
+.theme-gallery .theme-card[data-theme-id]::before {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--tp-line) 80%, #000);
+  background:
+    conic-gradient(from 210deg,
+      var(--tp-accent) 0 38%,
+      var(--tp-card) 38% 71%,
+      var(--tp-bg) 71% 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+.theme-gallery .theme-card[data-theme-id][aria-checked="true"]::before {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--tp-accent), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+/* =====================================================================
+   21. In-app confirmation dialog (window.confirm is unthemed)
+   ===================================================================== */
+.app-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 11, 18, 0.52);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.app-confirm-backdrop.hidden { display: none; }
+.app-confirm {
+  width: min(420px, 100%);
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.65);
+  animation: confirm-in 160ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+@keyframes confirm-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-confirm { animation: none; }
+}
+.app-confirm-header { display: flex; align-items: center; gap: 11px; }
+.app-confirm-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--danger, #e5484d) 32%, transparent);
+  background: color-mix(in srgb, var(--danger, #e5484d) 12%, transparent);
+  color: var(--danger, #e5484d);
+}
+.app-confirm-icon .ic { width: 17px; height: 17px; }
+.app-confirm-header h2 { margin: 0; font-size: 15px; font-weight: 650; color: var(--text-primary); }
+.app-confirm-message {
+  margin: 12px 0 18px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: pre-line;
+}
+.app-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.app-confirm-actions .btn { min-width: 96px; justify-content: center; }
+.app-confirm-actions .btn-danger {
+  background: var(--danger, #e5484d);
+  border-color: var(--danger, #e5484d);
+  color: #fff;
+}
+
+/* =====================================================================
+   22. Preview panes — the handset is the card
+   The wide "studio" stage around the phone was dead space: the phone is
+   all that is shown, sitting on the normal theme background, with the
+   settings panel right beside it.
+   ===================================================================== */
+#tab-screen-mirror,
+#tab-webcam { padding: 10px 16px 10px; }
+
+.stream-shell { grid-template-columns: auto 300px; justify-content: start; gap: 16px; }
+.webcam-shell { grid-template-columns: auto 320px; justify-content: start; gap: 16px; }
+
+.stream-stage,
+.webcam-preview-card {
+  width: max-content;
+  max-width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.device-area {
+  width: max-content;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  /* No container queries here: the stage now sizes to the handset. */
+  container-type: normal;
+}
+.mirror-stage,
+.webcam-area {
+  width: max-content;
+  height: auto;
+  padding: 0;
+}
+.mirror-stage .mirror-viewport {
+  height: var(--phone-h);
+  width: calc(var(--phone-h) * var(--ar));
+  max-width: none;
+}
+#tab-webcam .webcam-area .webcam-viewport {
+  height: var(--phone-h);
+  width: calc(var(--phone-h) * var(--phone-ar));
+  max-width: none;
+}
+/* Landscape mirror: fill the stage instead of the old fixed 640 px box, which
+   left a small phone-shaped picture floating in a mostly empty panel. Width
+   follows the column, height follows the frame's own aspect ratio, and the
+   max-width keeps the picture inside the window height. */
+.mirror-viewport.landscape {
+  height: auto;
+  width: 100%;
+  max-width: calc((100vh - 300px) * var(--ar));
+  max-height: calc(100vh - 300px);
+  border-radius: 14px;
+}
+.stream-stage.is-landscape {
+  width: 100%;
+}
+.stream-stage.is-landscape .device-area {
+  width: 100%;
+  justify-content: center;
+}
+#tab-screen-mirror .stream-statusbar {
+  width: 100%;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+}
+#tab-screen-mirror .stream-statusbar .btn {
+  width: 26px;
+  padding: 0 !important;
+}
+.webcam-settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.stream-readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-1);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.stream-readout b {
+  color: var(--text-primary);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 550;
+}
+
+/* =====================================================================
+   23. Theme artwork + motion
+   ===================================================================== */
+
+/* The gaps between cards show the active theme's artwork (assets/backgrounds)
+   while the aurora blobs keep drifting over it. */
+.aurora {
+  display: block !important;
+  background-color: var(--bg) !important;
+  background-image: var(--theme-bg) !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+.aurora i { opacity: .16 !important; }
+
+@keyframes phone-enter {
+  from { opacity: 0; transform: translateY(12px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes soft-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
+
+/* Brand mark breathes; nav icons lean toward the pointer. */
+.brand-icon { animation: soft-float 6.5s ease-in-out infinite; }
+.nav-tab .tab-icon { transition: transform 180ms var(--ease), color 180ms var(--ease); }
+.nav-tab:hover .tab-icon { transform: translateY(-1px) scale(1.08); }
+
+/* Cards lift a hair, buttons press in. */
+.card {
+  transition: transform 240ms var(--ease), border-color 240ms var(--ease), box-shadow 240ms var(--ease);
+}
+.card:hover { transform: translateY(-2px); }
+.btn {
+  transition: transform 140ms var(--ease), background-color 140ms ease,
+              border-color 140ms ease, box-shadow 140ms ease, color 140ms ease;
+}
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(.985); }
+
+/* The handset arrives when its tab opens. */
+.tab-pane.active .mirror-viewport,
+.tab-pane.active .webcam-preview-card {
+  animation: phone-enter 420ms cubic-bezier(.2, .7, .2, 1) both;
+}
+.qr-container { transition: transform 240ms var(--ease), box-shadow 240ms var(--ease); }
+.qr-card:hover .qr-container { transform: translateY(-2px) scale(1.01); }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-icon,
+  .tab-pane.active .mirror-viewport,
+  .tab-pane.active .webcam-preview-card { animation: none !important; }
+  .card, .btn, .nav-tab .tab-icon, .qr-container { transition: none !important; }
+  .card:hover, .btn:hover:not(:disabled), .btn:active:not(:disabled),
+  .nav-tab:hover .tab-icon, .qr-card:hover .qr-container { transform: none !important; }
+}
+:root[data-reduce-motion="1"] .brand-icon,
+:root[data-reduce-motion="1"] .tab-pane.active .mirror-viewport,
+:root[data-reduce-motion="1"] .tab-pane.active .webcam-preview-card { animation: none !important; }
+:root[data-reduce-motion="1"] .card,
+:root[data-reduce-motion="1"] .btn,
+:root[data-reduce-motion="1"] .nav-tab .tab-icon,
+:root[data-reduce-motion="1"] .qr-container { transition: none !important; }
+:root[data-reduce-motion="1"] .card:hover,
+:root[data-reduce-motion="1"] .btn:hover:not(:disabled),
+:root[data-reduce-motion="1"] .btn:active:not(:disabled),
+:root[data-reduce-motion="1"] .nav-tab:hover .tab-icon,
+:root[data-reduce-motion="1"] .qr-card:hover .qr-container { transform: none !important; }
+
+/* =====================================================================
+   24. Stream + webcam views — header row, one card, wide control panel
+   ===================================================================== */
+#tab-screen-mirror,
+#tab-webcam { padding: 8px 18px 16px; }
+.stream-head { margin: 0 0 14px; align-items: flex-end; }
+.stream-head h1 { font-size: 21px; }
+
+#tab-screen-mirror .stream-shell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+  padding: 18px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-xl);
+  background: var(--surface-1) !important;
+  box-shadow: var(--shadow-sm);
+}
+#tab-screen-mirror .stream-stage { border: 0; background: none; overflow: visible; }
+#tab-screen-mirror .stream-panel {
+  border: 0;
+  background: none;
+  padding: 2px 4px 2px 0;
+  gap: 14px;
+}
+.stream-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.stream-panel-head h2 { margin: 0; font-size: 15px; font-weight: 650; color: var(--text-primary); }
+
+.nav-keys.wide { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.nav-pill { height: 36px; justify-content: center; gap: 6px; }
+.nav-pill .ic { width: 14px; height: 14px; }
+.stream-start-row .btn { height: 36px; }
+.stream-readout .spacer { flex: 1; }
+
+#tab-webcam .webcam-shell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-sm);
+}
+#tab-webcam .webcam-preview-card { border: 0; background: none; padding: 0; }
+#tab-webcam .webcam-settings { border: 0; background: none; padding: 2px 4px 2px 0; }
+
+@media (max-width: 1180px) {
+  #tab-screen-mirror .stream-shell,
+  #tab-webcam .webcam-shell { grid-template-columns: minmax(0, 1fr); }
+  #tab-screen-mirror .stream-panel { padding-right: 0; }
+}
+
+/* Fit the stream view in one screen: no page scroll under the header row. */
+#tab-screen-mirror .stream-panel { min-width: 0; }
+#tab-screen-mirror .stream-panel-head h2 { white-space: nowrap; }
+#tab-screen-mirror .stream-start-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+#tab-screen-mirror .stream-start-row .btn { min-width: 0; padding: 0 10px; white-space: nowrap; }
+#tab-screen-mirror .stream-readout { flex-wrap: wrap; row-gap: 4px; }
+#tab-screen-mirror .stream-readout .spacer { display: none; }
+#tab-screen-mirror .stream-group .hint { margin: 0; }
+
+/* ---- Light theme: artwork held to a faint wash so text keeps AA contrast ---- */
+:root[data-base="light"] .aurora {
+  background-image: linear-gradient(rgba(255, 255, 255, .66), rgba(255, 255, 255, .66)), var(--theme-bg) !important;
+}
+
+/* ---- 6.7" handset: 20:9 panel inside a slim realistic bezel ---- */
+#tab-screen-mirror .device-frame {
+  padding: 7px;
+  border-radius: 38px;
+  background: linear-gradient(160deg, #2a2f3a, #0b0d12 55%, #1c2129);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .06);
+}
+:root[data-base="light"] #tab-screen-mirror .device-frame {
+  background: linear-gradient(160deg, #e2e6ee, #b9c0cc 55%, #d8dde6);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, .16), inset 0 0 0 1px rgba(255, 255, 255, .5);
+}
+#tab-screen-mirror .mirror-viewport {
+  border-radius: 31px;
+  overflow: hidden;
+}
+#tab-screen-mirror .mirror-viewport canvas { border-radius: 24px; }
+
+/* ---- Stream telemetry overlay ---- */
+.stream-hud {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  background: rgba(8, 10, 16, .72);
+  backdrop-filter: blur(6px);
+  color: #e6edf7;
+  font-size: 11px;
+  font-family: var(--mono);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.stream-hud.hidden { display: none; }
+.stream-hud b { color: #7ee2b8; font-weight: 600; }
+
+
+/* =====================================================================
+   25. Phone Navigation panel — compact cards, segmented keys, quiet rows
+   ===================================================================== */
+#tab-screen-mirror .stream-panel { gap: 10px; }
+
+.sp-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 2px;
+}
+.sp-head h2 { margin: 0; font-size: 15px; font-weight: 650; color: var(--text-primary); letter-spacing: -.1px; }
+.sp-sub { margin: 3px 0 0; font-size: 11.5px; color: var(--muted); }
+.sp-head .badge { flex: none; margin-top: 2px; }
+
+.sp-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px 12px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-1);
+}
+.sp-block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.sp-label {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .085em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sp-note { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+.sp-hint { margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.45; }
+
+/* Segmented system keys: one rail, three equal targets, no triple border noise. */
+.sp-seg {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, .22);
+}
+.sp-seg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 31px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+.sp-seg-btn .ic { width: 14px; height: 14px; }
+.sp-seg-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--text-primary); }
+.sp-seg-btn:active:not(:disabled) { background: var(--surface-3); }
+.sp-seg-btn:disabled { opacity: .45; cursor: default; }
+
+/* Stream controls: Start on its own full-width row, Stop + Find My Phone
+   below it as two equal, fully-labelled buttons. The old single row squeezed
+   the find-my-phone button into a 36 px icon slot, so its label was clipped
+   mid-word ("Find My Ph"). */
+.sp-stream-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.sp-stream-row + .sp-stream-row { margin-top: 6px; }
+.sp-stream-row.sp-row-single { grid-template-columns: minmax(0, 1fr); }
+.sp-stream-row .sp-main { height: 36px; min-width: 0; padding: 0 10px; gap: 6px; white-space: nowrap; }
+.sp-stream-row .sp-main .ic { width: 14px; height: 14px; }
+.sp-stream-row .sp-find {
+  height: 36px;
+  min-width: 0;
+  padding: 0 10px;
+  gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  font-size: 12px;
+  overflow: hidden;
+}
+.sp-stream-row .sp-find .ic { width: 14px; height: 14px; flex: 0 0 auto; }
+.sp-icon-btn { width: 36px; height: 36px; padding: 0; }
+.sp-icon-btn .ic { width: 15px; height: 15px; }
+
+/* Type field: the whole pill is the target; the input itself has no border. */
+.sp-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-input);
+  cursor: text;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.sp-input .ic { width: 15px; height: 15px; color: var(--muted); flex: none; }
+.sp-input input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+}
+.sp-input input::placeholder { color: var(--text-muted); }
+.sp-input:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px var(--brand-soft); }
+
+.sp-power { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.sp-power-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 550;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+.sp-power-btn .ic { width: 13px; height: 13px; }
+.sp-power-btn:hover:not(:disabled) { background: var(--surface-2); border-color: var(--line-strong); color: var(--text-primary); }
+
+/* Readout sits at the bottom of the rail as measured chips, not a grey bar. */
+#tab-screen-mirror .sp-readout {
+  margin-top: auto;
+  padding: 10px 2px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  font-size: 10.5px;
+  gap: 4px 10px;
+}
+#tab-screen-mirror .sp-readout .stream-stat { color: var(--text-secondary); }
+#tab-screen-mirror .sp-readout b { font-size: 10.5px; }
+
+:root[data-base="light"] .sp-block { background: rgba(255, 255, 255, .58); border-color: rgba(15, 23, 42, .10); }
+:root[data-base="light"] .sp-seg { background: rgba(15, 23, 42, .06); }
+:root[data-base="light"] .sp-pill,
+:root[data-base="light"] .sp-input { background: #fff; }
+
+@media (max-width: 560px) {
+  .sp-stream-row { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-seg-btn, .sp-input, .sp-power-btn { transition: none; }
+}
+
+
+/* =====================================================================
+   26. PC file access switch + webcam settings breathing room
+   ===================================================================== */
+
+/* The webcam settings column used to start flush against the card edge, so
+   labels and the "Stream settings" title were clipped by the handset beside
+   them. Give the column a divider and real padding. */
+#tab-webcam .webcam-shell { column-gap: 0; }
+#tab-webcam .webcam-settings {
+  min-width: 0;
+  padding: 6px 6px 6px 22px;
+  border-left: 1px solid var(--line);
+}
+#tab-webcam .webcam-settings .field > span { font-weight: 500; }
+#tab-webcam .webcam-settings .hint { color: var(--text-secondary); }
+#tab-webcam .webcam-settings .uri-box input { color: var(--text-primary); }
+
+/* Drive chips under the file-access switch replace the old per-folder list
+   and its "Remove" buttons. */
+.file-access-drives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 6px;
+}
+.file-access-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-primary);
+}
+.file-access-chip .ic { width: 12px; height: 12px; color: var(--text-secondary); }
+.file-access-chip.is-off { color: var(--text-secondary); font-family: inherit; }
+
+/* =====================================================================
+   27. Webcam view == stream view: one handset, one fixed settings rail
+   ===================================================================== */
+
+/* Same chassis as the mirror handset: 7px bezel around a --phone-h screen,
+   so the webcam screen is exactly the size of the stream screen. */
+/* No chassis and no ring: the webcam preview is a bare screen like the stream
+   mirror. The drawn bezel read as a border around the camera frame. */
+#tab-webcam .webcam-area .device-frame,
+:root[data-base="light"] #tab-webcam .webcam-area .device-frame {
+  padding: 0;
+  border-radius: 30px;
+  background: none;
+  box-shadow: 0 22px 44px -26px rgba(0, 0, 0, .7);
+}
+#tab-webcam .webcam-area .webcam-viewport {
+  height: var(--phone-h);
+  width: calc(var(--phone-h) * var(--phone-ar));
+  max-width: none;
+  max-height: none;
+  border-radius: 30px;
+  /* Was a 1 px highlight ring plus an inner glow - it showed as a visible
+     border around the camera picture. */
+  box-shadow: 0 22px 44px -26px rgba(0, 0, 0, .7);
+}
+
+/* Card hugs the handset plus a fixed-width settings rail instead of letting
+   the rail stretch across the window (which made the fields huge and the
+   right edge sit outside the card). */
+#tab-webcam .webcam-shell {
+  /* Same full-width card as the stream view: handset, then the settings
+     panel takes the rest of the row instead of a stretched-away column. */
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: 18px;
+  padding: 8px 14px;
+  max-width: 100%;
+}
+/* The webcam page header wraps to two lines, so trim its gap: the taller
+   handset still finishes inside the window like the stream view does. */
+#tab-webcam .stream-head { margin-bottom: 6px; }
+#tab-webcam { padding-bottom: 4px; }
+#tab-webcam .webcam-preview-card { align-self: start; }
+
+/* The rail is exactly as tall as the handset so both containers end on the
+   same line; the OBS block is pinned to the bottom of the rail. */
+#tab-webcam .webcam-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 340px;
+  /* Matches the handset's outer height (screen + 7px bezel each side). */
+  min-height: calc(var(--phone-h) + 14px);
+  margin: 0;
+  padding: 0 0 0 18px;
+  border-left: 1px solid var(--line);
+  overflow: visible;
+}
+#tab-webcam .webcam-settings .webcam-obs { margin-top: auto; }
+/* Controls keep a readable width instead of stretching with the panel. */
+#tab-webcam .webcam-settings .field-grid {
+  grid-template-columns: repeat(2, minmax(0, 260px));
+  justify-content: start;
+  gap: 10px 12px;
+}
+#tab-webcam .webcam-settings .stream-start-row { max-width: 320px; }
+#tab-webcam .webcam-settings .webcam-obs { max-width: 720px; }
+#tab-webcam .webcam-settings .field,
+#tab-webcam .webcam-settings .field select,
+#tab-webcam .webcam-settings .uri-box,
+#tab-webcam .webcam-settings .uri-box input { min-width: 0; width: 100%; }
+#tab-webcam .webcam-settings .stream-start-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+#tab-webcam .webcam-settings .stream-start-row .btn { min-width: 0; }
+#tab-webcam .webcam-settings .webcam-settings-head .strip-title { white-space: nowrap; }
+
+/* =====================================================================
+   28. Dark theme: no visible border around the handset
+   ===================================================================== */
+
+/* The bezel used a slate gradient with a 1px inner highlight, which read as a
+   drawn border around the screen on a dark page. In dark mode the chassis now
+   matches the card it sits on, and the screen keeps only its drop shadow. */
+:root:not([data-base="light"]) #tab-screen-mirror .device-frame,
+:root:not([data-base="light"]) #tab-webcam .webcam-area .device-frame {
+  background: none;
+  box-shadow: none;
+}
+:root:not([data-base="light"]) #tab-screen-mirror .mirror-viewport,
+:root:not([data-base="light"]) #tab-webcam .webcam-area .webcam-viewport {
+  box-shadow: 0 22px 44px -26px rgba(0, 0, 0, .7);
+}
+
+/* =====================================================================
+   29. Tab cards never get squashed by the pane's flex column
+   ===================================================================== */
+
+/* `.card` sets overflow: hidden, and the tab pane is a flex column. When the
+   page content was taller than the window, the Phone control card shrank to
+   26 px (default flex-shrink) and clipped its own switch, media keys and
+   buttons - they looked like invisible/faded controls in light mode. Cards
+   keep their natural height and the pane scrolls instead. */
+.tab-pane > .card,
+.tab-pane > .control-strip,
+.tab-pane > .pairing-grid,
+.tab-pane > .settings-block,
+.tab-pane > .guide-layout { flex: 0 0 auto; }
+
+@media (max-width: 1180px) {
+  #tab-webcam .webcam-shell { grid-template-columns: minmax(0, 1fr); width: auto; align-items: start; }
+  #tab-webcam .webcam-settings { width: auto; min-height: 0; padding: 14px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+}

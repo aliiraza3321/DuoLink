@@ -60,6 +60,8 @@ jobs:
         run: |
           set -euo pipefail
           cd android
+          # The repo is developed on Windows, where the exec bit is not tracked.
+          chmod +x gradlew
           if [ -f keystore.properties ]; then
             ./gradlew assembleRelease --no-daemon --stacktrace
           else

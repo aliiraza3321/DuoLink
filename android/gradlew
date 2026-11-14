@@ -56,6 +56,24 @@ case "`uname`" in
     ;;
 esac
 
+# Resolve the directory this script lives in. This script used to reference
+# APP_HOME without ever defining it, so CLASSPATH became
+# "/gradle/wrapper/gradle-wrapper.jar" and every non-Windows build died with
+# "Could not find or load main class org.gradle.wrapper.GradleWrapperMain".
+PRG="$0"
+while [ -h "$PRG" ] ; do
+  ls=`ls -ld "$PRG"`
+  link=`expr "$ls" : '.*-> \(.*\)$'`
+  case "$link" in
+    /*) PRG="$link" ;;
+    *)  PRG="`dirname "$PRG"`/$link" ;;
+  esac
+done
+SAVED="`pwd`"
+cd "`dirname "$PRG"`" > /dev/null
+APP_HOME="`pwd -P`"
+cd "$SAVED" > /dev/null
+
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
 # Determine the Java command to use to start the JVM.

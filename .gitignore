@@ -1,6 +1,6 @@
 # Build outputs
 node_modules/
-build/
+/build/
 dist/
 coverage/
 .DS_Store
@@ -25,9 +25,8 @@ android/keystore/
 *.keystore
 keystore.properties
 
-# Installer artwork + NSIS script live in desktop/build and must be tracked
-!desktop/build/
-!desktop/build/**
+# Installer artwork + NSIS script live in desktop/build and are tracked
+# (the root /build/ rule above is anchored so it does not swallow them).
 
 # Temp / scratch
 *.bmp.tmp

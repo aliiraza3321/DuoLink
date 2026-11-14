@@ -120,8 +120,33 @@ def build_setup():
     note_f = font("segoeui.ttf", 8.5 * sc)
 
     centered(d, 88, "Welcome to DUOLINK", title_f, INK, scale=sc)
-    centered(d, 118, "Connect your Android phone and PC like never before.", sub_f, BODY, scale=sc)
+    centered(d, 118, "Connect your Android phone and PC.", sub_f, BODY, scale=sc)
     centered(d, 190, "Installs locally  ·  no account  ·  LAN only", note_f, MUTED, scale=sc)
+
+    # QR for the phone app: scanning it (during or right after install) opens
+    # the permanent APK link, so the phone can be set up from the same screen.
+    qr_path = os.path.join(HERE, "qr-install.png")
+    if os.path.exists(qr_path):
+        qr_px = 104
+        qr = Image.open(qr_path).convert("RGB").resize((qr_px * sc, qr_px * sc), Image.NEAREST)
+        qr_x, qr_y = 376, 56
+        d.rounded_rectangle(
+            [(qr_x - 4) * sc, (qr_y - 4) * sc, (qr_x + qr_px + 4) * sc, (qr_y + qr_px + 4) * sc],
+            radius=4 * sc, outline=LINE, width=max(1, sc), fill=(250, 247, 240)
+        )
+        img.paste(qr, (qr_x * sc, qr_y * sc))
+
+        cap_f = font("segoeuib.ttf", 7.5 * sc)
+        cap = "DuoLink Mobile"
+        box = d.textbbox((0, 0), cap, font=cap_f)
+        cx = (qr_x + qr_px / 2) * sc - (box[2] - box[0]) / 2 - box[0]
+        d.text((cx, (qr_y + qr_px + 8) * sc), cap, font=cap_f, fill=INK)
+        sub_cap_f = font("segoeui.ttf", 6.5 * sc)
+        sub_cap = "scan to install"
+        box = d.textbbox((0, 0), sub_cap, font=sub_cap_f)
+        cx = (qr_x + qr_px / 2) * sc - (box[2] - box[0]) / 2 - box[0]
+        d.text((cx, (qr_y + qr_px + 18) * sc), sub_cap, font=sub_cap_f, fill=MUTED)
+
     return img.convert("RGB")
 
 

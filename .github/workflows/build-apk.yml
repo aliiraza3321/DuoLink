@@ -58,8 +58,12 @@ jobs:
 
       - name: Ensure Android SDK 35
         run: |
-          yes | sdkmanager "platforms;android-35" "build-tools;35.0.0" > /dev/null 2>&1 || true
-          sdkmanager --list_installed 2>/dev/null | grep -E "android-35" || echo "android-35 not listed"
+          set +e
+          SDKM=$(command -v sdkmanager || echo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager")
+          echo "sdkmanager: $SDKM"
+          yes | "$SDKM" "platforms;android-35" "build-tools;35.0.0" > /tmp/sdk.log 2>&1
+          grep -iE "error|warning: Failed|not found" /tmp/sdk.log | head -5
+          "$SDKM" --list_installed | grep -E "android-35|build-tools;35" || echo "android-35 still missing"
 
       - name: Build APK
         run: |
@@ -72,8 +76,9 @@ jobs:
           else
             TASK=assembleDebug
           fi
-          ./gradlew "$TASK" --no-daemon --stacktrace > ../gradle-build.log 2>&1
-          STATUS=$?
+          set +e
+          ./gradlew "$TASK" --no-daemon --stacktrace 2>&1 | tee ../gradle-build.log | tail -80
+          STATUS=${PIPESTATUS[0]}
           if [ $STATUS -ne 0 ]; then
             # Surface the real reason on the run page: the raw log needs auth.
             {

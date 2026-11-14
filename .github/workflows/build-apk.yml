@@ -56,17 +56,29 @@ jobs:
           keyPassword=$KEY_PASSWORD
           EOF
 
+      - name: Ensure Android SDK 35
+        run: |
+          yes | sdkmanager "platforms;android-35" "build-tools;35.0.0" > /dev/null 2>&1 || true
+          sdkmanager --list_installed 2>/dev/null | grep -E "android-35" || echo "android-35 not listed"
+
       - name: Build APK
         run: |
-          set -euo pipefail
+          set -uo pipefail
           cd android
           # The repo is developed on Windows, where the exec bit is not tracked.
           chmod +x gradlew
           if [ -f keystore.properties ]; then
-            ./gradlew assembleRelease --no-daemon --stacktrace
+            TASK=assembleRelease
           else
-            ./gradlew assembleDebug --no-daemon --stacktrace
+            TASK=assembleDebug
           fi
+          ./gradlew "$TASK" --no-daemon --stacktrace > ../gradle-build.log 2>&1
+          STATUS=$?
+          if [ $STATUS -ne 0 ]; then
+            # Surface the real reason as an annotation (log files need auth).
+            tail -c 1500 ../gradle-build.log | tr '\n' '~' | sed 's/^/::error::/'
+          fi
+          exit $STATUS
 
       - name: Collect APK
         run: |

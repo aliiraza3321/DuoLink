@@ -1359,58 +1359,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ---- Stream status: measured values only ----
-  // ---- Overview quick actions -------------------------------------------
-  // Each tile calls the real IPC the matching pane uses; nothing is faked.
-  const qaMirror = $id('qa-mirror');
-  if (qaMirror) {
-    qaMirror.addEventListener('click', async () => {
-      switchTab('tab-screen-mirror');
-      try { await window.phonePcApi.openScreenWindow(); } catch (_) { /* pane still works */ }
-    });
-  }
-  const qaWebcam = $id('qa-webcam');
-  if (qaWebcam) {
-    qaWebcam.addEventListener('click', () => {
-      switchTab('tab-webcam');
-      showToast('Press Start Camera to open the phone camera here', 'info');
-    });
-  }
-  const qaSendFiles = $id('qa-send-files');
-  if (qaSendFiles) {
-    qaSendFiles.addEventListener('click', () => {
-      switchTab('tab-chat-files');
-      const pick = $id('btn-pick-file') || $id('btn-send-file') || $id('btn-files-pick');
-      if (pick) pick.click();
-    });
-  }
-  const qaClipboard = $id('qa-send-clipboard');
-  if (qaClipboard) {
-    qaClipboard.addEventListener('click', async () => {
-      try {
-        const clip = await window.phonePcApi.getClipboard();
-        const text = typeof clip === 'string' ? clip : (clip && clip.text) || '';
-        if (!text.trim()) { showToast('Clipboard is empty', 'info'); return; }
-        const res = await window.phonePcApi.sendClipboardToPhone(text);
-        showToast(res && res.ok === false ? `Could not send: ${res.error}` : 'Clipboard sent to the phone',
-          res && res.ok === false ? 'error' : 'success');
-      } catch (err) {
-        showToast('Could not send the clipboard', 'error');
-      }
-    });
-  }
-  const qaFindPhone = $id('qa-find-phone');
-  if (qaFindPhone) {
-    qaFindPhone.addEventListener('click', async () => {
-      try {
-        await window.phonePcApi.findPhone(true);
-        showToast('Ringing the phone…', 'info');
-      } catch (_) {
-        showToast('Could not reach the phone', 'error');
-      }
-    });
-  }
-
-  // ---- Stream status: measured values only ----
   // Nothing here is invented. Frames counts real decodes over the last second,
   // Picture is the last frame's pixel size, Orientation comes from that size.
   const streamStateText = $id('stream-state-text');

@@ -39,6 +39,8 @@ FunctionEnd
 !define MUI_BGCOLOR 0xE2EEF3
 !define MUI_TEXTCOLOR 0x161B1E
 !define MUI_HEADER_TRANSPARENT_TEXT
+!define MUI_INSTFILESPAGE_COLORS "0x161B1E 0xE2EEF3"
+!define MUI_INSTFILESPAGE_PROGRESSBAR colored
 
 ; MUI2 owns .onGUIInit (MUI_FUNCTION_GUIINIT) and paints the wizard from these
 ; two defines, so they must stay as defines - defining our own callback here
@@ -56,11 +58,70 @@ Var DL_CTL
   InitPluginsDir
   File /oname=$PLUGINSDIR\setup-page.bmp "${BUILD_RESOURCES_DIR}\setup-page.bmp"
   File /oname=$PLUGINSDIR\setup-pill.bmp "${BUILD_RESOURCES_DIR}\setup-pill.bmp"
+  File /oname=$PLUGINSDIR\ready-page.bmp "${BUILD_RESOURCES_DIR}\ready-page.bmp"
+  File /oname=$PLUGINSDIR\ready-open.bmp "${BUILD_RESOURCES_DIR}\ready-open.bmp"
+  File /oname=$PLUGINSDIR\ready-close.bmp "${BUILD_RESOURCES_DIR}\ready-close.bmp"
 !macroend
 
 !macro customWelcomePage
   Page custom duolinkWelcomeCreate duolinkWelcomeLeave
 !macroend
+
+; The stock finish page says "Completed" over a grey form. This replaces it
+; with the reference layout: "DuoLink is ready", the Android download QR that
+; points at the GitHub release, and Open / Close.
+!macro customFinishPage
+  Page custom duolinkFinishCreate duolinkFinishLeave
+!macroend
+
+Function duolinkFinishCreate
+  ${If} ${Silent}
+    Abort
+  ${EndIf}
+  Call duolinkHideButtons
+  SetCtlColors $HWNDPARENT 0x161B1E 0xE2EEF3
+  nsDialogs::Create 1018
+  Pop $DL_PAGE
+  ${If} $DL_PAGE == error
+    Abort
+  ${EndIf}
+  SetCtlColors $DL_PAGE 0x161B1E 0xE2EEF3
+
+  ${NSD_CreateBitmap} 0 0 0 0 ""
+  Pop $DL_IMG
+  ${NSD_SetImage} $DL_IMG "$PLUGINSDIR\ready-page.bmp" $DL_CTL
+  System::Call 'user32::SetWindowPos(p $DL_IMG, p 0, i 0, i 0, i 490, i 238, i 0x0014)'
+
+  ; Open DuoLink (filled pill) and Close (outlined pill), both still images.
+  ${NSD_CreateBitmap} 0 0 0 0 ""
+  Pop $DL_CTL
+  ${NSD_SetImage} $DL_CTL "$PLUGINSDIR\ready-open.bmp" $DL_IMG
+  System::Call 'user32::SetWindowPos(p $DL_CTL, p 0, i 118, i 190, i 170, i 34, i 0x0014)'
+  ${NSD_OnClick} $DL_CTL duolinkOpenApp
+
+  ${NSD_CreateBitmap} 0 0 0 0 ""
+  Pop $DL_CTL
+  ${NSD_SetImage} $DL_CTL "$PLUGINSDIR\ready-close.bmp" $DL_IMG
+  System::Call 'user32::SetWindowPos(p $DL_CTL, p 0, i 300, i 190, i 120, i 34, i 0x0014)'
+  ${NSD_OnClick} $DL_CTL duolinkFinishClose
+
+  nsDialogs::Show
+FunctionEnd
+
+Function duolinkFinishLeave
+  Call duolinkShowButtons
+FunctionEnd
+
+Function duolinkOpenApp
+  ${If} ${FileExists} "$INSTDIR\DuoLink.exe"
+    Exec '"$INSTDIR\DuoLink.exe"'
+  ${EndIf}
+  SendMessage $HWNDPARENT ${WM_COMMAND} 2 0
+FunctionEnd
+
+Function duolinkFinishClose
+  SendMessage $HWNDPARENT ${WM_COMMAND} 2 0
+FunctionEnd
 
 Function duolinkHideButtons
   GetDlgItem $0 $HWNDPARENT 1
@@ -107,7 +168,7 @@ Function duolinkWelcomeCreate
   ${NSD_CreateBitmap} 0 0 0 0 ""
   Pop $DL_CTL
   ${NSD_SetImage} $DL_CTL "$PLUGINSDIR\setup-pill.bmp" $DL_IMG
-  System::Call 'user32::SetWindowPos(p $DL_CTL, p 0, i 143, i 140, i 210, i 38, i 0x0014)'
+  System::Call 'user32::SetWindowPos(p $DL_CTL, p 0, i 140, i 126, i 210, i 38, i 0x0014)'
   System::Call 'user32::SetWindowPos(p $DL_CTL, p 0, i 0, i 0, i 0, i 0, i 0x0003)'
   ${NSD_OnClick} $DL_CTL duolinkInstallClick
 
@@ -135,10 +196,10 @@ Function duolinkPageClick
   System::Call 'user32::ScreenToClient(p $DL_PAGE, p r1)'
   System::Call '*$1(i .r2, i .r3)'
   System::Free $1
-  ${If} $2 >= 143
-  ${AndIf} $2 <= 353
-  ${AndIf} $3 >= 140
-  ${AndIf} $3 <= 180
+  ${If} $2 >= 140
+  ${AndIf} $2 <= 350
+  ${AndIf} $3 >= 126
+  ${AndIf} $3 <= 164
     Call duolinkInstallClick
   ${EndIf}
 FunctionEnd

@@ -77,15 +77,41 @@ const KNOWN_LABELS = {
   'com.truecaller': 'Truecaller',
   'com.termux': 'Termux',
   'com.termux.api': 'Termux:API',
+  'com.google.android.apps.authenticator2': 'Authenticator',
+  'com.google.android.apps.sheets': 'Sheets',
+  'com.google.android.apps.play': 'Play Store',
+  'com.motach.videoplay': 'Motach Video',
+  'com.video.fun.app': 'Video Fun',
+  'com.sadapay.app': 'SadaPay',
+  'com.instagram.barcelona': 'Threads',
+  'pk.upaisa.com': 'UPaisa',
+  'com.fiverr.fiverr': 'Fiverr',
+  'org.zennolab.android': 'ZennoLab',
+  'com.tencent.ig': 'PUBG Mobile',
+  'com.tencent.tmgp.pubgmhd': 'PUBG Mobile',
+  'com.lemon.lvoverseas': 'CapCut',
+  'com.thehive.mbm': 'MBM',
+  'com.pakistan.teams': 'Pakistan',
+  'com.snapchat.android': 'Snapchat',
+
   'com.android.shell': 'Shell',
 };
 
+const GENERIC_SEGMENTS = new Set([
+  'android', 'app', 'apps', 'mobile', 'client', 'release', 'beta', 'free', 'pro', 'plus',
+  'main', 'ui', 'tv', 'com', 'org', 'net', 'io', 'me', 'co', 'pk', 'in', 'lite', 'hd',
+]);
+
+// "com.motach.videoplay" -> "Motach Videoplay", "com.sadapay.app" -> "Sadapay".
+// Only a fallback: the curated map above wins whenever it knows the package.
 function prettify(pkg) {
-  const last = String(pkg || '').split('.').pop() || pkg || '';
-  return last
+  const parts = String(pkg || '').toLowerCase().split('.').filter(Boolean);
+  const meaningful = parts.filter((p) => !GENERIC_SEGMENTS.has(p) && !/^[a-z]?\d+$/.test(p));
+  const words = (meaningful.length ? meaningful : parts).slice(0, 2).join(' ');
+  return words
     .replace(/[_-]+/g, ' ')
     .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+      .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 class WirelessAdb {

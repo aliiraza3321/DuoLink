@@ -92,6 +92,12 @@ const MessageType = {
   CALL_RECENTS_REQ: 'CALL_RECENTS_REQ',   // PC -> phone: { limit }
   CALL_RECENTS: 'CALL_RECENTS',           // phone -> PC: { calls: [...] }
 
+  // App catalog: label + icon for every launchable app on the phone
+  APP_CATALOG_REQ: 'APP_CATALOG_REQ',     // PC -> phone
+  APP_CATALOG: 'APP_CATALOG',             // phone -> PC: { apps: [{ pkg, label, icon }] }
+  APP_LAUNCH: 'APP_LAUNCH',               // PC -> phone: { pkg }
+  APP_LAUNCH_RESULT: 'APP_LAUNCH_RESULT', // phone -> PC: { ok, pkg, error? }
+
   // Notifications mirroring
   NOTIF_POSTED: 'NOTIF_POSTED',           // phone -> PC: { key, appName, title, text, postTime, canReply, isOngoing }
   NOTIF_REMOVED: 'NOTIF_REMOVED',         // phone -> PC: { key }

@@ -917,6 +917,15 @@ function setupIpc() {
     return sendToPhone(MessageType.CALL_ACTION, payload);
   });
   ipcMain.handle('call-recents', () => sendToPhone(MessageType.CALL_RECENTS_REQ, { limit: 50 }));
+  // ---- Phone apps catalog (label + icon, over the paired session) ----
+  ipcMain.handle('app-catalog', () => sendToPhone(MessageType.APP_CATALOG_REQ, {}));
+  ipcMain.handle('app-launch', (_e, pkg) => {
+    if (!/^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+){1,}$/.test(String(pkg || ''))) {
+      return { ok: false, error: 'Unknown package' };
+    }
+    return sendToPhone(MessageType.APP_LAUNCH, { pkg: String(pkg) });
+  });
+
   // ---- Phone apps over Wireless debugging (adb) ----
   const wirelessAdb = new WirelessAdb();
   ipcMain.handle('adb-status', () => wirelessAdb.status());

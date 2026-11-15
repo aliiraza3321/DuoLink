@@ -688,6 +688,23 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
                 CallController.sendRecents(this, message.payload.get("limit")?.intOrNull() ?: 50)
             }
 
+            // ================= Apps: catalog + launch =================
+            Protocol.TYPE_APP_CATALOG_REQ -> sendAppCatalog()
+            Protocol.TYPE_APP_LAUNCH -> {
+                val pkg = message.payload.get("pkg")?.strOrNull()
+                val result = JsonObject()
+                if (pkg.isNullOrBlank()) {
+                    result.addProperty("ok", false)
+                    result.addProperty("error", "Missing package")
+                } else {
+                    val launched = launchApp(pkg)
+                    result.addProperty("ok", launched == null)
+                    if (launched != null) result.addProperty("error", launched)
+                    result.addProperty("pkg", pkg)
+                }
+                sendRawEnvelope(Protocol.TYPE_APP_LAUNCH_RESULT, result)
+            }
+
             Protocol.TYPE_CALL_LOG_DELETE -> {
                 val id = message.payload.get("id")?.strOrNull()
                 if (id.isNullOrBlank()) {
@@ -837,6 +854,58 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
                 connectWithCredentials(creds)
             }
         }
+    }
+
+    /**
+     * Launchable third-party apps with their real label and a 96px icon, so the
+     * PC can draw the phone's app grid without any desktop-side guessing.
+     */
+    private fun sendAppCatalog() {
+        val out = JsonObject()
+        try {
+            val pm = packageManager
+            val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+            val resolved = pm.queryIntentActivities(intent, 0)
+            val seen = HashSet<String>()
+            val arr = com.google.gson.JsonArray()
+            for (ri in resolved) {
+                val pkg = ri.activityInfo?.packageName ?: continue
+                if (pkg == packageName || !seen.add(pkg)) continue
+                arr.add(JsonObject().apply {
+                    addProperty("pkg", pkg)
+                    addProperty("label", ri.loadLabel(pm)?.toString() ?: pkg)
+                    appIconBase64(pkg)?.let { addProperty("icon", it) }
+                })
+            }
+            out.add("apps", arr)
+        } catch (t: Throwable) {
+            out.addProperty("error", t.message ?: "Could not list the phone's apps")
+        }
+        sendRawEnvelope(Protocol.TYPE_APP_CATALOG, out)
+    }
+
+    /** Icon as a 96px PNG in base64 (null when the app exposes nothing usable). */
+    private fun appIconBase64(pkg: String): String? = try {
+        val d = packageManager.getApplicationIcon(pkg)
+        val bmp = android.graphics.Bitmap.createBitmap(96, 96, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bmp)
+        d.setBounds(0, 0, 96, 96)
+        d.draw(canvas)
+        val baos = java.io.ByteArrayOutputStream()
+        bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, baos)
+        bmp.recycle()
+        Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+    } catch (_: Throwable) { null }
+
+    /** Returns null on success, or the failure reason. */
+    private fun launchApp(pkg: String): String? = try {
+        val launch = packageManager.getLaunchIntentForPackage(pkg)
+            ?: return "That app has no launch screen"
+        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(launch)
+        null
+    } catch (t: Throwable) {
+        "${t.javaClass.simpleName}: ${t.message ?: "the phone refused to start the app"}"
     }
 
     fun sendRawEnvelope(type: String, payload: JsonObject): Boolean {

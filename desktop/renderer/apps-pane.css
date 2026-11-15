@@ -1,0 +1,210 @@
+/* =====================================================================
+   Apps pane: a numbered setup rail on the left, the phone's app grid on
+   the right. Same ink + glass language as the rest of the dark theme.
+   ===================================================================== */
+.tab-pane.apps-pane { padding: 0 !important; display: none; overflow: hidden; }
+.tab-pane.apps-pane.active { display: flex; flex: 1 1 auto; min-height: 0; }
+
+.apps-rail {
+  width: 336px; flex: 0 0 336px; border-right: 1px solid var(--line);
+  padding: 18px 16px 16px; display: flex; flex-direction: column; gap: 14px;
+  overflow: auto; min-height: 0;
+}
+.apps-rail-head { display: flex; align-items: flex-start; gap: 10px; }
+.apps-rail-head h2 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -0.015em; color: var(--text); }
+.apps-rail-head p { margin: 3px 0 0; font-size: 12px; color: var(--text-muted); }
+.apps-dot {
+  margin-left: auto; margin-top: 6px; width: 9px; height: 9px; border-radius: 999px;
+  background: var(--text-muted); box-shadow: 0 0 0 4px rgba(255, 255, 255, .04);
+  transition: background 160ms ease-out, box-shadow 160ms ease-out;
+}
+.apps-dot.ok { background: var(--success); box-shadow: 0 0 0 4px rgba(52, 211, 153, .22); }
+.apps-dot.busy { background: var(--warning); box-shadow: 0 0 0 4px rgba(251, 191, 36, .22); }
+.apps-dot.error { background: var(--danger); box-shadow: 0 0 0 4px rgba(248, 113, 113, .22); }
+
+.apps-conn {
+  display: flex; flex-direction: column; gap: 14px;
+  border-radius: 18px; padding: 16px 14px;
+  background: rgba(255, 255, 255, .03); border: 1px solid var(--line);
+}
+.apps-step { display: flex; gap: 10px; }
+.apps-step + .apps-step { border-top: 1px solid var(--line); padding-top: 14px; }
+.apps-step-n {
+  width: 22px; height: 22px; flex: 0 0 22px; border-radius: 999px; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; font-weight: 700; color: #06121c;
+  background: linear-gradient(120deg, #22d3ee, #7c6cff);
+}
+.apps-step-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.apps-step-body label { font-size: 12.5px; font-weight: 600; color: var(--text); }
+.apps-step-hint { margin: 0 0 2px; font-size: 11.5px; line-height: 1.4; color: var(--text-muted); }
+.apps-input {
+  width: 100%; height: 34px; border-radius: 10px; padding: 0 11px;
+  border: 1px solid var(--line-strong); background: rgba(0, 0, 0, .22);
+  color: var(--text); font: inherit; font-size: 12.5px; outline: none;
+  transition: border-color 140ms ease-out, background 140ms ease-out;
+}
+.apps-input:focus { border-color: var(--brand); background: rgba(0, 0, 0, .3); }
+.apps-input::placeholder { color: var(--text-muted); }
+.apps-select { appearance: none; cursor: pointer; }
+.apps-input-code { flex: 0 0 108px; }
+.apps-inline { display: flex; gap: 8px; align-items: center; }
+.apps-inline .apps-input { flex: 1 1 auto; min-width: 0; }
+.apps-cta {
+  height: 34px; padding: 0 14px; border-radius: 10px; flex: 0 0 auto;
+  border: 1px solid var(--line-strong); background: var(--surface-2);
+  color: var(--text); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: filter 130ms ease-out, transform 130ms ease-out;
+}
+.apps-cta:hover:not(:disabled) { filter: brightness(1.15); }
+.apps-cta:active:not(:disabled) { transform: translateY(1px); }
+.apps-cta:disabled { opacity: .45; cursor: default; }
+.apps-cta-primary {
+  background: linear-gradient(120deg, #22d3ee, #7c6cff);
+  border-color: transparent; color: #06121c;
+}
+.apps-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; flex: 1 1 0; padding: 0 10px; border-radius: 10px;
+  border: 1px solid var(--line-strong); background: transparent; color: var(--text-secondary);
+  font: inherit; font-size: 12px; cursor: pointer;
+}
+.apps-ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
+.apps-ghost:disabled { opacity: .4; cursor: default; }
+.apps-ghost .ic { width: 14px; height: 14px; }
+.apps-status {
+  font-size: 11.5px; line-height: 1.45; color: var(--text-muted);
+  padding: 8px 10px; border-radius: 10px;
+  background: rgba(255, 255, 255, .03); border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+.apps-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.apps-toolbar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px 12px; flex: 0 0 auto;
+}
+.apps-toolbar-text h2 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; color: var(--text); }
+.apps-toolbar-text p { margin: 3px 0 0; font-size: 12px; color: var(--text-muted); }
+.apps-search {
+  margin-left: auto; display: flex; align-items: center; gap: 8px;
+  height: 34px; width: 240px; padding: 0 12px; border-radius: 999px;
+  background: rgba(255, 255, 255, .05); border: 1px solid transparent;
+  transition: border-color 150ms ease-out, background 150ms ease-out;
+}
+.apps-search:focus-within { border-color: var(--line-strong); background: rgba(255, 255, 255, .08); }
+.apps-search .ic { width: 15px; height: 15px; color: var(--text-muted); }
+.apps-search input {
+  flex: 1 1 auto; min-width: 0; border: 0; background: transparent; color: var(--text);
+  font: inherit; font-size: 12.5px; outline: none; height: 100%;
+}
+.apps-search input::placeholder { color: var(--text-muted); }
+
+.apps-grid {
+  flex: 1 1 auto; min-height: 0; overflow: auto; padding: 4px 20px 22px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 6px; align-content: start;
+}
+.apps-section-label {
+  grid-column: 1 / -1; font-size: 11px; font-weight: 650; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-muted); padding: 10px 2px 4px;
+}
+.app-card {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 12px 8px 10px; border-radius: 14px; border: 1px solid transparent;
+  background: transparent; color: var(--text); cursor: pointer; font: inherit;
+  transition: background 140ms ease-out, border-color 140ms ease-out, transform 140ms ease-out;
+}
+.app-card:hover { background: rgba(255, 255, 255, .05); border-color: var(--line); transform: translateY(-1px); }
+.app-card:active { transform: translateY(0); }
+.app-glyph {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 700; color: #06121c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 6px 14px -8px rgba(0, 0, 0, .9);
+}
+.app-glyph.t0 { background: linear-gradient(145deg, #a5b4fc, #7c6cff); }
+.app-glyph.t1 { background: linear-gradient(145deg, #67e8f9, #22d3ee); }
+.app-glyph.t2 { background: linear-gradient(145deg, #6ee7b7, #34d399); }
+.app-glyph.t3 { background: linear-gradient(145deg, #fcd34d, #fbbf24); }
+.app-glyph.t4 { background: linear-gradient(145deg, #fda4c3, #ff6aa2); }
+.app-glyph.t5 { background: linear-gradient(145deg, #c4bbff, #8b5cf6); }
+.app-name {
+  font-size: 11.5px; line-height: 1.3; text-align: center; max-width: 100%;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow-wrap: anywhere;
+}
+.app-pkg {
+  font-size: 10px; color: var(--text-muted); max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.apps-empty {
+  grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 48px 24px; text-align: center; color: var(--text-muted);
+}
+.apps-empty-icon {
+  width: 52px; height: 52px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, .05); border: 1px solid var(--line); color: var(--text-secondary);
+}
+.apps-empty-icon .ic { width: 22px; height: 22px; }
+.apps-empty strong { font-size: 13.5px; color: var(--text); font-weight: 600; }
+.apps-empty p { margin: 0; font-size: 12.5px; line-height: 1.5; max-width: 340px; }
+
+/* Light theme: neutral fills instead of translucent white. */
+:root[data-base="light"] .apps-conn { background: #f7f8fa; border-color: #e4e7ee; }
+:root[data-base="light"] .apps-input { background: #fff; }
+:root[data-base="light"] .apps-search { background: #eef0f4; }
+:root[data-base="light"] .apps-search:focus-within { background: #fff; }
+:root[data-base="light"] .apps-status { background: #f7f8fa; }
+:root[data-base="light"] .app-card:hover { background: #f2f4f8; }
+:root[data-base="light"] .apps-empty-icon { background: #eef0f4; }
+
+/* ---------- Phone card, tip and the collapsible adb panel ---------- */
+.apps-phone {
+  display: flex; align-items: center; gap: 10px; padding: 12px;
+  border-radius: 14px; border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, .04);
+}
+.apps-phone.offline { border-style: dashed; background: transparent; }
+.apps-phone-icon {
+  width: 36px; height: 36px; flex: 0 0 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(140deg, rgba(34, 211, 238, .28), rgba(124, 108, 255, .34));
+  color: var(--text);
+}
+.apps-phone-icon .ic { width: 18px; height: 18px; }
+.apps-phone-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.apps-phone-text strong { font-size: 13px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+.apps-phone-text span { font-size: 11.5px; color: var(--text-muted); overflow-wrap: anywhere; }
+.apps-phone .apps-cta { margin-left: auto; }
+
+.apps-tip {
+  border-radius: 14px; border: 1px solid var(--line); padding: 12px;
+  background: rgba(124, 108, 255, .08);
+}
+.apps-tip strong { display: block; font-size: 11.5px; font-weight: 650; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--text-secondary); margin-bottom: 5px; }
+.apps-tip p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+
+.apps-adv { border-top: 1px solid var(--line); padding-top: 10px; }
+.apps-adv summary {
+  display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none;
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+}
+.apps-adv summary::-webkit-details-marker { display: none; }
+.apps-adv summary .ic { width: 14px; height: 14px; margin-left: auto; transition: transform 160ms ease-out; }
+.apps-adv[open] summary .ic { transform: rotate(180deg); }
+.apps-adv-body { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; }
+.apps-adv-body label { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
+.apps-adv-body .apps-step-hint { margin: 0 0 4px; }
+
+/* Real app icons coming from the phone */
+img.app-icon {
+  width: 46px; height: 46px; border-radius: 12px; object-fit: contain;
+  background: rgba(255, 255, 255, .04);
+  box-shadow: 0 6px 16px -10px rgba(0, 0, 0, .9);
+}
+:root[data-base="light"] .apps-phone { background: #f7f8fa; border-color: #dfe3ea; }
+:root[data-base="light"] .apps-tip { background: #f4f2ff; border-color: #e4e0fb; }
+:root[data-base="light"] img.app-icon { background: #fff; }

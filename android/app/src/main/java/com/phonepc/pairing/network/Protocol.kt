@@ -95,6 +95,12 @@ object Protocol {
     const val TYPE_CALL_RECENTS_REQ = "CALL_RECENTS_REQ"
     const val TYPE_CALL_RECENTS = "CALL_RECENTS"
 
+    // App catalog: the phone's launchable apps (label + icon), opened from the PC
+    const val TYPE_APP_CATALOG_REQ = "APP_CATALOG_REQ"
+    const val TYPE_APP_CATALOG = "APP_CATALOG"
+    const val TYPE_APP_LAUNCH = "APP_LAUNCH"
+    const val TYPE_APP_LAUNCH_RESULT = "APP_LAUNCH_RESULT"
+
     // Notifications mirroring
     const val TYPE_NOTIF_POSTED = "NOTIF_POSTED"
     const val TYPE_NOTIF_REMOVED = "NOTIF_REMOVED"

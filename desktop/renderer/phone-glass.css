@@ -1,0 +1,173 @@
+/* =====================================================================
+   Dark theme parity with the Android app (Theme.kt / Glass.kt).
+
+   Same ink, same aurora, same glass fill and rim: #0B0D14 page, violet +
+   cyan + rose glows, panels filled #181F35 -> #121829 -> #151C30 at 24px
+   radius with a 1px white rim and a soft drop shadow. Loaded after
+   design.css and ref-panes.css so it wins over the flat rules.
+   ===================================================================== */
+:root[data-base="dark"],
+:root[data-base="midnight"],
+:root[data-base="graphite"] {
+  --bg: #0b0d14 !important;
+  --bg-main: #0b0d14 !important;
+  --surface: #12151f !important;
+  --surface-1: #12151f !important;
+  --surface-2: #181c29 !important;
+  --surface-3: #1d2231 !important;
+  --surface-hover: rgba(255, 255, 255, 0.06) !important;
+  --elevated: #181c29 !important;
+  --text: #e8eaf2 !important;
+  --text-primary: #e8eaf2 !important;
+  --text-secondary: #c3c9db !important;
+  --text-muted: #9ea6be !important;
+  --muted: #9ea6be !important;
+  --line: rgba(255, 255, 255, 0.08) !important;
+  --line-strong: rgba(255, 255, 255, 0.14) !important;
+  --border: rgba(255, 255, 255, 0.08) !important;
+  --border-color: rgba(255, 255, 255, 0.08) !important;
+  --brand: #7c6cff !important;
+  --brand-2: #22d3ee !important;
+  --brand-soft: rgba(124, 108, 255, 0.18) !important;
+  --primary: #7c6cff !important;
+  --accent-primary: #7c6cff !important;
+  --accent-primary-hover: #8d7fff !important;
+  --accent-ink: #e8eaf2 !important;
+  --on-primary-btn: #06121c !important;
+  --ok: #34d399 !important;
+  --success: #34d399 !important;
+  --warning: #fbbf24 !important;
+  --warn: #fbbf24 !important;
+  --danger: #f87171 !important;
+}
+
+/* Same aurora as the phone: violet top-left, cyan right, rose bottom. */
+:root[data-base="dark"] body,
+:root[data-base="dark"] .app-layout,
+body.dark-theme {
+  background-color: #0b0d14 !important;
+  background-image:
+    radial-gradient(52% 44% at 12% 8%, rgba(124, 108, 255, 0.30), transparent 72%),
+    radial-gradient(48% 42% at 92% 44%, rgba(34, 211, 238, 0.16), transparent 72%),
+    radial-gradient(46% 40% at 40% 100%, rgba(255, 106, 162, 0.13), transparent 74%) !important;
+  background-attachment: fixed !important;
+}
+
+/* One glass recipe, used by every raised surface. */
+:root[data-base="dark"] .card,
+:root[data-base="dark"] .panel,
+:root[data-base="dark"] .settings-card,
+:root[data-base="dark"] .device-card,
+:root[data-base="dark"] .status-card,
+:root[data-base="dark"] .quick-tile,
+:root[data-base="dark"] .stat-card,
+:root[data-base="dark"] .guide-step,
+:root[data-base="dark"] .health-cell,
+:root[data-base="dark"] .active-session-box,
+:root[data-base="dark"] .file-transfer-box,
+:root[data-base="dark"] .rf-dialpad,
+:root[data-base="dark"] .rf-live,
+:root[data-base="dark"] .rf-composer,
+:root[data-base="dark"] .adbf-card,
+:root[data-base="dark"] .rf-search,
+:root[data-base="dark"] .rf-key,
+:root[data-base="dark"] .rf-media-tools,
+:root[data-base="dark"] .settings-grid-2 > .settings-card,
+:root[data-base="dark"] #settings-trusted {
+  background: linear-gradient(160deg, #181f35, #121829 55%, #151c30) !important;
+  background-image: linear-gradient(160deg, #181f35, #121829 55%, #151c30) !important;
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  box-shadow:
+    0 18px 44px -24px rgba(0, 0, 0, 0.92),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
+/* Rows and list items stay flat; only their hover/active states tint. */
+:root[data-base="dark"] .rf-row:hover,
+:root[data-base="dark"] .rf-album:hover,
+:root[data-base="dark"] .rf-app:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+:root[data-base="dark"] .rf-row.active,
+:root[data-base="dark"] .rf-album.active,
+:root[data-base="dark"] .nav-tab.active {
+  background: rgba(124, 108, 255, 0.18) !important;
+  color: #e8eaf2 !important;
+}
+:root[data-base="dark"] .rf-app:hover { border-color: rgba(255, 255, 255, 0.10) !important; }
+
+/* Phone buttons: cyan -> violet gradient with dark ink on top. */
+:root[data-base="dark"] .btn-primary,
+:root[data-base="dark"] .rf-btn-primary,
+:root[data-base="dark"] .rf-btn-ok,
+:root[data-base="dark"] .rf-send {
+  background: linear-gradient(120deg, #22d3ee, #7c6cff) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #06121c !important;
+  font-weight: 650 !important;
+}
+:root[data-base="dark"] .btn-primary .ic,
+:root[data-base="dark"] .rf-btn-primary .ic,
+:root[data-base="dark"] .rf-send .ic { color: #06121c !important; }
+:root[data-base="dark"] .rf-btn { border-color: rgba(255, 255, 255, 0.12); }
+
+/* Chips, avatars and the composer keep the phone's translucent look. */
+:root[data-base="dark"] .rf-chip,
+:root[data-base="dark"] .rf-avatar,
+:root[data-base="dark"] .rf-app-icon,
+:root[data-base="dark"] .rf-album-icon,
+:root[data-base="dark"] .rf-seg {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #e8eaf2 !important;
+}
+:root[data-base="dark"] .rf-avatar.a1 { background: rgba(52, 211, 153, 0.16) !important; color: #6ee7b7 !important; }
+:root[data-base="dark"] .rf-avatar.a2 { background: rgba(251, 191, 36, 0.16) !important; color: #fcd34d !important; }
+:root[data-base="dark"] .rf-avatar.a3 { background: rgba(34, 211, 238, 0.16) !important; color: #67e8f9 !important; }
+:root[data-base="dark"] .rf-avatar.a4 { background: rgba(255, 106, 162, 0.18) !important; color: #fda4c3 !important; }
+:root[data-base="dark"] .rf-avatar.a5 { background: rgba(124, 108, 255, 0.20) !important; color: #c4bbff !important; }
+:root[data-base="dark"] .rf-seg-btn.active {
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #fff !important;
+}
+
+/* Chat bubbles: sent = violet tint, received = translucent ink. */
+:root[data-base="dark"] .rf-thread .chat-msg.sent {
+  background: linear-gradient(140deg, rgba(124, 108, 255, 0.40), rgba(34, 211, 238, 0.16)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+:root[data-base="dark"] .rf-thread .chat-msg.received {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ---- Breathing room: text must never sit on a box edge ---------------- */
+.health-cell,
+:root[data-base="dark"] .health-cell {
+  padding: 12px 14px !important;
+  border-radius: 18px !important;
+}
+.health-stats { gap: 10px !important; }
+.health-cell .health-label,
+.health-cell .hint { margin: 0 !important; }
+
+/* Every glass panel gets inner padding so labels clear the rim. */
+:root[data-base="dark"] .rf-dialpad { padding: 18px !important; }
+:root[data-base="dark"] .rf-live { padding: 12px 14px !important; }
+:root[data-base="dark"] .rf-search { padding: 0 14px !important; }
+:root[data-base="dark"] .rf-media-tools { padding: 10px 14px !important; }
+:root[data-base="dark"] .adbf-card { padding: 14px 16px !important; }
+:root[data-base="dark"] .settings-card { padding: 16px 18px !important; }
+
+/* Scrollbars match the phone's thin, translucent ones. */
+:root[data-base="dark"] ::-webkit-scrollbar { width: 10px; height: 10px; }
+:root[data-base="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+:root[data-base="dark"] ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.24); }
+:root[data-base="dark"] ::-webkit-scrollbar-track { background: transparent; }

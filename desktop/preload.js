@@ -49,6 +49,8 @@ const ALLOWED_RECEIVE_CHANNELS = [
   'media-share-targets',
   'call-state',
   'call-recents',
+  'app-catalog',
+  'app-launch-result',
   'call-action-result',
   'call-log-delete-result',
   'webcam-status',
@@ -161,6 +163,8 @@ contextBridge.exposeInMainWorld('phonePcApi', {
   // V2: Calls
   callAction: (action, number) => ipcRenderer.invoke('call-action', number ? { action, number } : action),
   callRecents: () => ipcRenderer.invoke('call-recents'),
+  appCatalog: () => ipcRenderer.invoke('app-catalog'),
+  launchPhoneApp: (pkg) => ipcRenderer.invoke('app-launch', pkg),
   callLogDelete: (id) => ipcRenderer.invoke('call-log-delete', id),
 
   // Phone apps over Wireless debugging (adb)

@@ -877,6 +877,17 @@ class WssServer {
         break;
       }
 
+      // ================= Apps: catalog + launch =================
+      case MessageType.APP_CATALOG: {
+        this.onRendererEvent('app-catalog', payload || {});
+        break;
+      }
+
+      case MessageType.APP_LAUNCH_RESULT: {
+        this.onRendererEvent('app-launch-result', payload || {});
+        break;
+      }
+
       case MessageType.CALL_RECENTS: {
         const recents = this.featureHub && this.featureHub.callRecentsUpdate(payload);
         if (recents) this.onRendererEvent('call-recents', recents);

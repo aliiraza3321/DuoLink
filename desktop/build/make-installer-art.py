@@ -98,55 +98,99 @@ def pill(draw, x, y, w, h, color, scale, label, fnt, text_color):
               label, font=fnt, fill=text_color)
 
 
-def pill_bitmap(label, color=ACCENT):
+def pill_bitmap(label, color=ACCENT, size=(210, 38)):
     sc = 3
-    w, h = 210, 38
+    w, h = size
     img = Image.new("RGB", (w * sc, h * sc), BG)
     d = ImageDraw.Draw(img)
-    pill(d, 0, 0, w, h, color, sc, label, font("segoeuib.ttf", 12 * sc), (250, 246, 238))
+    if color is None:
+        # Outlined pill: cream fill, hairline ink edge, ink label.
+        d.rounded_rectangle([0, 0, w * sc - 1, h * sc - 1], radius=(h / 2) * sc,
+                            outline=(206, 198, 182), width=max(1, sc), fill=BG)
+        pill(d, 1, 1, w - 2, h - 2, BG, sc, label, font("segoeuib.ttf", 11 * sc), INK)
+    else:
+        pill(d, 0, 0, w, h, color, sc, label, font("segoeuib.ttf", 11 * sc), (250, 246, 238))
     return img
 
 
 def build_setup():
+    """Welcome page: the mark, the product name, one Install pill, and the two
+    lines of small print the reference design puts under it."""
     sc = SS
     img = base_canvas(sc)
     d = ImageDraw.Draw(img)
 
-    logo_px = 58
-    img.alpha_composite(app_logo(sc, logo_px), (int((W / 2 - logo_px / 2) * sc), int(20 * sc)))
+    logo_px = 62
+    img.alpha_composite(app_logo(sc, logo_px), (int((W / 2 - logo_px / 2) * sc), int(14 * sc)))
 
-    title_f = font("segoeuib.ttf", 21 * sc)
+    title_f = font("segoeuib.ttf", 23 * sc)
     sub_f = font("segoeui.ttf", 10.5 * sc)
-    note_f = font("segoeui.ttf", 8.5 * sc)
+    small_f = font("segoeui.ttf", 8.5 * sc)
+    tiny_f = font("segoeui.ttf", 8 * sc)
 
-    centered(d, 88, "Welcome to DUOLINK", title_f, INK, scale=sc)
-    centered(d, 118, "Connect your Android phone and PC.", sub_f, BODY, scale=sc)
-    centered(d, 190, "Installs locally  ·  no account  ·  LAN only", note_f, MUTED, scale=sc)
+    centered(d, 74, "DuoLink", title_f, INK, scale=sc)
+    centered(d, 102, "Your Android phone and your PC, working as one.", sub_f, BODY, scale=sc)
 
-    # QR for the phone app: scanning it (during or right after install) opens
-    # the permanent APK link, so the phone can be set up from the same screen.
-    qr_path = os.path.join(HERE, "qr-install.png")
+    # The Install pill itself is a separate bitmap NSIS overlays, so it can be
+    # clicked; the artwork only carries the text and the small print.
+    box_f = font("segoeui.ttf", 8.5 * sc)
+    box_y = 182
+    label = "Add a desktop shortcut"
+    tw = d.textbbox((0, 0), label, font=box_f)
+    total = (tw[2] - tw[0]) + 16 * sc
+    x0 = (W * sc - total) / 2
+    d.rounded_rectangle([x0, box_y * sc, x0 + 11 * sc, box_y * sc + 11 * sc],
+                        radius=2.5 * sc, outline=ACCENT, width=max(1, int(1.3 * sc)))
+    d.line([x0 + 2.5 * sc, box_y * sc + 6 * sc, x0 + 4.5 * sc, box_y * sc + 8.5 * sc],
+           fill=ACCENT, width=max(1, int(1.4 * sc)))
+    d.line([x0 + 4.5 * sc, box_y * sc + 8.5 * sc, x0 + 8.5 * sc, box_y * sc + 3.5 * sc],
+           fill=ACCENT, width=max(1, int(1.4 * sc)))
+    d.text((x0 + 16 * sc, box_y * sc - 0.5 * sc), label, font=box_f, fill=INK)
+
+    # "Installs in ... Change" - the folder is what electron-builder uses by
+    # default for a per-user install, spelled out the way the reference does.
+    path = "Installs in C:\Program Files\DuoLink"
+    pbox = d.textbbox((0, 0), path, font=small_f)
+    link = "Change"
+    lbox = d.textbbox((0, 0), link, font=small_f)
+    pw = pbox[2] - pbox[0]
+    lw = lbox[2] - lbox[0]
+    px = (W * sc - (pw + 10 * sc + lw)) / 2
+    py = 202 * sc
+    d.text((px, py), path, font=small_f, fill=MUTED)
+    d.text((px + pw + 10 * sc, py), link, font=small_f, fill=ACCENT)
+
+    centered(d, 219, "What this installs", tiny_f, BODY, scale=sc)
+    return img.convert("RGB")
+
+
+def build_ready():
+    """Final page: DuoLink is ready, the Android download QR, and its link."""
+    sc = SS
+    img = base_canvas(sc)
+    d = ImageDraw.Draw(img)
+
+    title_f = font("segoeuib.ttf", 19 * sc)
+    sub_f = font("segoeui.ttf", 9.5 * sc)
+    link_f = font("segoeui.ttf", 8 * sc)
+
+    centered(d, 12, "DuoLink is ready", title_f, INK, scale=sc)
+    centered(d, 40, "Next, get the Android app. Scan this code with your", sub_f, BODY, scale=sc)
+    centered(d, 54, "phone's camera to open its download page.", sub_f, BODY, scale=sc)
+
+    qr_path = os.path.join(HERE, "qr-ready.png")
     if os.path.exists(qr_path):
-        qr_px = 104
+        qr_px = 96
         qr = Image.open(qr_path).convert("RGB").resize((qr_px * sc, qr_px * sc), Image.NEAREST)
-        qr_x, qr_y = 376, 56
+        qr_x = int(W / 2 - qr_px / 2)
+        qr_y = 72
         d.rounded_rectangle(
-            [(qr_x - 4) * sc, (qr_y - 4) * sc, (qr_x + qr_px + 4) * sc, (qr_y + qr_px + 4) * sc],
-            radius=4 * sc, outline=LINE, width=max(1, sc), fill=(250, 247, 240)
+            [(qr_x - 5) * sc, (qr_y - 5) * sc, (qr_x + qr_px + 5) * sc, (qr_y + qr_px + 5) * sc],
+            radius=5 * sc, outline=LINE, width=max(1, sc), fill=(252, 250, 245)
         )
         img.paste(qr, (qr_x * sc, qr_y * sc))
 
-        cap_f = font("segoeuib.ttf", 7.5 * sc)
-        cap = "DuoLink Mobile"
-        box = d.textbbox((0, 0), cap, font=cap_f)
-        cx = (qr_x + qr_px / 2) * sc - (box[2] - box[0]) / 2 - box[0]
-        d.text((cx, (qr_y + qr_px + 8) * sc), cap, font=cap_f, fill=INK)
-        sub_cap_f = font("segoeui.ttf", 6.5 * sc)
-        sub_cap = "scan to install"
-        box = d.textbbox((0, 0), sub_cap, font=sub_cap_f)
-        cx = (qr_x + qr_px / 2) * sc - (box[2] - box[0]) / 2 - box[0]
-        d.text((cx, (qr_y + qr_px + 18) * sc), sub_cap, font=sub_cap_f, fill=MUTED)
-
+    centered(d, 178, "github.com/aliiraza3321/DuoLink/releases/latest", link_f, ACCENT, scale=sc)
     return img.convert("RGB")
 
 
@@ -162,9 +206,9 @@ def build_uninstall():
     sub_f = font("segoeui.ttf", 10.5 * sc)
     link_f = font("segoeui.ttf", 9 * sc)
 
-    centered(d, 88, "Remove DuoLink?", title_f, INK, scale=sc)
-    centered(d, 118, "The app and its local pairing data are removed from this PC.", sub_f, BODY, scale=sc)
-    centered(d, 184, "Keep DuoLink", link_f, BODY, scale=sc)
+    centered(d, 86, "Uninstall DuoLink?", title_f, INK, scale=sc)
+    centered(d, 116, "This removes DuoLink and its settings and pairings on this PC.", sub_f, BODY, scale=sc)
+    centered(d, 152, "Files you received stay in Downloads\DuoLink.", sub_f, MUTED, scale=sc)
     return img.convert("RGB")
 
 
@@ -209,6 +253,9 @@ TARGETS = {
     "setup-pill.bmp": (210, 38),
     "uninstall-pill.bmp": (210, 38),
     "setup-page.bmp": (W, H),
+    "ready-page.bmp": (W, H),
+    "ready-open.bmp": (170, 34),
+    "ready-close.bmp": (120, 34),
     "uninstall-page.bmp": (W, H),
     "installerHeader.bmp": (150, 57),
     "installerSidebar.bmp": (164, 314),
@@ -227,6 +274,9 @@ def save(img, name):
 if __name__ == "__main__":
     save(build_setup(), "setup-page.bmp")
     save(pill_bitmap("Install"), "setup-pill.bmp")
+    save(build_ready(), "ready-page.bmp")
+    save(pill_bitmap("Open DuoLink", ACCENT, (170, 34)), "ready-open.bmp")
+    save(pill_bitmap("Close", None, (120, 34)), "ready-close.bmp")
     save(build_uninstall(), "uninstall-page.bmp")
     save(pill_bitmap("Uninstall", DANGER), "uninstall-pill.bmp")
     save(build_header(), "installerHeader.bmp")

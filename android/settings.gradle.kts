@@ -16,6 +16,13 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // libadb-android (the phone's own wireless debugging, for app windows)
+        maven(url = "https://jitpack.io") {
+            content {
+                includeGroup("com.github.MuntashirAkon")
+                includeGroup("com.github.MuntashirAkon.spake2-java")
+            }
+        }
     }
 }
 

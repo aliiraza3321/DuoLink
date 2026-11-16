@@ -101,6 +101,18 @@ object Protocol {
     const val TYPE_APP_LAUNCH = "APP_LAUNCH"
     const val TYPE_APP_LAUNCH_RESULT = "APP_LAUNCH_RESULT"
 
+    // App windows: one app on a display of its own, streamed to its own PC window
+    const val TYPE_APP_WINDOW_FRAME = "APP_WINDOW_FRAME"
+    const val TYPE_APP_WINDOW_CLOSED = "APP_WINDOW_CLOSED"
+    const val TYPE_APP_WINDOW_INPUT = "APP_WINDOW_INPUT"
+    const val TYPE_APP_WINDOW_CLOSE = "APP_WINDOW_CLOSE"
+    const val TYPE_APP_WINDOW_READY = "APP_WINDOW_READY"
+
+    // The phone's own wireless debugging (what app windows run on)
+    const val TYPE_ADB_PAIR_REQ = "ADB_PAIR_REQ"
+    const val TYPE_ADB_PAIR_RESULT = "ADB_PAIR_RESULT"
+    const val TYPE_ADB_PAIR_STATE = "ADB_PAIR_STATE"
+
     // Notifications mirroring
     const val TYPE_NOTIF_POSTED = "NOTIF_POSTED"
     const val TYPE_NOTIF_REMOVED = "NOTIF_REMOVED"

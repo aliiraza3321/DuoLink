@@ -10,6 +10,37 @@
   const canvas = document.getElementById('frame');
   const ctx = canvas.getContext('2d');
 
+  // An app window (Phone apps → tap an app) has a real title bar with the app's
+  // own name, so the hover controls and the drag grip of the chrome-less
+  // mirror pop-out are not drawn: one window, one set of controls.
+  const params = new URLSearchParams(location.search);
+  const appLabel = params.get('app') === '1' ? (params.get('label') || '') : '';
+  // An app window shows one app's own display, streamed on its own session.
+  const appSession = params.get('app') === '1' ? (params.get('session') || '') : '';
+  if (params.get('app') === '1') {
+    document.body.classList.add('app-window');
+    if (appLabel) document.title = `${appLabel} \u00b7 DuoLink`;
+  }
+
+  /** Paints one of an app display's JPEG frames, sizing the canvas to it. */
+  const appPaint = (bytes) => {
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'image/jpeg' }));
+    if (lastUrl) URL.revokeObjectURL(lastUrl);
+    lastUrl = url;
+    img = img || new Image();
+    img.onload = () => {
+      if (canvas.width !== img.naturalWidth || canvas.height !== img.naturalHeight) {
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+      }
+      try { ctx.drawImage(img, 0, 0); } catch (_) {}
+      canvas.style.display = 'block';
+      lastFrameAt = Date.now();
+      document.body.classList.remove('stale');
+    };
+    img.src = url;
+  };
+
   // One Image + one Blob URL at a time, decode-gated: assigning a src faster
   // than the browser can decode cancels every in-flight load and leaves the
   // pane blank or frozen, so at most one frame decodes while newer arrivals
@@ -79,7 +110,24 @@
     }
   }, 1500);
 
-  if (window.phonePcApi && window.phonePcApi.on) {
+  if (window.phonePcApi && window.phonePcApi.on && appSession) {
+    // One app, one display, one stream: nothing of the phone's own screen.
+    window.phonePcApi.on('app-window-frame', (d) => {
+      if (!d || d.session !== appSession || !d.jpeg) return;
+      try {
+        const raw = atob(d.jpeg);
+        const bytes = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+        appPaint(bytes);
+      } catch (_) {}
+    });
+    window.phonePcApi.on('app-window-closed', (d) => {
+      if (d && d.session === appSession) window.close();
+    });
+    window.phonePcApi.on('session-status-change', (d) => {
+      if (d && d.status !== 'connected') window.close();
+    });
+  } else if (window.phonePcApi && window.phonePcApi.on) {
     window.phonePcApi.on('phone-screen-frame', (d) => {
       if (d && d.jpeg && d.jpeg.length) paint(d);
     });
@@ -133,6 +181,7 @@
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
   canvas.addEventListener('mousedown', (e) => {
+    if (appSession) return;
     if (e.button === 2) { window.phonePcApi.sendPhoneKeyAction('BACK'); return; }
     if (e.button !== 0) return;
     isDown = true;
@@ -143,7 +192,7 @@
   });
 
   const finish = (e) => {
-    if (!isDown) return;
+    if (appSession || !isDown) return;
     isDown = false;
     const p = norm(e);
     const held = Date.now() - downAt;
@@ -162,6 +211,7 @@
 
   let wheelLock = 0;
   canvas.addEventListener('wheel', (e) => {
+    if (appSession) return;
     e.preventDefault();
     const now = Date.now();
     if (now - wheelLock < 350) return;
@@ -176,6 +226,50 @@
       durationMs: 260
     });
   }, { passive: false });
+
+  // An app window's own input: the PC's mouse on that app's display, in that
+  // display's pixels (the phone injects them on its display, not the phone's).
+  if (appSession) {
+    const at = (e) => {
+      const r = canvas.getBoundingClientRect();
+      if (!r.width || !r.height) return { x: 0, y: 0 };
+      return {
+        x: Math.min(canvas.width, Math.max(0, ((e.clientX - r.left) / r.width) * canvas.width)),
+        y: Math.min(canvas.height, Math.max(0, ((e.clientY - r.top) / r.height) * canvas.height))
+      };
+    };
+    let down = false;
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      down = true;
+      const p = at(e);
+      window.phonePcApi.appWindowInput(appSession, 'DOWN', p.x, p.y);
+    });
+    canvas.addEventListener('mousemove', (e) => {
+      if (!down) return;
+      const p = at(e);
+      window.phonePcApi.appWindowInput(appSession, 'MOVE', p.x, p.y);
+    });
+    const up = (e) => {
+      if (!down) return;
+      down = false;
+      const p = at(e);
+      window.phonePcApi.appWindowInput(appSession, 'UP', p.x, p.y);
+    };
+    canvas.addEventListener('mouseup', up);
+    window.addEventListener('mouseup', up);
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const now = Date.now();
+      if (now - wheelLock < 260) return;
+      wheelLock = now;
+      const p = at(e);
+      const step = Math.sign(e.deltaY) * (canvas.height * 0.22);
+      window.phonePcApi.appWindowInput(appSession, 'DOWN', p.x, p.y);
+      window.phonePcApi.appWindowInput(appSession, 'MOVE', p.x, p.y - step / 2);
+      window.phonePcApi.appWindowInput(appSession, 'UP', p.x, p.y - step);
+    }, { passive: false });
+  }
 
   window.addEventListener('beforeunload', () => {
     if (lastUrl) URL.revokeObjectURL(lastUrl);
@@ -268,4 +362,115 @@
     }
   });
   if (btnClose) btnClose.addEventListener('click', () => window.close());
+
+  // ---- Tools: copy screenshot, screenshot, record video, volume ----
+  const noteEl = document.getElementById('tool-note');
+  let noteTimer = null;
+  const note = (text) => {
+    if (!noteEl) return;
+    noteEl.textContent = text;
+    noteEl.classList.add('show');
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => noteEl.classList.remove('show'), 2800);
+  };
+
+  // The canvas only holds a picture once a frame has been painted; a black
+  // rectangle is not a screenshot worth saving.
+  const hasPicture = () => canvas.style.display === 'block' && canvas.width > 1 && canvas.height > 1 && lastFrameAt > 0;
+  const snapshot = () => {
+    try { return hasPicture() ? canvas.toDataURL('image/png') : ''; } catch (_) { return ''; }
+  };
+
+  const copyBtn = document.getElementById('tool-copy');
+  if (copyBtn) copyBtn.addEventListener('click', async () => {
+    const dataUrl = snapshot();
+    if (!dataUrl) return note('No picture yet');
+    const res = await window.phonePcApi.copyShotImage(dataUrl).catch(() => null);
+    note(res && res.ok ? 'Screenshot copied' : (res && res.error) || 'Could not copy');
+  });
+
+  const shotBtn = document.getElementById('tool-shot');
+  if (shotBtn) shotBtn.addEventListener('click', async () => {
+    const dataUrl = snapshot();
+    if (!dataUrl) return note('No picture yet');
+    const res = await window.phonePcApi.saveShotImage(dataUrl).catch(() => null);
+    note(res && res.ok ? `Saved ${res.path.split(/[\\/]/).pop()}` : (res && res.error) || 'Could not save');
+  });
+
+  const recBtn = document.getElementById('tool-rec');
+  let recorder = null;
+  let recChunks = [];
+  const mimeType = () => {
+    const options = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+    for (const type of options) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) return type;
+    }
+    return '';
+  };
+  const stopRecording = () => {
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+  };
+  if (recBtn) recBtn.addEventListener('click', async () => {
+    if (recorder) { stopRecording(); return; }
+    const type = mimeType();
+    if (!type || !canvas.captureStream) return note('Recording is not available here');
+    try {
+      const stream = canvas.captureStream(30);
+      recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 6000000 });
+      recChunks = [];
+      recorder.ondataavailable = (e) => { if (e.data && e.data.size) recChunks.push(e.data); };
+      recorder.onstop = async () => {
+        document.body.classList.remove('recording');
+        const blob = new Blob(recChunks, { type });
+        recorder = null;
+        recChunks = [];
+        if (!blob.size) return note('Nothing was recorded');
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        const res = await window.phonePcApi.saveShotVideo(bytes).catch(() => null);
+        note(res && res.ok ? `Saved ${res.path.split(/[\\/]/).pop()}` : (res && res.error) || 'Could not save the recording');
+      };
+      recorder.start(1000);
+      document.body.classList.add('recording');
+      note('Recording  ·  press again to stop');
+    } catch (e) {
+      recorder = null;
+      document.body.classList.remove('recording');
+      note(e && e.message ? e.message : 'Could not start recording');
+    }
+  });
+
+  const volBtn = document.getElementById('tool-vol');
+  const volPop = document.getElementById('vol-pop');
+  const volRange = document.getElementById('vol-range');
+  const volMute = document.getElementById('vol-mute');
+  if (volBtn && volPop) {
+    volBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      volPop.hidden = !volPop.hidden;
+      volBtn.setAttribute('aria-expanded', String(!volPop.hidden));
+    });
+    document.addEventListener('click', (e) => {
+      if (volPop.hidden) return;
+      if (volPop.contains(e.target) || volBtn.contains(e.target)) return;
+      volPop.hidden = true;
+      volBtn.setAttribute('aria-expanded', 'false');
+    });
+  }
+  if (volRange) volRange.addEventListener('change', async () => {
+    const level = Number(volRange.value);
+    await window.phonePcApi.phoneVolume('SET', level).catch(() => null);
+    note(`Volume ${level}`);
+  });
+  if (volMute) volMute.addEventListener('click', async () => {
+    await window.phonePcApi.phoneVolume('MUTE').catch(() => null);
+    note('Muted');
+  });
+  if (window.phonePcApi && window.phonePcApi.on) {
+    window.phonePcApi.on('phone-volume-state', (st) => {
+      const level = st && (st.value ?? st.level);
+      if (volRange && typeof level === 'number') volRange.value = String(level);
+    });
+  }
+
+  window.addEventListener('beforeunload', stopRecording);
 })();

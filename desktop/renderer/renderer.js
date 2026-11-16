@@ -3905,6 +3905,7 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
   let adbSerial = null;
   let adbBusy = false;
   let appsBusy = false;
+  let catalogAt = 0;
 
   function appsIconSrc(app) {
     return app && app.icon ? `data:image/png;base64,${app.icon}` : '';
@@ -3980,14 +3981,26 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
   async function appsLoadCatalog() {
     if (appsBusy) return;
     appsBusy = true;
+    const askedAt = Date.now();
     adbSetStatus('Reading apps from your phone\u2026', 'busy');
     try {
-      await window.phonePcApi.appCatalog();
+      const res = await window.phonePcApi.appCatalog();
+      if (res && res.ok === false) {
+        adbSetStatus(res.error || 'Phone not connected', 'error');
+        appsBusy = false;
+        return;
+      }
     } catch (_) {
       adbSetStatus('Could not ask the phone for its apps', 'error');
     } finally {
       appsBusy = false;
     }
+    // A request the phone never answers must not leave the pane reading
+    // "Reading apps…" forever: say what to do instead.
+    setTimeout(() => {
+      if (phoneApps.length || catalogAt > askedAt) return;
+      adbSetStatus('The phone did not answer \u00b7 tap Refresh, or connect Wireless debugging below', 'error');
+    }, 10000);
   }
 
   async function appsRefresh() {
@@ -4004,6 +4017,7 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
   // ---- catalog + launch results from the phone ----
   window.phonePcApi.on('app-catalog', (p) => {
     if (!p) return;
+    catalogAt = Date.now();
     if (p.error && !(p.apps || []).length) {
       adbSetStatus(p.error, 'error');
       return;
@@ -4013,15 +4027,43 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     adbSetStatus(`Connected \u00b7 ${phoneApps.length} apps from your phone`, 'ok');
   });
 
-  window.phonePcApi.on('app-launch-result', async (p) => {
+  window.phonePcApi.on('app-launch-result', (p) => {
     if (!p) return;
     if (!p.ok) {
       showToast(p.error || 'The phone could not open that app', 'error');
       return;
     }
-    // The app is now on the phone's screen: show it here, in its own window.
-    const res = await window.phonePcApi.openScreenWindow().catch(() => null);
-    showToast(res && res.ok === false ? (res.error || 'Could not open the window') : 'Opening in a window on this PC', res && res.ok === false ? 'error' : 'success');
+    // A window session: the main process already opened its window (main.js
+    // turns each session into a window titled with the app's name).
+    if (p.session) {
+      const known = phoneApps.find((a) => a.pkg === p.pkg);
+      adbSetStatus(`${known ? known.label : p.pkg} \u00b7 open in its own window`, 'ok');
+    }
+  });
+
+  // One-time pairing with the phone's own wireless debugging: without it the
+  // phone can't give an app a display of its own.
+  if ($id('btn-adb-phone-pair')) {
+    $id('btn-adb-phone-pair').addEventListener('click', async () => {
+      const code = ($id('adb-phone-code').value || '').replace(/[^0-9]/g, '');
+      if (code.length < 6) return adbSetStatus('Enter the six-digit code from the pairing dialog', 'error');
+      adbSetStatus('Pairing this phone with its own wireless debugging\u2026', 'busy');
+      const res = await window.phonePcApi.pairPhoneAdb(code).catch(() => null);
+      if (!res || res.ok === false) {
+        return adbSetStatus((res && res.error) || 'Phone not connected', 'error');
+      }
+    });
+  }
+
+  window.phonePcApi.on('adb-pair-result', (p) => {
+    if (!p) return;
+    if (p.ok) {
+      if ($id('adb-phone-code')) $id('adb-phone-code').value = '';
+      adbSetStatus('Paired \u00b7 app windows are ready', 'ok');
+      showToast('Paired. Every app can now open in its own window.', 'success');
+    } else {
+      adbSetStatus(p.error || 'Pairing failed', 'error');
+    }
   });
 
   // ---- Wireless debugging fallback (advanced) ----
@@ -4106,6 +4148,12 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     });
   }
 
+  // The phone came back after a reconnect: fill the grid without the user
+  // having to press Refresh on an empty pane.
+  window.phonePcApi.on('session-status-change', (d) => {
+    if (d && d.status === 'connected' && !phoneApps.length) appsRefresh();
+  });
+
   if ($id('btn-apps-refresh')) $id('btn-apps-refresh').addEventListener('click', appsRefresh);
   if ($id('adb-search')) $id('adb-search').addEventListener('input', renderApps);
   if ($id('adb-search')) $id('adb-search').addEventListener('keydown', (e) => {
@@ -4120,15 +4168,24 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     const pkg = cell.dataset.pkg;
     cell.disabled = true;
     try {
+      const known = phoneApps.find((a) => a.pkg === pkg) || adbApps.find((a) => a.pkg === pkg);
+      const label = known ? known.label : '';
       if (phoneApps.length) {
-        await window.phonePcApi.launchPhoneApp(pkg);
+        // Start it on the phone and show it in a window of its own, titled
+        // with the app's name.
+        const res = await window.phonePcApi.launchAppInWindow(pkg, label).catch(() => null);
+        if (res && res.ok === false) {
+          showToast(res.error || 'Could not open that app', 'error');
+        } else {
+          showToast(`Opening ${label || 'the app'} in its own window`, 'success');
+        }
         return;
       }
       if (!adbSerial) return;
       const res = await window.phonePcApi.adbLaunch(adbSerial, pkg).catch(() => null);
       if (res && res.ok) {
-        await window.phonePcApi.openScreenWindow().catch(() => null);
-        showToast('Opening in a window on this PC', 'success');
+        await window.phonePcApi.openAppWindow(pkg, label).catch(() => null);
+        showToast(`Opening ${label || 'the app'} in its own window`, 'success');
       } else {
         showToast((res && res.error) || 'Could not open that app', 'error');
       }

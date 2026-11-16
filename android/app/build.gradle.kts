@@ -32,8 +32,8 @@ android {
         applicationId = "com.phonepc.pairing"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -104,6 +104,9 @@ dependencies {
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
     implementation(libs.mlkit.barcode)
+
+    // The phone's own wireless debugging: the shell side of app windows.
+    implementation(libs.libadb.android)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

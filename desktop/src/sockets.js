@@ -888,6 +888,21 @@ class WssServer {
         break;
       }
 
+      case MessageType.APP_WINDOW_FRAME: {
+        this.onRendererEvent('app-window-frame', payload || {});
+        break;
+      }
+
+      case MessageType.APP_WINDOW_CLOSED: {
+        this.onRendererEvent('app-window-closed', payload || {});
+        break;
+      }
+
+      case MessageType.ADB_PAIR_RESULT: {
+        this.onRendererEvent('adb-pair-result', payload || {});
+        break;
+      }
+
       case MessageType.CALL_RECENTS: {
         const recents = this.featureHub && this.featureHub.callRecentsUpdate(payload);
         if (recents) this.onRendererEvent('call-recents', recents);

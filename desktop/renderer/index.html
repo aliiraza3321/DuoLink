@@ -818,7 +818,12 @@
               <svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg>
             </summary>
             <div class="apps-adv-body">
-              <p class="apps-step-hint">Optional. On the phone: Developer options → Wireless debugging → Pair device with pairing code.</p>
+              <p class="apps-step-hint">App windows run on this phone's own wireless debugging, so each app gets a display only it uses. Pair that once: Developer options → Wireless debugging → Pair device with pairing code, then enter the six-digit code.</p>
+              <div class="apps-inline">
+                <input id="adb-phone-code" class="apps-input apps-input-code" placeholder="6-digit code" autocomplete="off" maxlength="6">
+                <button id="btn-adb-phone-pair" class="apps-cta apps-cta-primary">Pair this phone</button>
+              </div>
+              <p class="apps-step-hint">Optional, for the desktop side: pair from the PC with an address and code.</p>
               <label for="adb-pair-addr">Pairing address + code</label>
               <input id="adb-pair-addr" class="apps-input" placeholder="192.168.1.40:41234" autocomplete="off">
               <div class="apps-inline">

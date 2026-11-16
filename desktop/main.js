@@ -517,6 +517,12 @@ let captureWinDestroyTimer = null;
 let screenWin = null;
 const SCREEN_WIN_EVENTS = new Set(['phone-screen-frame', 'phone-control-status', 'session-status-change', 'phone-h264-config', 'phone-h264-frame']);
 
+// Phone apps opened in windows of their own: package -> BrowserWindow. Each
+// window draws the live phone picture and is titled with the app's own name,
+// so the app the user picked is the window they get (and re-picking focuses
+// the window that is already open instead of stacking another copy).
+const appWindows = new Map();
+
 // Last frame the phone sent, kept so a pop-out window can paint its very first
 // picture the instant it opens instead of waiting (blank) for the next frame
 // and flashing a false "Reconnecting…" in the meantime.
@@ -951,6 +957,60 @@ function setupIpc() {
     });
   });
 
+  // Screenshot / recording from the phone-screen window toolbar. The window
+  // hands over its canvas as a data URL (still) or raw chunks (video); the main
+  // process owns the disk, so the file lands in the user's own folders.
+  const mediaFolder = (kind) => {
+    const base = kind === 'video' ? 'videos' : 'pictures';
+    const dir = path.join(app.getPath(base), 'DuoLink');
+    try { fs.mkdirSync(dir, { recursive: true }); } catch (_) {}
+    return dir;
+  };
+
+  const stampName = (kind, ext) => {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    return `DuoLink-${kind}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.${ext}`;
+  };
+
+  ipcMain.handle('mirror-save-image', (_e, dataUrl) => {
+    try {
+      if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/png;base64,')) {
+        return { ok: false, error: 'No screen frame to save' };
+      }
+      const file = path.join(mediaFolder('screenshot'), stampName('screenshot', 'png'));
+      fs.writeFileSync(file, Buffer.from(dataUrl.split(',')[1], 'base64'));
+      return { ok: true, path: file };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+
+  ipcMain.handle('mirror-copy-image', (_e, dataUrl) => {
+    try {
+      if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/png;base64,')) {
+        return { ok: false, error: 'No screen frame to copy' };
+      }
+      const img = nativeImage.createFromDataURL(dataUrl);
+      if (img.isEmpty()) return { ok: false, error: 'No screen frame to copy' };
+      clipboard.writeImage(img);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+
+  ipcMain.handle('mirror-save-video', (_e, bytes) => {
+    try {
+      if (!bytes || !bytes.length) return { ok: false, error: 'The recording was empty' };
+      const file = path.join(mediaFolder('video'), stampName('recording', 'webm'));
+      fs.writeFileSync(file, Buffer.from(bytes));
+      return { ok: true, path: file };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+
   // Diagnostics
   ipcMain.handle('diag-request', () => sendToPhone(MessageType.DIAG_REQ, {}));
 
@@ -1280,16 +1340,24 @@ function setupIpc() {
     return r || null;
   }
 
-  ipcMain.handle('screen-window-minimize', () => {
-    if (screenWin && !screenWin.isDestroyed()) screenWin.minimize();
+  /** The pop-out window that sent an IPC call: the mirror or an app window. */
+  const senderWindow = (e) => {
+    const win = e && e.sender ? BrowserWindow.fromWebContents(e.sender) : null;
+    return win && !win.isDestroyed() ? win : null;
+  };
+
+  ipcMain.handle('screen-window-minimize', (e) => {
+    const win = senderWindow(e) || screenWin;
+    if (win && !win.isDestroyed()) win.minimize();
     return true;
   });
 
-  ipcMain.handle('screen-window-maximize', () => {
-    if (!screenWin || screenWin.isDestroyed()) return false;
-    if (screenWin.isMaximized()) screenWin.unmaximize();
-    else screenWin.maximize();
-    return screenWin.isMaximized();
+  ipcMain.handle('screen-window-maximize', (e) => {
+    const win = senderWindow(e) || screenWin;
+    if (!win || win.isDestroyed()) return false;
+    if (win.isMaximized()) win.unmaximize();
+    else win.maximize();
+    return win.isMaximized();
   });
 
   /**
@@ -1385,6 +1453,135 @@ function setupIpc() {
   }
 
   ipcMain.handle('open-screen-window', () => openScreenWindowInternal(null));
+
+  /**
+   * A phone app in a window of its own.
+   *
+   * The app is started on the phone and this window shows the live phone
+   * picture, titled with the app's own name so the window is the thing the
+   * user picked. Tapping the same app again focuses its window instead of
+   * stacking a second copy of it.
+   */
+  /**
+   * A phone app in a window of its own.
+   *
+   * The phone starts the app on a display only that app occupies and streams
+   * that display back on a session of its own; this window paints that stream,
+   * titled with the app's own name. Ten apps open means ten sessions, ten
+   * streams and ten windows, and each one shows that app and nothing else.
+   */
+  function appWindowFor(session) {
+    const entry = appWindows.get(String(session || ''));
+    return entry && entry.win && !entry.win.isDestroyed() ? entry : null;
+  }
+
+  function openAppWindowInternal(pkg, label, session) {
+    const cleanPkg = String(pkg || '').trim();
+    if (!/^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+){1,}$/.test(cleanPkg)) {
+      return { ok: false, error: 'Unknown package' };
+    }
+    const sid = String(session || '').trim();
+    if (!sid) return { ok: false, error: 'The phone did not open a window for that app' };
+    const existing = appWindowFor(sid);
+    if (existing) {
+      existing.win.show();
+      existing.win.focus();
+      return { ok: true, existing: true };
+    }
+
+    const name = String(label || cleanPkg).trim() || cleanPkg;
+    const wa = screen.getPrimaryDisplay().workAreaSize;
+    let aspect = 360 / 740;
+    if (latestScreenFrame && latestScreenFrame.width > 0 && latestScreenFrame.height > 0) {
+      aspect = latestScreenFrame.width / latestScreenFrame.height;
+    }
+    let winH = Math.min(Math.round(wa.height * 0.82), 960);
+    let winW = Math.round(winH * aspect);
+    if (winW > wa.width - 80) {
+      winW = wa.width - 80;
+      winH = Math.round(winW / aspect);
+    }
+
+    const win = new BrowserWindow({
+      width: Math.max(320, winW),
+      height: Math.max(420, winH),
+      minWidth: 220,
+      minHeight: 280,
+      backgroundColor: '#0B0D14',
+      title: `${name} — ${APP_NAME}`,
+      icon: APP_ICON,
+      autoHideMenuBar: true,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true
+      }
+    });
+    appWindows.set(sid, { win, pkg: cleanPkg, label: name });
+    win.loadFile(path.join(__dirname, 'renderer', 'screen-window.html'), {
+      query: { app: '1', label: name, session: sid }
+    });
+    win.on('closed', () => {
+      const entry = appWindows.get(sid);
+      if (entry && entry.win === win) appWindows.delete(sid);
+      // Closing the window closes that app's display on the phone too.
+      try { sendToPhone(MessageType.APP_WINDOW_CLOSE, { session: sid }); } catch (_) {}
+    });
+    win.webContents.setWindowOpenHandler(({ url }) => {
+      if (url.startsWith('https:') || url.startsWith('http:')) shell.openExternal(url);
+      return { action: 'deny' };
+    });
+    win.webContents.on('will-navigate', (event, url) => {
+      if (!url.startsWith('file://')) event.preventDefault();
+    });
+    return { ok: true };
+  }
+
+  ipcMain.handle('open-app-window', (_e, req) => {
+    const pkg = typeof req === 'string' ? req : (req && req.pkg);
+    const label = typeof req === 'string' ? '' : (req && req.label);
+    const session = typeof req === 'string' ? '' : (req && req.session);
+    return openAppWindowInternal(pkg, label, session);
+  });
+
+  // A phone app opened from the Apps pane: the phone gives it a display of its
+  // own and answers with a session; that session becomes a window here.
+  ipcMain.handle('launch-app-in-window', (_e, req) => {
+    const pkg = typeof req === 'string' ? req : (req && req.pkg);
+    if (!/^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+){1,}$/.test(String(pkg || ''))) {
+      return { ok: false, error: 'Unknown package' };
+    }
+    return sendToPhone(MessageType.APP_LAUNCH, { pkg: String(pkg), window: true });
+  });
+
+  // The window's mouse and keyboard, on that app's own display.
+  ipcMain.handle('app-window-input', (_e, req) => {
+    const session = String((req && req.session) || '');
+    if (!session) return false;
+    const action = String((req && req.action) || 'UP');
+    const x = Number((req && req.x) || 0);
+    const y = Number((req && req.y) || 0);
+    return sendToPhone(MessageType.APP_WINDOW_INPUT, { session, action, x, y });
+  });
+
+  ipcMain.handle('app-window-close', (_e, session) => {
+    const sid = String(session || '');
+    const entry = appWindowFor(sid);
+    if (entry) {
+      appWindows.delete(sid);
+      if (!entry.win.isDestroyed()) entry.win.close();
+    }
+    return sendToPhone(MessageType.APP_WINDOW_CLOSE, { session: sid });
+  });
+
+  // Wireless debugging on the phone itself: one pairing code, then the phone
+  // can run the shell side that gives each app its own display.
+  ipcMain.handle('adb-pair-phone', (_e, code) => {
+    const clean = String(code || '').replace(/[^0-9]/g, '').slice(0, 6);
+    if (clean.length < 6) return { ok: false, error: 'Enter the six-digit pairing code' };
+    return sendToPhone(MessageType.ADB_PAIR_REQ, { code: clean });
+  });
 
   // The pop-out renderer pings as soon as its script is up. Answer with the
   // last frame the phone sent so the window shows a picture IMMEDIATELY -
@@ -1709,6 +1906,23 @@ if (gotTheLock) app.whenReady().then(async () => {
           }
           screenWin.webContents.send(event, data);
         }
+        // Each app window gets only its own app's frames, by session.
+        if (event === 'app-window-frame' && data && data.session) {
+          const entry = appWindows.get(String(data.session));
+          if (entry && entry.win && !entry.win.isDestroyed()) {
+            entry.win.webContents.send('app-window-frame', data);
+          }
+        }
+        if (event === 'app-window-closed' && data && data.session) {
+          const entry = appWindows.get(String(data.session));
+          if (entry && entry.win && !entry.win.isDestroyed()) entry.win.close();
+        }
+        if (event === 'app-launch-result' && data && data.ok && data.session) {
+          const opened = openAppWindowInternal(data.pkg, '', data.session);
+          if (opened && opened.ok === false && mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('app-launch-result', { ok: false, pkg: data.pkg, error: opened.error });
+          }
+        }
       }
     });
 
@@ -1752,4 +1966,8 @@ app.on('will-quit', () => {
   try { if (captureWinDestroyTimer) clearTimeout(captureWinDestroyTimer); } catch (_) {}
   try { if (captureWin && !captureWin.isDestroyed()) captureWin.destroy(); } catch (_) {}
   try { if (screenWin && !screenWin.isDestroyed()) screenWin.destroy(); } catch (_) {}
+  for (const entry of appWindows.values()) {
+    try { if (entry.win && !entry.win.isDestroyed()) entry.win.destroy(); } catch (_) {}
+  }
+  appWindows.clear();
 });

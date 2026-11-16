@@ -90,6 +90,52 @@
       -webkit-backdrop-filter: blur(6px);
     }
     body:hover #grip { opacity: 1; pointer-events: auto; }
+    /* App window: the OS title bar carries the app's name and controls. */
+    body.app-window #winctl, body.app-window #grip, body.app-window #drag { display: none; }
+
+    /* ---- Tools: copy, screenshot, record, volume ---- */
+    #tools {
+      position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+      z-index: 7; display: flex; align-items: center; gap: 4px;
+      padding: 6px; border-radius: 16px;
+      background: rgba(10, 12, 20, 0.72); border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      opacity: .55; transition: opacity .16s ease;
+    }
+    body:hover #tools { opacity: 1; }
+    #tools button {
+      width: 34px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;
+      border-radius: 10px; border: 1px solid transparent; background: transparent;
+      color: #dfe3f0; cursor: pointer; transition: background .14s ease, border-color .14s ease, color .14s ease;
+    }
+    #tools button:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(255, 255, 255, 0.14); }
+    #tools button[disabled] { opacity: .35; cursor: default; }
+    #tools svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6;
+                 stroke-linecap: round; stroke-linejoin: round; }
+    #tool-rec svg circle { fill: currentColor; stroke: none; }
+    body.recording #tool-rec { color: #fca5a5; background: rgba(248, 113, 113, 0.16); border-color: rgba(248, 113, 113, 0.45); }
+    #tools .sep { width: 1px; height: 18px; background: rgba(255, 255, 255, 0.12); margin: 0 3px; }
+    #vol-pop {
+      position: absolute; bottom: 48px; right: 4px;
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+      border-radius: 12px; background: rgba(10, 12, 20, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+    #vol-pop[hidden] { display: none; }
+    #vol-pop input { width: 132px; accent-color: #7c6cff; }
+    #vol-pop button {
+      width: auto; padding: 0 8px; height: 26px; font: 600 11px/1 system-ui, sans-serif;
+      color: #dfe3f0;
+    }
+    #tool-note {
+      position: fixed; left: 50%; bottom: 60px; transform: translateX(-50%);
+      padding: 6px 11px; border-radius: 999px; z-index: 8;
+      background: rgba(10, 12, 20, 0.9); border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #e8eaf2; font: 600 11px/1 system-ui, sans-serif; white-space: nowrap;
+      opacity: 0; transition: opacity .18s ease; pointer-events: none; max-width: 90vw;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    #tool-note.show { opacity: 1; }
   </style>
 </head>
 <body>
@@ -105,6 +151,27 @@
        stays visible but dimmed, with this note over it — never a black hole. -->
   <div id="stale" aria-hidden="true"><span></span>Reconnecting…</div>
   <div id="type-hint">Type to write on the phone · Enter sends · Ctrl+V pastes · Esc closes</div>
+
+  <div id="tools" role="toolbar" aria-label="Phone screen tools">
+    <button id="tool-copy" title="Copy screenshot to the clipboard" aria-label="Copy screenshot">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/></svg>
+    </button>
+    <button id="tool-shot" title="Take a screenshot" aria-label="Screenshot">
+      <svg viewBox="0 0 24 24"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2l1.4-2h7.8l1.4 2h2.2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.8" r="3.4"/></svg>
+    </button>
+    <button id="tool-rec" title="Record the screen to a video" aria-label="Record video">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5"/></svg>
+    </button>
+    <span class="sep" aria-hidden="true"></span>
+    <button id="tool-vol" title="Phone media volume" aria-label="Volume" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><path d="M4 9.5h3L12 5v14L7 14.5H4z"/><path d="M16 9.2a4 4 0 0 1 0 5.6"/><path d="M18.6 6.6a7.5 7.5 0 0 1 0 10.8"/></svg>
+    </button>
+  </div>
+  <div id="vol-pop" hidden>
+    <button id="vol-mute" title="Mute the phone">Mute</button>
+    <input id="vol-range" type="range" min="0" max="15" value="7" aria-label="Media volume">
+  </div>
+  <div id="tool-note" aria-live="polite"></div>
   <script src="h264-mirror.js"></script>
   <script src="screen-window.js"></script>
 </body>

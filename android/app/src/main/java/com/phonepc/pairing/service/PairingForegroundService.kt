@@ -32,6 +32,8 @@ import com.google.gson.JsonObject
 import com.phonepc.pairing.MainActivity
 import com.phonepc.pairing.control.PhoneAccessibilityService
 import com.phonepc.pairing.control.ScreenCaptureService
+import com.phonepc.pairing.apps.AdbBridge
+import com.phonepc.pairing.apps.AppWindows
 import com.phonepc.pairing.feature.CallController
 import com.phonepc.pairing.feature.MediaBrowser
 import com.phonepc.pairing.feature.PhoneNotificationListener
@@ -264,6 +266,32 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
         try {
             registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         } catch (_: Exception) {}
+
+        // App windows: each display's frames go straight to the PC window that
+        // asked for that app, and its close ends the phone side too.
+        AppWindows.listener = object : AppWindows.Listener {
+            override fun onFrame(id: String, pkg: String, width: Int, height: Int, jpeg: ByteArray) {
+                val payload = JsonObject().apply {
+                    addProperty("session", id)
+                    addProperty("pkg", pkg)
+                    addProperty("width", width)
+                    addProperty("height", height)
+                    addProperty(
+                        "jpeg",
+                        android.util.Base64.encodeToString(jpeg, android.util.Base64.NO_WRAP)
+                    )
+                }
+                sendRawEnvelope(Protocol.TYPE_APP_WINDOW_FRAME, payload)
+            }
+
+            override fun onClosed(id: String, pkg: String, reason: String) {
+                sendRawEnvelope(Protocol.TYPE_APP_WINDOW_CLOSED, JsonObject().apply {
+                    addProperty("session", id)
+                    addProperty("pkg", pkg)
+                    addProperty("reason", reason)
+                })
+            }
+        }
 
         // Self-start the link here, not only from the Activity's LaunchedEffect.
         // START_STICKY restarts (system kill, reboot of the process) deliver a
@@ -692,10 +720,30 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
             Protocol.TYPE_APP_CATALOG_REQ -> sendAppCatalog()
             Protocol.TYPE_APP_LAUNCH -> {
                 val pkg = message.payload.get("pkg")?.strOrNull()
+                val window = message.payload.get("window")?.boolOrNull() ?: false
                 val result = JsonObject()
                 if (pkg.isNullOrBlank()) {
                     result.addProperty("ok", false)
                     result.addProperty("error", "Missing package")
+                } else if (window) {
+                    // A window of its own: the app runs on a display only it
+                    // occupies, so its picture is that app and nothing else.
+                    serviceScope.launch {
+                        val (session, error) = AppWindows.open(this@PairingForegroundService, pkg)
+                        val answer = JsonObject()
+                        answer.addProperty("pkg", pkg)
+                        if (session == null) {
+                            answer.addProperty("ok", false)
+                            answer.addProperty("error", error ?: "Could not open that app in a window")
+                        } else {
+                            answer.addProperty("ok", true)
+                            answer.addProperty("session", session.id)
+                            answer.addProperty("width", session.width)
+                            answer.addProperty("height", session.height)
+                        }
+                        sendRawEnvelope(Protocol.TYPE_APP_LAUNCH_RESULT, answer)
+                    }
+                    return
                 } else {
                     val launched = launchApp(pkg)
                     result.addProperty("ok", launched == null)
@@ -703,6 +751,35 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
                     result.addProperty("pkg", pkg)
                 }
                 sendRawEnvelope(Protocol.TYPE_APP_LAUNCH_RESULT, result)
+            }
+
+            Protocol.TYPE_APP_WINDOW_INPUT -> {
+                val session = message.payload.get("session")?.strOrNull() ?: return
+                val action = message.payload.get("action")?.strOrNull() ?: "UP"
+                val x = message.payload.get("x")?.asFloat ?: 0f
+                val y = message.payload.get("y")?.asFloat ?: 0f
+                AppWindows.input(session, action, x, y)
+            }
+
+            Protocol.TYPE_APP_WINDOW_CLOSE -> {
+                message.payload.get("session")?.strOrNull()?.let { AppWindows.close(it) }
+            }
+
+            Protocol.TYPE_ADB_PAIR_REQ -> {
+                val code = message.payload.get("code")?.strOrNull().orEmpty()
+                serviceScope.launch {
+                    val result = AdbBridge.pair(this@PairingForegroundService, code)
+                    sendRawEnvelope(Protocol.TYPE_ADB_PAIR_RESULT, JsonObject().apply {
+                        addProperty("ok", result.isSuccess)
+                        addProperty(
+                            "error",
+                            if (result.isSuccess) "" else when (result.exceptionOrNull()?.message) {
+                                "nocode" -> "Open Developer options → Wireless debugging → Pair device with pairing code first"
+                                else -> result.exceptionOrNull()?.message ?: "Pairing failed"
+                            }
+                        )
+                    })
+                }
             }
 
             Protocol.TYPE_CALL_LOG_DELETE -> {
@@ -1459,6 +1536,9 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
     }
 
     override fun onDestroy() {
+        // App windows belong to this link: no link, no windows.
+        runCatching { AppWindows.closeAll() }
+        runCatching { AppWindows.listener = null }
         stopRinging()
         try { CallController.stopListening(this) } catch (_: Exception) {}
         try { WebcamService.stopFrom(this) } catch (_: Exception) {}

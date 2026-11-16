@@ -95,8 +95,18 @@ const MessageType = {
   // App catalog: label + icon for every launchable app on the phone
   APP_CATALOG_REQ: 'APP_CATALOG_REQ',     // PC -> phone
   APP_CATALOG: 'APP_CATALOG',             // phone -> PC: { apps: [{ pkg, label, icon }] }
-  APP_LAUNCH: 'APP_LAUNCH',               // PC -> phone: { pkg }
-  APP_LAUNCH_RESULT: 'APP_LAUNCH_RESULT', // phone -> PC: { ok, pkg, error? }
+  APP_LAUNCH: 'APP_LAUNCH',               // PC -> phone: { pkg, window? }
+  APP_LAUNCH_RESULT: 'APP_LAUNCH_RESULT', // phone -> PC: { ok, pkg, session?, width?, height?, error? }
+
+  // One app on a display of its own, streamed to its own PC window
+  APP_WINDOW_FRAME: 'APP_WINDOW_FRAME',   // phone -> PC: { session, pkg, width, height, jpeg (base64) }
+  APP_WINDOW_CLOSED: 'APP_WINDOW_CLOSED', // phone -> PC: { session, pkg, reason }
+  APP_WINDOW_INPUT: 'APP_WINDOW_INPUT',   // PC -> phone: { session, action, x, y }
+  APP_WINDOW_CLOSE: 'APP_WINDOW_CLOSE',   // PC -> phone: { session }
+
+  // The phone's own wireless debugging (what app windows run on)
+  ADB_PAIR_REQ: 'ADB_PAIR_REQ',           // PC -> phone: { code }
+  ADB_PAIR_RESULT: 'ADB_PAIR_RESULT',     // phone -> PC: { ok, error }
 
   // Notifications mirroring
   NOTIF_POSTED: 'NOTIF_POSTED',           // phone -> PC: { key, appName, title, text, postTime, canReply, isOngoing }

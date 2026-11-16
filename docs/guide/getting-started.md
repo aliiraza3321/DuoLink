@@ -13,7 +13,8 @@ through each page of the desktop app and the permissions it needs.
 
 ## Install on Windows
 
-1. Download `DuoLink Setup <version>.exe` from
+1. Download [DuoLink Setup 1.1.0 (.exe)](https://github.com/aliiraza3321/DuoLink/releases/download/apk-1.1.0/DuoLink-Setup-1.1.0.exe)
+   — or pick the newest installer from
    [GitHub Releases](https://github.com/aliiraza3321/DuoLink/releases/latest).
 2. Run it. The installer isn't code-signed yet, so SmartScreen may show
    **Windows protected your PC** — choose **More info**, then **Run anyway**.
@@ -30,8 +31,9 @@ through each page of the desktop app and the permissions it needs.
 
 ## Install on Android
 
-1. Scan the QR from the installer's last page, or open
-   [DuoLink.apk](https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink.apk).
+1. Scan the QR from the installer's last page, or download
+   [DuoLink 1.1.0 (.apk)](https://github.com/aliiraza3321/DuoLink/releases/download/apk-1.1.0/DuoLink-1.1.0.apk).
+   The two apps must be the same version.
 2. Open the downloaded file. If Android warns about an unknown developer, choose
    **Settings → Allow from this source**, then install.
 3. Launch DuoLink and leave it on the pairing screen.
@@ -108,16 +110,30 @@ Discord and OBS can use it as a camera. Torch toggles the phone's flash.
 
 ### Apps
 Every launchable app on the phone, with its real name and icon, searchable.
-Choosing one opens it in a window on the PC while the phone stays in your pocket.
+Choosing one opens it in a window of its own on the PC: open ten apps and you get
+ten windows, each showing only that app, while the phone stays free for anything
+else. Closing a window closes that app's display on the phone.
 
-**Optional — wireless debugging.** If you prefer the ADB route (or the phone app
-isn't connected yet), open **Advanced · Wireless debugging** in the Apps rail:
+#### App windows: the one-time wireless-debugging pairing
+App windows run on the phone's own wireless debugging, so the phone needs
+Developer options once. Android 11 or newer is required.
 
-1. On the phone: **Developer options → Wireless debugging → Pair device with
-   pairing code**. Note the IP, the pairing port and the six-digit code.
-2. In DuoLink paste the address and the code, press **Pair**.
-3. Then paste the **device address** shown on the same screen and press
-   **Connect**. The app list appears and stays cached until you press Refresh.
+1. On the phone open **Settings → About phone** and tap **Build number** seven
+   times, then go to **Developer options → Wireless debugging** and turn it on.
+   Keep the phone on the **Wireless debugging** screen for the next step.
+2. On the PC open **Apps**, expand **Advanced · Wireless debugging** and press
+   **Pair this phone**.
+3. Type the **six-digit code** the phone is showing and confirm. DuoLink pairs,
+   connects, and the app grid loads.
+
+After that the pairing is remembered. Wireless debugging has to stay on for the
+phone to start new app displays; if it is turned off, switch it on again and the
+existing pairing is reused — you only type a code the first time.
+
+If the automatic pairing can't find the phone, the manual route still works:
+enter the **IP:pairing-port** and code under **Pairing address + code**, press
+**Pair**, then enter the **device address** shown on the same phone screen and
+press **Connect**. The grid stays cached until you press **Refresh**.
 
 ### Settings
 Appearance (dark and light, matched to the Android app), start with Windows,
@@ -135,6 +151,9 @@ update checks.
 | Black mirror window | Accept the screen-capture prompt on the phone; restart the mirror. |
 | Gallery shows nothing | Grant photos/videos access, then pick an album again. |
 | Apps list empty | Open **Apps → Refresh**; update the phone APK if the PC is newer. |
+| App windows won't open | Enable **Developer options → Wireless debugging** on the phone, then **Apps → Advanced · Wireless debugging → Pair this phone**. |
+| App window stays black | Unlock the phone and try another app; the app's display can't draw while the device is locked mid-launch. |
+| First app window takes a few seconds | The phone is starting the app on a fresh display; later apps open faster. |
 | Installer blocked | SmartScreen → **More info → Run anyway**. |
 
 ## Uninstall

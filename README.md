@@ -40,8 +40,12 @@ server; the phone connects to it directly. Nothing is relayed.
 
 | | Download | Needs |
 |---|---|---|
-| **Windows (x64)** | [Installer (.exe)](https://github.com/aliiraza3321/DuoLink/releases/latest) | Windows 10 (2004+) or Windows 11, 64-bit |
-| **Android** | [DuoLink.apk](https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink.apk) | Android 8.0 or newer, same Wi-Fi as the PC |
+| **Windows (x64)** | [DuoLink Setup 1.1.0 (.exe, 82 MB)](https://github.com/aliiraza3321/DuoLink/releases/download/apk-1.1.0/DuoLink-Setup-1.1.0.exe) | Windows 10 (2004+) or Windows 11, 64-bit |
+| **Android** | [DuoLink 1.1.0 (.apk, 43 MB)](https://github.com/aliiraza3321/DuoLink/releases/download/apk-1.1.0/DuoLink-1.1.0.apk) | Android 8.0 or newer, same Wi-Fi as the PC |
+
+Both files are attached to the [1.1.0 release](https://github.com/aliiraza3321/DuoLink/releases/tag/apk-1.1.0);
+[releases/latest](https://github.com/aliiraza3321/DuoLink/releases/latest) always
+points at the newest build.
 
 > [!NOTE]
 > The Windows installer isn't code-signed yet, so SmartScreen may show
@@ -64,7 +68,7 @@ your phone's camera to open the download page.
 | 📷 | **Gallery** | Browse albums, thumbnails grouped by day, open, download, share to a phone app or delete from the phone. |
 | 🖥️ | **Screen mirroring** | The phone screen in its own resizable window, with mouse and keyboard input, recording, screenshots and volume control. |
 | 🎥 | **Phone as webcam** | Use the phone's camera in Zoom, Teams, Discord or OBS, with torch and lens switching. |
-| 🧩 | **Apps** | Every app on the phone, with its real name and icon. Open one and it comes up in a window on the PC. |
+| 🧩 | **Apps** | Every app on the phone, with its real name and icon. Open one and it gets a Windows window of its own — ten apps open means ten windows, each showing only that app — while the phone stays free for anything else. |
 | ⚙️ | **Settings** | Themes (dark and light, both matched to the Android app), trusted devices, phone health and permissions, diagnostics. |
 
 ## Screens
@@ -77,7 +81,7 @@ your phone's camera to open the download page.
 | **Notifications** | Live mirror with per-app filters and reply. |
 | **Gallery** | Album sidebar, day-grouped photo grid, select / download / share / delete. |
 | **Phone Screen** | The mirror, plus a toolbar for record, screenshot, copy screenshot and volume. |
-| **Apps** | The phone's app grid; wireless debugging lives under *Advanced*. |
+| **Apps** | The phone's app grid and search; open as many apps as you like, one window each. The one-time wireless-debugging pairing lives under *Advanced*. |
 | **Settings** | General, security and privacy, trusted devices, phone health, diagnostics. |
 
 ## Quick start
@@ -90,6 +94,11 @@ your phone's camera to open the download page.
 3. **Pair.** Open DuoLink on the PC, scan the QR with the phone, confirm the
    six-digit code on both screens, and approve the phone on the PC. From then on
    the phone reconnects by itself whenever both are on the same network.
+4. **Turn on app windows (once).** Open **Apps** on the PC and expand
+   **Advanced · Wireless debugging**. Turn on **Developer options → Wireless
+   debugging** on the phone, press **Pair this phone** and type the six-digit
+   code the phone shows. After that, tapping any app in the grid opens it in its
+   own window; close the window and the app's display on the phone closes too.
 
 The full walkthrough — every permission, every page and every troubleshooting
 step — is in **[docs/guide/getting-started.md](docs/guide/getting-started.md)**.
@@ -113,9 +122,13 @@ step — is in **[docs/guide/getting-started.md](docs/guide/getting-started.md)*
   encrypted preferences. Reconnects use an HMAC-SHA256 challenge/response.
 - **Transports** — one WebSocket per phone carries every feature; media and
   screen frames use their own binary channels so chat never stutters.
-- **Apps** — the phone answers with its launchable app list (real label + icon);
-  opening one asks the phone to start it and the PC shows it in its window.
-  Wireless debugging (`adb`) is available as an optional fallback.
+- **App windows** — the phone answers with its launchable app list (real label
+  and icon). Opening one starts a small helper on the phone through its *own*
+  wireless-debugging session (`app_process` as the shell user). The helper makes
+  a virtual display, launches the app onto it with `am start --display`, and
+  streams its frames back to the PC, so each open app has a display and a window
+  of its own; taps, scrolls and keys in the window go back to that display. No
+  root and no second app on the phone.
 
 ## Build from source
 
@@ -136,8 +149,11 @@ cd android
 ./gradlew assembleRelease      # needs android/keystore.properties
 ```
 
-Continuous integration builds the APK and publishes it to the `apk-latest`
-release on every push, so the download link in the installer always works.
+Releases are cut from a clean checkout: `npm run dist` produces the installer
+and `./gradlew assembleDebug` the APK, and both are attached to a GitHub release
+(1.1.0 lives on the `apk-1.1.0` release). The installer's last page and this
+README both link to `releases/latest`, so they follow whichever release is
+newest.
 
 ## Privacy
 
@@ -155,6 +171,8 @@ received stay in `Downloads\DuoLink`.
 | Messages or calls are empty | On the phone: Settings → Apps → DuoLink → Permissions → SMS and Call log. |
 | Mirroring shows a black frame | Grant the screen-capture prompt on the phone when it appears. |
 | App list is empty | Open **Apps** → **Refresh**; if the phone app is older than the PC, update the APK. |
+| App windows won't open | Re-pair wireless debugging: **Apps → Advanced · Wireless debugging → Pair this phone**, and turn wireless debugging back on in Developer options. |
+| App window stays black | Unlock the phone and try another app; a locked phone can stop the app's display from drawing. |
 
 ## Documentation
 

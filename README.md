@@ -149,11 +149,11 @@ cd android
 ./gradlew assembleRelease      # needs android/keystore.properties
 ```
 
-Releases are cut from a clean checkout: `npm run dist` produces the installer
-and `./gradlew assembleDebug` the APK, and both are attached to a GitHub release
-(1.1.0 lives on the `apk-1.1.0` release). The installer's last page and this
-README both link to `releases/latest`, so they follow whichever release is
-newest.
+The installer is cut from a clean checkout (`npm run dist`) and attached to a
+GitHub release together with the APK — 1.1.0 lives on the `apk-1.1.0` release.
+CI also builds the APK on every push to a non-documentation file and publishes
+it as its own `apk-<version>-<build>` release, marked latest, so
+`releases/latest/download/DuoLink.apk` always serves the newest build.
 
 ## Privacy
 

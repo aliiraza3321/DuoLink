@@ -15,6 +15,10 @@ name: Build & Publish APK
 on:
   push:
     branches: ["**"]
+    # Documentation-only commits don't need a new APK release.
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
   workflow_dispatch:
 
 permissions:

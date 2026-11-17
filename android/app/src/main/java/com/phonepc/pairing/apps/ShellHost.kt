@@ -243,19 +243,34 @@ object ShellHost {
 
         /** Starts [pkg] on the display, through its launcher activity when one resolves. */
         private fun launch(pkg: String, id: Int) {
-            val activity = shell(
-                "cmd package resolve-activity --brief -a android.intent.action.MAIN " +
-                    "-c android.intent.category.LAUNCHER $pkg"
-            )
-                .lineSequence()
-                .map { it.trim() }
-                .lastOrNull { it.startsWith("$pkg/") }
-            if (activity != null) {
-                shell("am start --display $id --windowingMode 1 -n $activity -f 0x18000000")
+            // An instance already running on the phone's own screen would just be
+            // brought forward there, leaving this display empty. Stop it first so
+            // the app really starts on the display we made for it.
+            if (shell("pidof $pkg").trim().isNotEmpty()) {
+                shell("am force-stop $pkg")
+                Thread.sleep(300)
+            }
+            val activity = resolveLauncher(pkg)
+            val started = if (activity != null) {
+                // Single quotes: components such as YouTube's `Shell$HomeActivity`
+                // lose the `$HomeActivity` half to the shell's variable expansion.
+                val component = activity.replace("'", "'\\''")
+                shell("am start --display $id --windowingMode 1 -n '$component' -f 0x18000000")
             } else {
                 shell("am start --display $id --windowingMode 1 -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p $pkg -f 0x18000000")
             }
+            val firstLine = started.trim().lineSequence().firstOrNull() ?: ""
+            System.err.println("start $pkg on $id via ${activity ?: "intent"}: $firstLine")
         }
+
+        /** `com.example/.Main` for the package's launcher activity, or null. */
+        private fun resolveLauncher(pkg: String): String? = shell(
+            "cmd package resolve-activity --brief -a android.intent.action.MAIN " +
+                "-c android.intent.category.LAUNCHER $pkg"
+        )
+            .lineSequence()
+            .map { it.trim() }
+            .lastOrNull { it.startsWith("$pkg/") && !it.contains(' ') }
 
         /** Keeps the phone awake so the app on its own display keeps drawing. */
         private fun wake() {

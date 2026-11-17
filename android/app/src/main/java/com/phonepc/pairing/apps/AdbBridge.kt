@@ -57,6 +57,15 @@ internal object AdbBridge {
     fun isPaired(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(PAIRED, false)
 
+    /**
+     * Whether Android's wireless debugging switch is on. A paired phone that has
+     * the switch off cannot be reached, and its own screen is the only thing that
+     * can turn it back on.
+     */
+    fun wirelessDebuggingOn(context: Context): Boolean = runCatching {
+        android.provider.Settings.Global.getInt(context.contentResolver, "adb_wifi_enabled") == 1
+    }.getOrDefault(false)
+
     /** Pairs with the code Android's pairing dialog shows. */
     suspend fun pair(context: Context, code: String): Result<Unit> = withContext(Dispatchers.IO) {
         val port = mDNS(context, AdbMdns.SERVICE_TYPE_TLS_PAIRING, PAIR_MS)

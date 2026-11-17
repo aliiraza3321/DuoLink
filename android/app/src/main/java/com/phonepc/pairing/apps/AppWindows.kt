@@ -56,9 +56,16 @@ object AppWindows {
      * when the phone can't (not paired, or the helper didn't start).
      */
     suspend fun open(context: Context, pkg: String): Pair<Session?, String?> {
+        // Say which half is missing: the phone's switch, or DuoLink's pairing.
+        if (!AdbBridge.wirelessDebuggingOn(context)) {
+            return null to "Turn on Developer options → Wireless debugging on the phone, then open Apps → Advanced and pair it once."
+        }
+        if (!AdbBridge.isPaired(context)) {
+            return null to "Wireless debugging is on but DuoLink isn't paired with it yet: Apps → Advanced · Wireless debugging → Pair this phone."
+        }
         val (width, height, dpi) = displaySize(context)
         val socket = AdbBridge.openWindow(context, pkg, width, height, dpi)
-            ?: return null to "Wireless debugging isn't connected. Open Apps → Advanced and pair it once."
+            ?: return null to "Wireless debugging is on but the phone didn't answer. Toggle wireless debugging off and on, then pair again."
         val id = UUID.randomUUID().toString().take(8)
         val session = Session(id, pkg, width, height, waiting = false, socket = socket, writer = socket.getOutputStream())
         sessions[id] = session

@@ -1,7 +1,12 @@
 name: Build & Publish APK
 
-# Builds the Android app and attaches it to a "latest" GitHub Release, so the
-# installer QR can always point at one stable URL:
+# Builds the Android app and publishes it as its own tagged release:
+#   apk-<versionName>-<run number>   e.g. apk-1.1.0-42
+#
+# Published releases in this repository are immutable, so a build can never
+# replace the asset of an older release - every run gets a new tag. The release
+# is marked latest and its asset is always named DuoLink.apk, which keeps the
+# stable link in the installer QR working:
 #   https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink.apk
 #
 # Uploading here uses the GitHub API (2 GB per asset), which is why the 25 MB
@@ -86,6 +91,14 @@ jobs:
           fi
           exit $STATUS
 
+      - name: Read app version
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -m1 'versionName' android/app/build.gradle.kts | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "App version: $VERSION"
+
       - name: Collect APK
         run: |
           set -euo pipefail
@@ -101,16 +114,21 @@ jobs:
           path: DuoLink.apk
           retention-days: 30
 
-      - name: Publish to latest release
+      - name: Publish a new tagged release
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: apk-latest
-          name: DuoLink for Android (latest)
+          # Immutable releases cannot be edited, so every build gets its own tag.
+          tag_name: apk-${{ steps.version.outputs.version }}-${{ github.run_number }}
+          name: DuoLink ${{ steps.version.outputs.version }} — APK build ${{ github.run_number }}
           body: |
-            Latest APK built automatically from the newest commit.
+            Android app built automatically from `${{ github.sha }}`
+            (${{ github.ref_name }}), version ${{ steps.version.outputs.version }}.
 
-            Permanent link: https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink.apk
+            Stable link that always serves the newest build:
+            https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink.apk
+
+            The Windows installer is on the releases page.
           files: DuoLink.apk
           make_latest: true
           fail_on_unmatched_files: true

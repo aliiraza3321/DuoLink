@@ -166,4 +166,6 @@ jobs:
             DuoLink.apk
             DuoLink-Setup-*.exe
           make_latest: true
-          fail_on_unmatched_files: true
+          # The installer is optional (a first run may predate any Windows
+          # release), so a missing copy must not fail the APK publish.
+          fail_on_unmatched_files: false

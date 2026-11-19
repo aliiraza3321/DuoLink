@@ -40,10 +40,12 @@ server; the phone connects to it directly. Nothing is relayed.
 
 | | Download | Needs |
 |---|---|---|
-| **Windows (x64)** | [DuoLink Setup 1.1.0 (.exe, 82 MB)](https://github.com/aliiraza3321/DuoLink/releases/download/apk-1.1.0/DuoLink-Setup-1.1.0.exe) | Windows 10 (2004+) or Windows 11, 64-bit |
+| **Windows (x64)** | [DuoLink Setup 1.1.0 (.exe, 82 MB)](https://github.com/aliiraza3321/DuoLink/releases/download/desktop-1.1.0-3/DuoLink-Setup-1.1.0.exe) | Windows 10 (2004+) or Windows 11, 64-bit |
 | **Android** | [DuoLink 1.1.0 (.apk, 43 MB)](https://github.com/aliiraza3321/DuoLink/releases/download/apk-1.1.0/DuoLink-1.1.0.apk) | Android 8.0 or newer, same Wi-Fi as the PC |
 
-Both files are attached to the [1.1.0 release](https://github.com/aliiraza3321/DuoLink/releases/tag/apk-1.1.0);
+Both files are attached to a release: the installer to the
+[1.1.0 Windows release](https://github.com/aliiraza3321/DuoLink/releases/tag/desktop-1.1.0-3)
+and the APK to the [1.1.0 Android release](https://github.com/aliiraza3321/DuoLink/releases/tag/apk-1.1.0);
 [releases/latest](https://github.com/aliiraza3321/DuoLink/releases/latest) always
 points at the newest build.
 

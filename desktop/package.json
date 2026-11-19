@@ -46,7 +46,8 @@
       "installerIcon": "renderer/assets/icon.ico",
       "uninstallerIcon": "renderer/assets/icon.ico",
       "runAfterFinish": false,
-      "installerHeader": "build/installerHeader.bmp",
+      "installerHeader": null,
+      "installerHeaderIcon": null,
       "installerSidebar": "build/installerSidebar.bmp",
       "uninstallerSidebar": "build/uninstallerSidebar.bmp"
     }

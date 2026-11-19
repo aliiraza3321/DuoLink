@@ -126,13 +126,20 @@ jobs:
           tag_name: apk-${{ steps.version.outputs.version }}-${{ github.run_number }}
           name: DuoLink ${{ steps.version.outputs.version }} — APK build ${{ github.run_number }}
           body: |
-            Android app built automatically from `${{ github.sha }}`
-            (${{ github.ref_name }}), version ${{ steps.version.outputs.version }}.
+            ## Download
 
-            Stable link that always serves the newest build:
+            **Android** (this release) — `DuoLink.apk` below, version
+            ${{ steps.version.outputs.version }}, built from `${{ github.sha }}`
+            (${{ github.ref_name }}).
+
+            Stable link that always serves the newest Android build:
             https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink.apk
 
-            The Windows installer is on the releases page.
+            **Windows** is a separate download and a separate release:
+            https://github.com/aliiraza3321/DuoLink#desktop
+
+            Install the Windows app first — its last screen shows the QR for
+            this APK.
           files: DuoLink.apk
           make_latest: true
           fail_on_unmatched_files: true

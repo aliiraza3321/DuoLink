@@ -17,16 +17,6 @@
       cursor: default;
     }
     body { display: flex; align-items: center; justify-content: center; }
-    /* Typing hint: appears only once the picture is clicked (keyboard armed). */
-    #type-hint {
-      position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%);
-      padding: 7px 12px; border-radius: 999px;
-      background: rgba(10, 12, 20, 0.82); border: 1px solid rgba(255, 255, 255, 0.16);
-      color: #dfe3f0; font: 600 11px/1 system-ui, sans-serif; letter-spacing: .2px;
-      opacity: 0; transition: opacity .2s ease; pointer-events: none; z-index: 6;
-      white-space: nowrap;
-    }
-    body.typing #type-hint { opacity: 1; }
     /* The pane is the screen and nothing else: no chrome, no labels. */
     #frame { display: none; max-width: 100%; max-height: 100%; transition: opacity .25s ease; }
     /* Stalled-stream note: dimmed last frame + pill, self-clearing on resume. */
@@ -94,8 +84,11 @@
     body.app-window #winctl, body.app-window #grip, body.app-window #drag { display: none; }
 
     /* ---- Tools: copy, screenshot, record, volume ---- */
+    /* Top-right, revealed on hover, exactly like the webcam bar: the picture is
+       the content, so the controls never sit on top of the phone's own
+       navigation bar at the bottom of the screen. */
     #tools {
-      position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+      position: fixed; top: 10px; right: 10px;
       z-index: 7; display: flex; align-items: center; gap: 4px;
       padding: 6px; border-radius: 16px;
       background: rgba(10, 12, 20, 0.72); border: 1px solid rgba(255, 255, 255, 0.14);
@@ -116,7 +109,7 @@
     body.recording #tool-rec { color: #fca5a5; background: rgba(248, 113, 113, 0.16); border-color: rgba(248, 113, 113, 0.45); }
     #tools .sep { width: 1px; height: 18px; background: rgba(255, 255, 255, 0.12); margin: 0 3px; }
     #vol-pop {
-      position: absolute; bottom: 48px; right: 4px;
+      position: absolute; top: 44px; right: 0;
       display: flex; align-items: center; gap: 8px; padding: 8px 10px;
       border-radius: 12px; background: rgba(10, 12, 20, 0.94);
       border: 1px solid rgba(255, 255, 255, 0.16);
@@ -128,7 +121,7 @@
       color: #dfe3f0;
     }
     #tool-note {
-      position: fixed; left: 50%; bottom: 60px; transform: translateX(-50%);
+      position: fixed; right: 10px; top: 64px;
       padding: 6px 11px; border-radius: 999px; z-index: 8;
       background: rgba(10, 12, 20, 0.9); border: 1px solid rgba(255, 255, 255, 0.16);
       color: #e8eaf2; font: 600 11px/1 system-ui, sans-serif; white-space: nowrap;
@@ -150,7 +143,6 @@
   <!-- Frames paused (rotation, heavy game, Wi-Fi blip): the last picture
        stays visible but dimmed, with this note over it — never a black hole. -->
   <div id="stale" aria-hidden="true"><span></span>Reconnecting…</div>
-  <div id="type-hint">Type to write on the phone · Enter sends · Ctrl+V pastes · Esc closes</div>
 
   <div id="tools" role="toolbar" aria-label="Phone screen tools">
     <button id="tool-copy" title="Copy screenshot to the clipboard" aria-label="Copy screenshot">

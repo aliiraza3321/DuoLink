@@ -451,13 +451,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         confirmationBox.classList.add('hidden');
         activeSession = res.session;
         activeSessionBox.classList.remove('hidden');
-        activePhoneName.textContent = res.session.deviceName || 'Phone';
+        if (activePhoneName) activePhoneName.textContent = res.session.deviceName || 'Phone';
         const approveModel = $id('hero-model');
         if (approveModel) {
           approveModel.textContent = res.session.modelCode || '';
           approveModel.classList.toggle('hidden', !res.session.modelCode);
         }
-        activeSessionId.textContent = res.session.sessionId;
+        if (activeSessionId) activeSessionId.textContent = res.session.sessionId;
         sessionBadge.textContent = 'Active Link';
         sessionBadge.className = 'badge badge-success';
         globalStatusDot.className = 'status-dot connected';
@@ -649,8 +649,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       sessionIdleView.classList.add('hidden');
       confirmationBox.classList.add('hidden');
       activeSessionBox.classList.remove('hidden');
-      activePhoneName.textContent = data.deviceName || 'Android Phone';
-      activeSessionId.textContent = data.sessionId;
+      if (activePhoneName) activePhoneName.textContent = data.deviceName || 'Android Phone';
+      if (activeSessionId) activeSessionId.textContent = data.sessionId;
       sessionBadge.textContent = 'Active Link';
       sessionBadge.className = 'badge badge-success';
       globalStatusDot.className = 'status-dot connected';
@@ -1695,6 +1695,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // frames briefly without the stream being unhealthy — flashing
   // "Reconnecting…" on every such gap made a working stream look broken.
   setInterval(() => {
+    // While the pop-out window owns the picture this pane receives no frames by
+    // design, so it must not interpret that silence as a stalled stream - that
+    // is what put "Reconnecting…" over a perfectly live stream in its own
+    // window.
+    if (mirrorPopoutOpen) {
+      setMirrorStale(false);
+      return;
+    }
     if (!mirrorLive || !lastMirrorFrameAt) return;
     setMirrorStale(Date.now() - lastMirrorFrameAt > 5000);
   }, 1500);

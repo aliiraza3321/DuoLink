@@ -1085,3 +1085,117 @@ body.dark-theme {
 @media (prefers-reduced-motion: reduce) {
   #tab-webcam .webcam-tools { transition: none; transform: none; }
 }
+
+/* ==========================================================================
+   Cyan actions, and a light stage in the light theme
+   --------------------------------------------------------------------------
+   Light mode shipped navy-primary buttons (#1e2433) while the product's accent
+   is cyan, and the screen-mirror/webcam stage stayed #0f1116 in every theme,
+   so a light window had a black slab in the middle. Both are theme-level
+   decisions, so they live here next to the palettes rather than in a patch
+   file that may or may not load last.
+   ========================================================================== */
+
+:root[data-base="light"] {
+  --accent-ink: #0891b2;          /* primary buttons, badges, active rails */
+  --accent-primary: #0891b2;
+  --accent-primary-hover: #0e7490;
+  --brand: #0891b2;
+  --brand-2: #22d3ee;
+  --brand-soft: rgba(8, 145, 178, .10);
+  --on-primary-btn: #ffffff;
+}
+
+/* Primary action: flat cyan, white label, cyan on hover too. */
+:root[data-base="light"] .btn-primary,
+:root[data-base="light"] .btn-primary:hover:not(:disabled) {
+  background: var(--accent-ink) !important;
+  border-color: var(--accent-ink) !important;
+  color: #ffffff !important;
+}
+:root[data-base="light"] .btn-primary:hover:not(:disabled) {
+  background: var(--accent-primary-hover) !important;
+  border-color: var(--accent-primary-hover) !important;
+}
+
+/* Anything "on" reads cyan: the current page, a checked switch, an armed
+   segment. This is the state colour the rest of the app already uses for
+   success/live, so an active control no longer looks like an ordinary one. */
+:root[data-base="light"] .nav-tab.active {
+  background: var(--brand-soft) !important;
+  color: #0e7490 !important;
+  box-shadow: inset 2px 0 0 var(--accent-ink) !important;
+}
+:root[data-base="light"] .nav-tab.active .ic,
+:root[data-base="light"] .nav-tab.active .tab-icon,
+:root[data-base="light"] .sidebar .nav-tab.active .tab-icon {
+  color: #0e7490 !important;
+}
+:root[data-base="light"] .switch input:checked + .slider,
+:root[data-base="light"] .toggle input:checked + .slider {
+  background-color: var(--accent-ink) !important;
+}
+:root[data-base="light"] .rf-seg-btn.active,
+:root[data-base="light"] .sp-seg-btn.is-active,
+:root[data-base="light"] .sp-seg-btn.active,
+:root[data-base="light"] .rf-row.active,
+:root[data-base="light"] .rf-album.active,
+:root[data-base="light"] .guide-nav-item.active {
+  background: var(--brand-soft) !important;
+  color: #0e7490 !important;
+}
+:root[data-base="light"] .nav-badge {
+  background: var(--accent-ink) !important;
+  color: #ffffff !important;
+}
+
+/* The phone stage is paper, not a black slab, in the light theme. The live
+   frame still paints over it; only the empty/placeholder state is visible. */
+:root[data-base="light"] #tab-screen-mirror .mirror-viewport,
+:root[data-base="light"] #tab-webcam .webcam-area,
+:root[data-base="light"] #tab-webcam .device-frame.webcam-frame,
+:root[data-base="light"] #tab-webcam .webcam-viewport {
+  background: linear-gradient(165deg, #fbfcfe 0%, #eef2f9 55%, #e3e9f3 100%) !important;
+  border-color: var(--line) !important;
+}
+:root[data-base="light"] .screen-placeholder {
+  background: color-mix(in srgb, #ffffff 62%, transparent) !important;
+  color: var(--text-secondary) !important;
+}
+:root[data-base="light"] .screen-placeholder strong { color: var(--text-primary) !important; }
+:root[data-base="light"] .screen-placeholder .placeholder-icon {
+  background: #ffffff !important;
+  border-color: var(--line) !important;
+  color: #0e7490 !important;
+}
+
+/* The sidebar's own light-theme rule outranks the block above, so the active
+   page keeps its cyan rail and tint explicitly. */
+:root[data-base="light"] .sidebar .nav-tab.active {
+  background: var(--brand-soft) !important;
+  color: #0e7490 !important;
+  box-shadow: inset 2px 0 0 var(--accent-ink) !important;
+}
+
+/* Coloured buttons keep their identity on hover. The generic
+   `.btn:hover:not(:disabled)` rule painted a pale surface behind
+   `.btn-success`/`.btn-danger`, which still carried white/red text: "Approve
+   Pairing" went white-on-white the moment the cursor touched it. */
+.btn-success:hover:not(:disabled),
+.btn-success:focus-visible {
+  background: color-mix(in srgb, var(--ok) 86%, #000) !important;
+  border-color: var(--ok) !important;
+  color: #ffffff !important;
+}
+.btn-danger:hover:not(:disabled),
+.btn-danger:focus-visible {
+  background: color-mix(in srgb, var(--danger) 12%, transparent) !important;
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+}
+:root[data-base="light"] .btn-primary:hover:not(:disabled),
+:root[data-base="light"] .btn-primary:focus-visible {
+  background: var(--accent-primary-hover) !important;
+  border-color: var(--accent-primary-hover) !important;
+  color: #ffffff !important;
+}

@@ -1,30 +1,30 @@
 """
 Generates the DuoLink installer artwork.
 
-The installer now carries the same minimal dark identity as the app: one flat
-background, one hairline accent, the product mark, a single filled action pill
-and nothing else. No gradients, no patterns, no decorative illustration.
-
-NSIS cannot round or recolour a native button into that pill, so the page is
-rendered here as one bitmap and the NSIS page only places invisible click
-targets over the pill and the text link. That keeps the artwork pixel-exact on
-every Windows version and every DPI.
+The installer carries the same cream-and-ink identity as the app: warm paper, a
+faint honeycomb, the product mark, one action pill, and a soft panel for the
+choices. Everything a person can *do* (the checkbox, the install folder line,
+"Change", "What this installs") is a real nsDialogs control placed on top of
+this artwork by build/installer.nsh - the bitmap only supplies the paper, the
+type and the panel they sit in. Nothing interactive is ever painted.
 
 Run from desktop/:  python build/make-installer-art.py
 """
 
+import math
 import os
+
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(os.path.dirname(HERE), "renderer", "assets")
 
-W, H = 490, 238          # NSIS assistant page area under the branded header
+# The nsDialogs page electron-builder hands us is 450x228. Drawing 490x238 used
+# to push the right 40px and the bottom 10px of every page outside the dialog,
+# which is why the small print looked pinned to the window edge.
+W, H = 450, 228
 SS = 4                   # supersampling factor
 
-# Cream "honeycomb" identity: warm paper with a faint hex grid, ink type and
-# one dark-gold action pill. Every MUI page is painted with the same cream, so
-# the wizard never falls back to a black window between the branded pages.
 BG = (243, 238, 226)      # cream paper
 HONEY = (231, 222, 204)   # hex grid lines
 INK = (30, 27, 22)        # headings
@@ -32,6 +32,7 @@ BODY = (95, 90, 78)       # body copy
 MUTED = (140, 132, 114)   # fine print
 ACCENT = (140, 102, 32)   # dark gold pill
 LINE = (222, 214, 198)
+PANEL = (251, 248, 241)   # soft card behind the choices
 DANGER = (168, 60, 48)
 
 FONTS = r"C:\Windows\Fonts"
@@ -58,19 +59,17 @@ def honeycomb(img, scale):
             cy = row * dy * 2 + (dy if col % 2 else 0)
             pts = []
             for i in range(6):
-                ang = (60 * i - 30) * 3.14159265 / 180
-                pts.append((cx + r * 0.92 * __import__('math').cos(ang),
-                            cy + r * 0.92 * __import__('math').sin(ang)))
+                ang = (60 * i - 30) * math.pi / 180
+                pts.append((cx + r * 0.92 * math.cos(ang),
+                            cy + r * 0.92 * math.sin(ang)))
             d.polygon(pts, outline=HONEY + (255,), width=max(1, scale))
     return img
 
 
 def base_canvas(scale):
-    """Cream paper, hex grid, single hairline under the header area."""
+    """Cream paper with the honeycomb; no hard rules, the header sits above."""
     img = Image.new("RGBA", (W * scale, H * scale), BG + (255,))
     honeycomb(img, scale)
-    d = ImageDraw.Draw(img)
-    d.line([(0, 0), (W * scale, 0)], fill=LINE + (255,), width=max(1, scale))
     return img
 
 
@@ -113,54 +112,34 @@ def pill_bitmap(label, color=ACCENT, size=(210, 38)):
     return img
 
 
+# Panel that the real controls (checkbox, folder line, links) sit inside.
+PANEL_X, PANEL_Y, PANEL_W, PANEL_H = 18, 158, 414, 62
+
+
 def build_setup():
-    """Welcome page: the mark, the product name, one Install pill, and the two
-    lines of small print the reference design puts under it."""
+    """Welcome page: the mark, the product name, one Install pill, and a panel
+    of real choices underneath (NSIS places those controls on top)."""
     sc = SS
     img = base_canvas(sc)
     d = ImageDraw.Draw(img)
 
-    logo_px = 62
-    img.alpha_composite(app_logo(sc, logo_px), (int((W / 2 - logo_px / 2) * sc), int(14 * sc)))
+    logo_px = 46
+    img.alpha_composite(app_logo(sc, logo_px), (int((W / 2 - logo_px / 2) * sc), int(6 * sc)))
 
-    title_f = font("segoeuib.ttf", 23 * sc)
-    sub_f = font("segoeui.ttf", 10.5 * sc)
-    small_f = font("segoeui.ttf", 8.5 * sc)
-    tiny_f = font("segoeui.ttf", 8 * sc)
+    title_f = font("segoeuib.ttf", 22 * sc)
+    sub_f = font("segoeui.ttf", 10 * sc)
+    chips_f = font("segoeuib.ttf", 7 * sc)
 
-    centered(d, 74, "DuoLink", title_f, INK, scale=sc)
-    centered(d, 102, "Your Android phone and your PC, working as one.", sub_f, BODY, scale=sc)
+    centered(d, 56, "DuoLink", title_f, INK, scale=sc)
+    centered(d, 86, "Your Android phone and your PC, working as one.", sub_f, BODY, scale=sc)
+    centered(d, 102, "MESSAGES   CALLS   FILES   MIRRORING   WEBCAM   APPS", chips_f, MUTED, scale=sc)
 
-    # The Install pill itself is a separate bitmap NSIS overlays, so it can be
-    # clicked; the artwork only carries the text and the small print.
-    box_f = font("segoeui.ttf", 8.5 * sc)
-    box_y = 182
-    label = "Add a desktop shortcut"
-    tw = d.textbbox((0, 0), label, font=box_f)
-    total = (tw[2] - tw[0]) + 16 * sc
-    x0 = (W * sc - total) / 2
-    d.rounded_rectangle([x0, box_y * sc, x0 + 11 * sc, box_y * sc + 11 * sc],
-                        radius=2.5 * sc, outline=ACCENT, width=max(1, int(1.3 * sc)))
-    d.line([x0 + 2.5 * sc, box_y * sc + 6 * sc, x0 + 4.5 * sc, box_y * sc + 8.5 * sc],
-           fill=ACCENT, width=max(1, int(1.4 * sc)))
-    d.line([x0 + 4.5 * sc, box_y * sc + 8.5 * sc, x0 + 8.5 * sc, box_y * sc + 3.5 * sc],
-           fill=ACCENT, width=max(1, int(1.4 * sc)))
-    d.text((x0 + 16 * sc, box_y * sc - 0.5 * sc), label, font=box_f, fill=INK)
-
-    # "Installs in ... Change" - the folder is what electron-builder uses by
-    # default for a per-user install, spelled out the way the reference does.
-    path = "Installs in C:\Program Files\DuoLink"
-    pbox = d.textbbox((0, 0), path, font=small_f)
-    link = "Change"
-    lbox = d.textbbox((0, 0), link, font=small_f)
-    pw = pbox[2] - pbox[0]
-    lw = lbox[2] - lbox[0]
-    px = (W * sc - (pw + 10 * sc + lw)) / 2
-    py = 202 * sc
-    d.text((px, py), path, font=small_f, fill=MUTED)
-    d.text((px + pw + 10 * sc, py), link, font=small_f, fill=ACCENT)
-
-    centered(d, 219, "What this installs", tiny_f, BODY, scale=sc)
+    # The Install pill is a separate clickable bitmap NSIS overlays; the panel
+    # behind the options is drawn here so the native controls blend in.
+    d.rounded_rectangle(
+        [PANEL_X * sc, PANEL_Y * sc, (PANEL_X + PANEL_W) * sc, (PANEL_Y + PANEL_H) * sc],
+        radius=10 * sc, fill=PANEL + (255,), outline=LINE + (255,), width=max(1, sc)
+    )
     return img.convert("RGB")
 
 
@@ -170,27 +149,27 @@ def build_ready():
     img = base_canvas(sc)
     d = ImageDraw.Draw(img)
 
-    title_f = font("segoeuib.ttf", 19 * sc)
-    sub_f = font("segoeui.ttf", 9.5 * sc)
-    link_f = font("segoeui.ttf", 8 * sc)
+    title_f = font("segoeuib.ttf", 18 * sc)
+    sub_f = font("segoeui.ttf", 9 * sc)
+    link_f = font("segoeui.ttf", 7.5 * sc)
 
-    centered(d, 12, "DuoLink is ready", title_f, INK, scale=sc)
-    centered(d, 40, "Next, get the Android app. Scan this code with your", sub_f, BODY, scale=sc)
-    centered(d, 54, "phone's camera to open its download page.", sub_f, BODY, scale=sc)
+    centered(d, 8, "DuoLink is ready", title_f, INK, scale=sc)
+    centered(d, 34, "Next, get the Android app. Scan this code with your", sub_f, BODY, scale=sc)
+    centered(d, 47, "phone's camera to open its download page.", sub_f, BODY, scale=sc)
 
     qr_path = os.path.join(HERE, "qr-ready.png")
     if os.path.exists(qr_path):
-        qr_px = 96
+        qr_px = 92
         qr = Image.open(qr_path).convert("RGB").resize((qr_px * sc, qr_px * sc), Image.NEAREST)
         qr_x = int(W / 2 - qr_px / 2)
-        qr_y = 72
+        qr_y = 64
         d.rounded_rectangle(
             [(qr_x - 5) * sc, (qr_y - 5) * sc, (qr_x + qr_px + 5) * sc, (qr_y + qr_px + 5) * sc],
             radius=5 * sc, outline=LINE, width=max(1, sc), fill=(252, 250, 245)
         )
         img.paste(qr, (qr_x * sc, qr_y * sc))
 
-    centered(d, 178, "github.com/aliiraza3321/DuoLink/releases/latest", link_f, ACCENT, scale=sc)
+    centered(d, 164, "github.com/aliiraza3321/DuoLink/releases/latest", link_f, ACCENT, scale=sc)
     return img.convert("RGB")
 
 
@@ -199,28 +178,15 @@ def build_uninstall():
     img = base_canvas(sc)
     d = ImageDraw.Draw(img)
 
-    logo_px = 54
-    img.alpha_composite(app_logo(sc, logo_px), (int((W / 2 - logo_px / 2) * sc), int(22 * sc)))
+    logo_px = 48
+    img.alpha_composite(app_logo(sc, logo_px), (int((W / 2 - logo_px / 2) * sc), int(18 * sc)))
 
-    title_f = font("segoeuib.ttf", 20 * sc)
-    sub_f = font("segoeui.ttf", 10.5 * sc)
-    link_f = font("segoeui.ttf", 9 * sc)
+    title_f = font("segoeuib.ttf", 19 * sc)
+    sub_f = font("segoeui.ttf", 10 * sc)
 
-    centered(d, 86, "Uninstall DuoLink?", title_f, INK, scale=sc)
-    centered(d, 116, "This removes DuoLink and its settings and pairings on this PC.", sub_f, BODY, scale=sc)
-    centered(d, 152, "Files you received stay in Downloads\DuoLink.", sub_f, MUTED, scale=sc)
-    return img.convert("RGB")
-
-
-def build_header():
-    """Small header bitmap for the directory/installing/uninstalling pages."""
-    sc = 3
-    w, h = 150, 57
-    img = Image.new("RGBA", (w * sc, h * sc), BG + (255,))
-    img.alpha_composite(app_logo(sc, 32), (10 * sc, 12 * sc))
-    d = ImageDraw.Draw(img)
-    d.text((48 * sc, 14 * sc), "DuoLink", font=font("segoeuib.ttf", 11 * sc), fill=INK)
-    d.text((48 * sc, 31 * sc), "Phone + PC", font=font("segoeui.ttf", 7 * sc), fill=MUTED)
+    centered(d, 78, "Uninstall DuoLink?", title_f, INK, scale=sc)
+    centered(d, 106, "This removes DuoLink and its settings and pairings on this PC.", sub_f, BODY, scale=sc)
+    centered(d, 140, "Files you received stay in Downloads\\DuoLink.", sub_f, MUTED, scale=sc)
     return img.convert("RGB")
 
 
@@ -257,7 +223,6 @@ TARGETS = {
     "ready-open.bmp": (170, 34),
     "ready-close.bmp": (120, 34),
     "uninstall-page.bmp": (W, H),
-    "installerHeader.bmp": (150, 57),
     "installerSidebar.bmp": (164, 314),
     "uninstallerSidebar.bmp": (164, 314),
 }
@@ -279,6 +244,5 @@ if __name__ == "__main__":
     save(pill_bitmap("Close", None, (120, 34)), "ready-close.bmp")
     save(build_uninstall(), "uninstall-page.bmp")
     save(pill_bitmap("Uninstall", DANGER), "uninstall-pill.bmp")
-    save(build_header(), "installerHeader.bmp")
     save(build_sidebar(), "installerSidebar.bmp")
     save(build_sidebar(), "uninstallerSidebar.bmp")

@@ -235,7 +235,11 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true
+      sandbox: true,
+      // The webcam recorder paints the preview into a canvas every animation
+      // tick; a throttled (occluded or minimised) window would record a
+      // slideshow of one frame per second instead of the camera.
+      backgroundThrottling: false
     }
   });
 

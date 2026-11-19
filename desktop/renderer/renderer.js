@@ -3400,6 +3400,9 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     stopWebcamStreamTimer();
     preview.dataset.stream = '1';
     preview.onerror = () => useWebcamFrameFallback('stream request failed');
+    // CORS-approved fetch (the endpoint answers with Access-Control-Allow-Origin)
+    // so the picture can be drawn into a canvas for screenshots and recordings.
+    if (preview.crossOrigin !== 'anonymous') preview.crossOrigin = 'anonymous';
     preview.src = `${info.mjpegUrl}?token=${encodeURIComponent(info.token)}`;
     preview.style.display = 'block';
     $id('webcam-placeholder').classList.add('hidden');
@@ -3631,6 +3634,98 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     if (!$id('tab-webcam').classList.contains('active')) return;
     webcamPaintPending = f.jpeg;
     pumpWebcamFrames();
+  });
+
+  // ---- Webcam actions: copy the frame, screenshot, record a video ----
+  // The preview is an <img> fed fresh blob URLs, so a canvas copy is untainted
+  // and can go straight to the clipboard, a PNG, or a MediaRecorder stream.
+  const webcamPreviewEl = () => $id('webcam-preview');
+  function webcamGrab() {
+    const img = webcamPreviewEl();
+    if (!img || img.style.display === 'none' || !img.naturalWidth || !img.naturalHeight) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas;
+  }
+
+  if ($id('wc-copy')) $id('wc-copy').addEventListener('click', async () => {
+    const canvas = webcamGrab();
+    if (!canvas) return showToast('No webcam picture yet', 'error');
+    const res = await window.phonePcApi.copyShotImage(canvas.toDataURL('image/png')).catch(() => null);
+    if (res && res.ok) showToast('Frame copied to the clipboard', 'success');
+    else showToast((res && res.error) || 'Could not copy the frame', 'error');
+  });
+
+  if ($id('wc-shot')) $id('wc-shot').addEventListener('click', async () => {
+    const canvas = webcamGrab();
+    if (!canvas) return showToast('No webcam picture yet', 'error');
+    const res = await window.phonePcApi.saveShotImage(canvas.toDataURL('image/png')).catch(() => null);
+    if (res && res.ok) showToast(`Screenshot saved · ${res.path.split(/[\\/]/).pop()}`, 'success');
+    else showToast((res && res.error) || 'Could not save the screenshot', 'error');
+  });
+
+  const webcamTools = $id('webcam-tools');
+  let webcamRecorder = null;
+  let webcamRecChunks = [];
+  let webcamRecRaf = 0;
+  function stopWebcamRecording() {
+    if (webcamRecorder && webcamRecorder.state !== 'inactive') webcamRecorder.stop();
+  }
+  function webcamMimeType() {
+    for (const type of ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) return type;
+    }
+    return '';
+  }
+  if ($id('wc-rec')) $id('wc-rec').addEventListener('click', async () => {
+    if (webcamRecorder) { stopWebcamRecording(); return; }
+    const first = webcamGrab();
+    if (!first) return showToast('Start the webcam before recording', 'error');
+    const type = webcamMimeType();
+    if (!type || !first.captureStream) return showToast('Recording is not available here', 'error');
+    try {
+      const stream = first.captureStream(30);
+      // Keep the recorded canvas current: redraw the newest preview frame each
+      // animation tick, so the video shows the camera, not the first frame.
+      const tick = () => {
+        const img = webcamPreviewEl();
+        if (img && img.naturalWidth) {
+          if (first.width !== img.naturalWidth || first.height !== img.naturalHeight) {
+            first.width = img.naturalWidth;
+            first.height = img.naturalHeight;
+          }
+          first.getContext('2d').drawImage(img, 0, 0, first.width, first.height);
+        }
+        webcamRecRaf = requestAnimationFrame(tick);
+      };
+      webcamRecRaf = requestAnimationFrame(tick);
+      webcamRecorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 6000000 });
+      webcamRecChunks = [];
+      webcamRecorder.ondataavailable = (e) => { if (e.data && e.data.size) webcamRecChunks.push(e.data); };
+      webcamRecorder.onstop = async () => {
+        cancelAnimationFrame(webcamRecRaf);
+        stream.getTracks().forEach((track) => track.stop());
+        if (webcamTools) webcamTools.classList.remove('is-recording');
+        const blob = new Blob(webcamRecChunks, { type });
+        webcamRecorder = null;
+        webcamRecChunks = [];
+        if (!blob.size) return showToast('Nothing was recorded', 'error');
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        const res = await window.phonePcApi.saveShotVideo(bytes).catch(() => null);
+        if (res && res.ok) showToast(`Recording saved · ${res.path.split(/[\\/]/).pop()}`, 'success');
+        else showToast((res && res.error) || 'Could not save the recording', 'error');
+      };
+      webcamRecorder.start(1000);
+      if (webcamTools) webcamTools.classList.add('is-recording');
+      showToast('Recording · press the record button again to stop', 'success');
+    } catch (err) {
+      cancelAnimationFrame(webcamRecRaf);
+      webcamRecorder = null;
+      if (webcamTools) webcamTools.classList.remove('is-recording');
+      showToast(err && err.message ? err.message : 'Could not start recording', 'error');
+    }
   });
 
   // ---------------- 10. Device status & diagnostics ----------------

@@ -136,6 +136,9 @@ class WebcamHub {
 
       res.writeHead(200, {
         'Content-Type': `multipart/x-mixed-replace; boundary=${BOUNDARY}`,
+        // The desktop UI draws these frames into a canvas for its screenshot
+        // and recording tools, which needs an untainted (CORS-approved) image.
+        'Access-Control-Allow-Origin': '*',
         'Cache-Control': 'no-store, no-cache, must-revalidate, private',
         'Pragma': 'no-cache',
         'X-Content-Type-Options': 'nosniff',

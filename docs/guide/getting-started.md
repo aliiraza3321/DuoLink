@@ -13,7 +13,7 @@ through each page of the desktop app and the permissions it needs.
 
 ## Install on Windows
 
-1. Download [DuoLink Setup 1.1.0 (.exe)](https://github.com/aliiraza3321/DuoLink/releases/download/desktop-1.1.0-4/DuoLink-Setup-1.1.0.exe)
+1. Download [DuoLink Setup 1.1.0 (.exe)](https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink-Setup-1.1.0.exe)
    — or pick the newest installer from
    [GitHub Releases](https://github.com/aliiraza3321/DuoLink/releases/latest).
 2. Run it. The installer isn't code-signed yet, so SmartScreen may show
@@ -32,7 +32,7 @@ through each page of the desktop app and the permissions it needs.
 ## Install on Android
 
 1. Scan the QR from the installer's last page, or download
-   [DuoLink 1.1.0 (.apk)](https://github.com/aliiraza3321/DuoLink/releases/download/apk-1.1.0/DuoLink-1.1.0.apk).
+   [DuoLink 1.1.0 (.apk)](https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink.apk).
    The two apps must be the same version.
 2. Open the downloaded file. If Android warns about an unknown developer, choose
    **Settings → Allow from this source**, then install.

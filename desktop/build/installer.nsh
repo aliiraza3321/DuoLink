@@ -225,22 +225,25 @@ Function duolinkWelcomeCreate
   ${NSD_CreateCheckbox} 40 166 240 12 "Create a desktop shortcut"
   Pop $DL_CHECK
   ${NSD_Check} $DL_CHECK
-  SetCtlColors $DL_CHECK 0x161B1E transparent
+  SetCtlColors $DL_CHECK 0x161B1E 0xFBF8F1
 
   ${NSD_CreateLabel} 40 183 296 11 ""
   Pop $DL_PATHLBL
-  SetCtlColors $DL_PATHLBL 0x8C8472 transparent
+  SetCtlColors $DL_PATHLBL 0x8C8472 0xFBF8F1
   Call duolinkShowInstallPath
 
+  ; SysLink controls ignore `transparent` and paint the wizard page's own brush
+  ; (light blue) behind the label, which read as chips on the cream card. Give
+  ; them the card's exact colour so the text sits on the artwork.
   ${NSD_CreateLink} 352 183 60 11 "Change"
   Pop $DL_CTL
   ${NSD_OnClick} $DL_CTL duolinkPickFolder
-  SetCtlColors $DL_CTL 0x20668C transparent
+  SetCtlColors $DL_CTL 0x20668C 0xFBF8F1
 
   ${NSD_CreateLink} 165 199 120 11 "What this installs"
   Pop $DL_CTL
   ${NSD_OnClick} $DL_CTL duolinkWhatInstalls
-  SetCtlColors $DL_CTL 0x20668C transparent
+  SetCtlColors $DL_CTL 0x20668C 0xFBF8F1
 
   Call duolinkSendArtworkBack
   nsDialogs::Show

@@ -111,6 +111,26 @@ jobs:
           cp "$APK" DuoLink.apk
           ls -lh DuoLink.apk
 
+      # Every release carries both downloads, so the "Latest" release on the
+      # repo page always shows the Windows installer next to the APK. The
+      # installer itself is built on a Windows machine; this step copies the
+      # newest published one into this release rather than rebuilding it.
+      - name: Fetch the current Windows installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${{ github.repository }}/releases?per_page=50" \
+            --jq '[.[] | .assets[] | select(.name | test("^DuoLink-Setup-.*\\.exe$"))] | first | "\(.id) \(.name)"' > installer-asset.txt
+          if [ ! -s installer-asset.txt ]; then
+            echo "No published installer yet - publishing the APK on its own"
+            exit 0
+          fi
+          read -r ASSET_ID ASSET_NAME < installer-asset.txt
+          gh api -H "Accept: application/octet-stream" \
+            "repos/${{ github.repository }}/releases/assets/$ASSET_ID" > "$ASSET_NAME"
+          ls -lh "$ASSET_NAME"
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -128,18 +148,22 @@ jobs:
           body: |
             ## Download
 
-            **Android** (this release) — `DuoLink.apk` below, version
+            **Windows** — `DuoLink-Setup-${{ steps.version.outputs.version }}.exe`
+            below (the current desktop build).
+
+            **Android** — `DuoLink.apk` below, version
             ${{ steps.version.outputs.version }}, built from `${{ github.sha }}`
             (${{ github.ref_name }}).
 
-            Stable link that always serves the newest Android build:
-            https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink.apk
+            Stable links that always serve the newest build of each file:
 
-            **Windows** is a separate download and a separate release:
-            https://github.com/aliiraza3321/DuoLink#desktop
+            - https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink-Setup-${{ steps.version.outputs.version }}.exe
+            - https://github.com/aliiraza3321/DuoLink/releases/latest/download/DuoLink.apk
 
-            Install the Windows app first — its last screen shows the QR for
-            this APK.
-          files: DuoLink.apk
+            Install the Windows app first — its last setup screen shows the QR
+            code for this APK.
+          files: |
+            DuoLink.apk
+            DuoLink-Setup-*.exe
           make_latest: true
           fail_on_unmatched_files: true

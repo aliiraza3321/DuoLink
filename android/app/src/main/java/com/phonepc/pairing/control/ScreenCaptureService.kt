@@ -136,10 +136,10 @@ class ScreenCaptureService : Service() {
     // the last rung is small enough (~270 px wide) to stream at 60 fps even on
     // a crowded 2.4 GHz network.
     private val encodeLadder = arrayOf(
-        EncodeStep(84, 1.00f, 32L),   // full quality at the capture size
-        EncodeStep(76, 1.00f, 32L),
-        EncodeStep(68, 1.00f, 32L),
-        EncodeStep(58, 1.00f, 32L)
+        EncodeStep(84, 1.00f, 16L),   // full quality at the capture size
+        EncodeStep(76, 1.00f, 16L),
+        EncodeStep(68, 1.00f, 16L),
+        EncodeStep(58, 1.00f, 16L)
     )
     @Volatile private var ladderStep = 0
     @Volatile private var encQuality = 84

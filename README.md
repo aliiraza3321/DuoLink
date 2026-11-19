@@ -27,10 +27,10 @@ its last screen shows the QR for the phone app.
 
 | | Version | Size | Requirements |
 |---|---|---|---|
-| [**DuoLink Setup 1.1.0.exe**](https://github.com/aliiraza3321/DuoLink/releases/download/desktop-1.1.0-3/DuoLink-Setup-1.1.0.exe) | 1.1.0 | 82 MB | Windows 10 (2004+) or Windows 11, 64-bit |
+| [**DuoLink Setup 1.1.0.exe**](https://github.com/aliiraza3321/DuoLink/releases/download/desktop-1.1.0-4/DuoLink-Setup-1.1.0.exe) | 1.1.0 | 82 MB | Windows 10 (2004+) or Windows 11, 64-bit |
 
 Release notes and the checksum live on the
-[Windows release page](https://github.com/aliiraza3321/DuoLink/releases/tag/desktop-1.1.0-3).
+[Windows release page](https://github.com/aliiraza3321/DuoLink/releases/tag/desktop-1.1.0-4).
 
 ### <a id="android"></a>DuoLink for Android
 

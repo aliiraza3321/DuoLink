@@ -107,6 +107,11 @@ dependencies {
 
     // The phone's own wireless debugging: the shell side of app windows.
     implementation(libs.libadb.android)
+    // libadb's TLS pairing exports keying material through Conscrypt. Android's
+    // own copy hides that method (Android 14+ / some OEM builds answer with
+    // NoSuchMethodException), so carry Conscrypt with the app: libadb prefers
+    // `org.conscrypt` when the class is present.
+    implementation(libs.conscrypt.android)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

@@ -3384,7 +3384,7 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     if (reason) console.warn('[webcam] MJPEG preview unavailable, using frame fallback:', reason);
   }
 
-  async function attachWebcamStream() {
+  async function attachWebcamStream(attempt = 0) {
     const preview = $id('webcam-preview');
     if (!preview || webcamPreviewFallback) return false;
     let info = null;
@@ -3406,12 +3406,18 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     preview.src = `${info.mjpegUrl}?token=${encodeURIComponent(info.token)}`;
     preview.style.display = 'block';
     $id('webcam-placeholder').classList.add('hidden');
-    // A multipart response never fires `load`; if no frame has decoded shortly
-    // after connecting, fall back instead of showing a black screen forever.
+    // A multipart response never fires `load` for the stream itself, so the only
+    // proof the picture works is a decoded first frame. Re-request once before
+    // giving up: the phone can take a few seconds to open its camera, and a
+    // healthy but still-empty stream used to be mistaken for a broken one.
+    stopWebcamStreamTimer();
     webcamStreamTimer = setTimeout(() => {
       webcamStreamTimer = null;
-      if (webcamActive && preview.naturalWidth === 0) useWebcamFrameFallback('no frame within 4s');
-    }, 4000);
+      if (!webcamActive || webcamPreviewFallback) return;
+      if (preview.naturalWidth > 0) return;
+      if (attempt < 1) attachWebcamStream(attempt + 1);
+      else useWebcamFrameFallback('no frame decoded from the MJPEG stream');
+    }, 6000);
     return true;
   }
 

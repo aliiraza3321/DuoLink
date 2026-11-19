@@ -145,15 +145,22 @@ class WebcamHub {
         'Connection': 'keep-alive'
       });
 
-      // Send the last frame immediately so the viewer isn't blank
-      if (this.latestFrame) {
-        try { res.write(this._framePacket(this.latestFrame.buffer)); } catch (_) {}
-      } else {
-        // No frames yet: keep alive with a comment so clients don't time out
-        try { res.write(`--${BOUNDARY}\r\nContent-Type: text/plain\r\nContent-Length: 2\r\n\r\nok\r\n`); } catch (_) {}
-      }
+      // Only ever write real JPEG parts into this stream. The old "ok"
+      // text/plain placeholder for the no-frame-yet case was a trap: an <img>
+      // decoder reads the FIRST part as the image itself, so a non-image part
+      // either errors the element or leaves it waiting forever with
+      // naturalWidth 0. That is why the desktop preview gave up on MJPEG and
+      // fell back to per-frame IPC blobs. The response headers are already on
+      // the wire, so an empty stream is fine: the first frame a subscriber sees
+      // is always a decodable picture.
+      // Headers go out immediately; an empty stream is a valid, still-open
+      // MJPEG response and the <img> simply waits for its first picture.
+      try { res.flushHeaders(); } catch (_) {}
 
       this.subscribers.add(res);
+      if (this.latestFrame) {
+        try { res.write(this._framePacket(this.latestFrame.buffer)); } catch (_) {}
+      }
       const cleanup = () => {
         this.subscribers.delete(res);
         try { res.end(); } catch (_) {}

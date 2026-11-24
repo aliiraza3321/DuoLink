@@ -111,6 +111,8 @@ class ScreenCaptureService : Service() {
     private var lastRateChangeAt = 0L
     private var queueClearSince = 0L
     private var lastQueueLogAt = 0L
+    // Written by the drain thread and by the screen-off receiver (main thread).
+    @Volatile private var lastKeyframeRequestAt = 0L
 
     private var isCapturing = false
     private var isFrameBusy = false
@@ -127,19 +129,18 @@ class ScreenCaptureService : Service() {
     // then cadence); once the link runs clear it climbs back, so idle UI stays
     // sharp while a heavy game gets a stream that actually fits the Wi-Fi.
     private class EncodeStep(val quality: Int, val scale: Float, val delayMs: Long)
-    // 60 fps first: a 6.7" pane on the desktop is ~270 px wide, so half-scale
-    // (540x1200 on a 1080x2400 phone) is already sharper than the pane can
-    // show — and small JPEGs are what let 60 fps fit through home Wi-Fi.
-    // Every rung keeps the 16 ms cadence: frame rate is the thing the desktop
-    // asked for (60 fps), so a link that cannot carry the picture gets a
-    // smaller picture instead of a slower one. Scale shrinks ~15% per rung and
-    // the last rung is small enough (~270 px wide) to stream at 60 fps even on
-    // a crowded 2.4 GHz network.
+    // 30 fps cadence. Doubling this to 16 ms was tried and made the mirror
+    // WORSE, not better: every rung below is full resolution (scale 1.00), so a
+    // doubled cadence only doubles the bytes the link has to carry and gives
+    // the ladder no smaller picture to fall back on - the queue fills, frames
+    // are dropped, and the phone spends two JPEG encodes per delivered frame.
+    // The cadence is therefore the one fixed thing; the levers are quality and
+    // (should scale rungs ever be used) size.
     private val encodeLadder = arrayOf(
-        EncodeStep(84, 1.00f, 16L),   // full quality at the capture size
-        EncodeStep(76, 1.00f, 16L),
-        EncodeStep(68, 1.00f, 16L),
-        EncodeStep(58, 1.00f, 16L)
+        EncodeStep(84, 1.00f, 32L),   // full quality at the capture size
+        EncodeStep(76, 1.00f, 32L),
+        EncodeStep(68, 1.00f, 32L),
+        EncodeStep(58, 1.00f, 32L)
     )
     @Volatile private var ladderStep = 0
     @Volatile private var encQuality = 84
@@ -198,6 +199,9 @@ class ScreenCaptureService : Service() {
     // ~2 frames at 60 fps: enough to ride a scheduling hiccup, small enough
     // that a slow link can never replay a visible backlog.
     private val maxQueuedBytes = 160L * 1024L
+    // An IDR is 10-20x a delta frame, so it may only be demanded at the
+    // encoder's own GOP cadence (KEY_I_FRAME_INTERVAL = 1s) -- never per frame.
+    private val keyframeRequestGapMs = 1_000L
 
     // Phone sound -> PC: internal playback captured through the SAME
     // MediaProjection (Android 10+), streamed as PCM16LE binary frames so the
@@ -581,9 +585,21 @@ class ScreenCaptureService : Service() {
         }
     }
 
-    /** Forces the next encoded access unit to be an IDR (clean resume point). */
+    /**
+     * Forces the next encoded access unit to be an IDR (clean resume point).
+     * Rate-limited on purpose: the drain loop calls this for every encoded
+     * frame while the queue is deep, and an unthrottled sync request turns
+     * every frame into an IDR. All-IDR at 60 fps needs far more bitrate than
+     * the deltas that already did not fit, so the queue could never drain and
+     * a briefly slow link became a permanent stall. One request per second
+     * keeps recovery at the natural keyframe interval and leaves gaps for the
+     * socket to empty.
+     */
     private fun requestH264Keyframe() {
         val codec = videoEncoder ?: return
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - lastKeyframeRequestAt < keyframeRequestGapMs) return
+        lastKeyframeRequestAt = now
         try {
             codec.setParameters(android.os.Bundle().apply {
                 putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)

@@ -4146,7 +4146,15 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     phoneApps = (p.apps || []).slice().sort((a, b) => String(a.label).localeCompare(String(b.label)));
     if (typeof p.paired === 'boolean') appsSetPairBox(!p.paired);
     renderApps();
-    adbSetStatus(`Connected \u00b7 ${phoneApps.length} apps from your phone`, 'ok');
+    // Say why a tap cannot open a window yet instead of failing silently:
+    // without Android's wireless debugging there is no shell to give an app a
+    // display of its own, however healthy the DuoLink link looks.
+    if (p.wireless === false) {
+      appsSetPairBox(true);
+      adbSetStatus('Wireless debugging is off on the phone \u2014 turn it on in Developer options', 'error');
+    } else {
+      adbSetStatus(`Connected \u00b7 ${phoneApps.length} apps from your phone`, 'ok');
+    }
   });
 
   window.phonePcApi.on('app-launch-result', (p) => {

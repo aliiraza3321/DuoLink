@@ -39,6 +39,18 @@ internal object AdbBridge {
     private var helperPort = -1
     private var helperToken: String? = null
 
+    // Ports the PC discovered for this phone's wireless debugging. Android's
+    // own mDNS lookup is unavailable on some ROMs (it times out while adbd is
+    // advertising), so the PC — which sees the service fine — relays them.
+    @Volatile private var connectPort = -1
+    @Volatile private var pairingPort = -1
+
+    /** Called when the PC relays the ports it saw over mDNS. */
+    fun setPorts(connect: Int?, pairing: Int?) {
+        if (connect != null && connect > 0) connectPort = connect
+        if (pairing != null && pairing > 0) pairingPort = pairing
+    }
+
     /** The phone's own adbd, as DuoLink. */
     internal class Manager(context: Context) : AbsAdbConnectionManager() {
         private val keys = AdbKeys.load(File(context.noBackupFilesDir, "adb"))
@@ -68,7 +80,8 @@ internal object AdbBridge {
 
     /** Pairs with the code Android's pairing dialog shows. */
     suspend fun pair(context: Context, code: String): Result<Unit> = withContext(Dispatchers.IO) {
-        val port = mDNS(context, AdbMdns.SERVICE_TYPE_TLS_PAIRING, PAIR_MS)
+        val port = pairingPort.takeIf { it > 0 }
+            ?: mDNS(context, AdbMdns.SERVICE_TYPE_TLS_PAIRING, PAIR_MS)
             ?: return@withContext Result.failure(IllegalStateException("nocode"))
         runCatching {
             val connection = manager ?: Manager(context).also { manager = it }
@@ -85,6 +98,11 @@ internal object AdbBridge {
         if (!isPaired(context)) return@withContext null
         val connection = manager ?: Manager(context).also { manager = it }
         if (connection.isConnected) return@withContext connection
+        // The relayed port first: one TCP connect, no discovery needed.
+        if (connectPort > 0) {
+            runCatching { connection.connect(connectPort) }.onFailure { Log.i(TAG, "relayed port failed", it) }
+            if (connection.isConnected) return@withContext connection
+        }
         val opened = runCatching { connection.connectTls(context, CONNECT_MS) }.getOrElse {
             Log.i(TAG, "wireless debugging not found over mDNS", it)
             false

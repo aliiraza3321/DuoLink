@@ -799,6 +799,13 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
             // the whole flow, so the user never types an address anywhere.
             Protocol.TYPE_ADB_PAIR_PROMPT -> AdbPairPrompt.show(this)
 
+            // Ports the PC found over mDNS: Android's own lookup is unreliable
+            // on some ROMs, so the numbers arrive already resolved.
+            Protocol.TYPE_ADB_PORT_INFO -> AdbBridge.setPorts(
+                message.payload.get("connectPort")?.intOrNull(),
+                message.payload.get("pairingPort")?.intOrNull()
+            )
+
             Protocol.TYPE_CALL_LOG_DELETE -> {
                 val id = message.payload.get("id")?.strOrNull()
                 if (id.isNullOrBlank()) {

@@ -71,6 +71,22 @@ class WssServer {
     this._webcamPrevAt = 0;
   }
 
+  /**
+   * LAN address of the phone that is connected right now, or null. Used to
+   * pick that phone's own wireless-debugging entry out of `adb mdns services`
+   * when relaying its ports (the phone's NSD lookup fails on some ROMs).
+   */
+  phoneIp() {
+    try {
+      for (const s of this.pairingManager.activeSessions.values()) {
+        if (s && s.socket && s.socket.readyState === 1 && s.socket.clientIp) {
+          return String(s.socket.clientIp).replace(/^::ffff:/, '');
+        }
+      }
+    } catch (_) { /* no sessions */ }
+    return null;
+  }
+
   currentSessionStatus() {
     try {
       for (const s of this.pairingManager.activeSessions.values()) {
@@ -158,6 +174,7 @@ class WssServer {
   }
 
   _setupSocket(ws, clientIp) {
+    ws.clientIp = clientIp;
     ws.isAlive = true;
     ws.isPendingApproval = false;
     ws.associatedSessionId = null;

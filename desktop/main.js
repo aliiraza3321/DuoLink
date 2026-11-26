@@ -928,7 +928,13 @@ function setupIpc() {
   });
   ipcMain.handle('call-recents', () => sendToPhone(MessageType.CALL_RECENTS_REQ, { limit: 50 }));
   // ---- Phone apps catalog (label + icon, over the paired session) ----
-  ipcMain.handle('app-catalog', () => sendToPhone(MessageType.APP_CATALOG_REQ, {}));
+  ipcMain.handle('app-catalog', () => {
+    const res = sendToPhone(MessageType.APP_CATALOG_REQ, {});
+    // The pane is opened because an app is about to be launched: hand the
+    // phone its wireless-debugging port while the link is warm.
+    relayAdbPorts().catch(() => {});
+    return res;
+  });
   ipcMain.handle('app-launch', (_e, pkg) => {
     if (!/^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+){1,}$/.test(String(pkg || ''))) {
       return { ok: false, error: 'Unknown package' };
@@ -938,6 +944,33 @@ function setupIpc() {
 
   // ---- Phone apps over Wireless debugging (adb) ----
   const wirelessAdb = new WirelessAdb();
+
+  // Some ROMs never resolve adbd's own mDNS advertisement from inside the
+  // phone (the lookup times out while the service is plainly advertised). This
+  // PC's adb sees it, so it relays the port numbers over the link already in
+  // place: pairing and app windows then need no address and no guessing.
+  let adbPortRelayTimer = null;
+  const relayAdbPorts = async () => {
+    if (!wssServer) return { ok: false, error: 'Server not running' };
+    const ip = typeof wssServer.phoneIp === 'function' ? wssServer.phoneIp() : null;
+    const seen = await wirelessAdb.mdnsServices();
+    if (!seen.ok) return { ok: false, error: seen.error || 'adb mdns unavailable' };
+    const mine = ip ? seen.services.filter((s) => s.host === ip) : seen.services;
+    const connect = mine.find((s) => s.service.indexOf('_adb-tls-connect') === 0);
+    const pairing = mine.find((s) => s.service.indexOf('_adb-tls-pairing') === 0);
+    if (!connect && !pairing) return { ok: false, error: 'Wireless debugging is not advertising yet' };
+    const payload = {};
+    if (connect) payload.connectPort = connect.port;
+    if (pairing) payload.pairingPort = pairing.port;
+    sendToPhone(MessageType.ADB_PORT_INFO, payload);
+    return { ok: true, ...payload };
+  };
+  const stopAdbPortRelay = () => {
+    if (adbPortRelayTimer) clearInterval(adbPortRelayTimer);
+    adbPortRelayTimer = null;
+  };
+  ipcMain.handle('adb-relay-ports', () => relayAdbPorts());
+
   ipcMain.handle('adb-status', () => wirelessAdb.status());
   ipcMain.handle('adb-pair', (_e, { addr, code }) => wirelessAdb.pair(addr, code));
   ipcMain.handle('adb-connect', async (_e, { addr }) => {
@@ -1582,13 +1615,31 @@ function setupIpc() {
   // Ask the phone itself for a wireless-debugging pairing: it posts the
   // notification where the six digits are typed, so the PC never asks for an
   // address or a port.
-  ipcMain.handle('adb-pair-prompt', () => sendToPhone(MessageType.ADB_PAIR_PROMPT, {}));
+  ipcMain.handle('adb-pair-prompt', () => {
+    const res = sendToPhone(MessageType.ADB_PAIR_PROMPT, {});
+    // Android only advertises the pairing service once the user opens
+    // "Pair device with pairing code", so keep relaying for a couple of
+    // minutes — the six digits are then all that is left to do.
+    relayAdbPorts().catch(() => {});
+    stopAdbPortRelay();
+    const startedAt = Date.now();
+    adbPortRelayTimer = setInterval(() => {
+      if (Date.now() - startedAt > 120000) {
+        stopAdbPortRelay();
+        return;
+      }
+      relayAdbPorts().catch(() => {});
+    }, 2000);
+    if (adbPortRelayTimer.unref) adbPortRelayTimer.unref();
+    return res;
+  });
 
   // Wireless debugging on the phone itself: one pairing code, then the phone
   // can run the shell side that gives each app its own display.
   ipcMain.handle('adb-pair-phone', (_e, code) => {
     const clean = String(code || '').replace(/[^0-9]/g, '').slice(0, 6);
     if (clean.length < 6) return { ok: false, error: 'Enter the six-digit pairing code' };
+    relayAdbPorts().catch(() => {});
     return sendToPhone(MessageType.ADB_PAIR_REQ, { code: clean });
   });
 

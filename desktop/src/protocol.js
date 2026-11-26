@@ -106,6 +106,7 @@ const MessageType = {
 
   // The phone's own wireless debugging (what app windows run on)
   ADB_PAIR_PROMPT: 'ADB_PAIR_PROMPT',     // PC -> phone: show the pairing notification
+  ADB_PORT_INFO: 'ADB_PORT_INFO',         // PC -> phone: { connectPort?, pairingPort? } from adb mDNS
   ADB_PAIR_REQ: 'ADB_PAIR_REQ',           // PC -> phone: { code }
   ADB_PAIR_RESULT: 'ADB_PAIR_RESULT',     // phone -> PC: { ok, error }
 

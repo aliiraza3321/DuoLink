@@ -194,6 +194,22 @@ class WirelessAdb {
     };
   }
 
+  /**
+   * adb's own mDNS view: `name service host:port`. This is the reliable way to
+   * learn the phone's wireless-debugging ports — the phone's own NSD lookup
+   * fails on some ROMs even while adbd is advertising.
+   */
+  async mdnsServices() {
+    const res = await this.run(['mdns', 'services'], 15000);
+    const services = [];
+    for (const line of String(res.output || '').split(/\r?\n/)) {
+      const m = line.trim().match(/^(\S+)\s+(_[\w.-]+\._tcp)\s+(\S+?):(\d{1,5})$/);
+      if (!m) continue;
+      services.push({ name: m[1], service: m[2], host: m[3], port: Number(m[4]) });
+    }
+    return { ok: res.ok || services.length > 0, services, error: res.error || '' };
+  }
+
   async pair(addr, code) {
     if (!ADDR_RE.test(String(addr || ''))) return { ok: false, error: 'Enter the pairing IP:port shown on the phone' };
     if (!CODE_RE.test(String(code || ''))) return { ok: false, error: 'Enter the 6-digit pairing code' };

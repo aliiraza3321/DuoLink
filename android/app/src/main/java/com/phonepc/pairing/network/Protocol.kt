@@ -113,6 +113,10 @@ object Protocol {
     // PC -> phone: show the pairing notification on the phone; the six digits
     // are typed there, so no address ever has to be copied to the PC.
     const val TYPE_ADB_PAIR_PROMPT = "ADB_PAIR_PROMPT"
+    // PC -> phone: the wireless-debugging ports the PC saw over mDNS. Some
+    // ROMs never resolve adbd's own advertisement from inside the phone, so
+    // the PC (which sees it) relays the numbers instead of the phone guessing.
+    const val TYPE_ADB_PORT_INFO = "ADB_PORT_INFO"
     const val TYPE_ADB_PAIR_RESULT = "ADB_PAIR_RESULT"
     const val TYPE_ADB_PAIR_STATE = "ADB_PAIR_STATE"
 

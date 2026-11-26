@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import androidx.core.app.RemoteInput
 import com.phonepc.pairing.R
 
 /**
@@ -19,7 +20,11 @@ internal object AdbPairPrompt {
     const val CHANNEL_ID = "duolink_adb_pair"
     const val NOTIFICATION_ID = 7711
 
-    fun show(context: Context) {
+    /**
+     * Posts (or replaces) the prompt. [error] is shown when a code was refused,
+     * so the same notification is the place to try again.
+     */
+    fun show(context: Context, error: String = "") {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
         manager.createNotificationChannel(
             NotificationChannel(
@@ -34,24 +39,52 @@ internal object AdbPairPrompt {
         val open = Intent(context, AdbPairActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
-        val pending = PendingIntent.getActivity(
+        val openPending = PendingIntent.getActivity(
             context,
             0,
             open,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val body = "This PC wants to open your apps in windows. Type the 6-digit code Android shows " +
-            "for wireless debugging — the phone connects itself."
+
+        // The code is typed in the notification's own column: the system fills
+        // this RemoteInput, and AdbPairReceiver hands the digits to the link
+        // service. Mutable is required - the system writes the reply into it.
+        val reply = RemoteInput.Builder(AdbPairReceiver.KEY_CODE)
+            .setLabel("6-digit code")
+            .build()
+        val pairAction = NotificationCompat.Action.Builder(
+            0,
+            "Enter code",
+            PendingIntent.getBroadcast(
+                context,
+                1,
+                Intent(context, AdbPairReceiver::class.java).setAction(AdbPairReceiver.ACTION_PAIR),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            )
+        )
+            .addRemoteInput(reply)
+            .setAllowGeneratedReplies(true)
+            // Declaring the reply semantics is what makes SystemUI draw the
+            // text column inside the notification instead of just a button.
+            .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY)
+            .build()
+
+        val body = if (error.isNotBlank()) {
+            "$error\nType the 6-digit code Android shows for wireless debugging."
+        } else {
+            "This PC wants to open your apps in windows. Type the 6-digit code Android shows " +
+                "for wireless debugging — the phone connects itself."
+        }
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_link)
             .setContentTitle("Enter the 6-digit pairing code")
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
-            .setContentIntent(pending)
-            .addAction(0, "Enter code", pending)
+            .setContentIntent(openPending)
+            .addAction(pairAction)
             .build()
         runCatching { manager.notify(NOTIFICATION_ID, notification) }
     }

@@ -115,6 +115,11 @@
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.PhonePCPair" />
 
+        <!-- The code typed into the pairing notification, handed to the link service. -->
+        <receiver
+            android:name=".apps.AdbPairReceiver"
+            android:exported="false" />
+
         <!-- Background Persistent Connection & Sync Service -->
         <service
             android:name=".service.PairingForegroundService"

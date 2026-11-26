@@ -101,6 +101,9 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
 
         const val ACTION_START_LINK = "ACTION_START_LINK"
         const val ACTION_DISCONNECT = "ACTION_DISCONNECT"
+        /** Started by AdbPairReceiver with the code typed into the notification. */
+        const val ACTION_ADB_PAIR_CODE = "ACTION_ADB_PAIR_CODE"
+        const val EXTRA_PAIR_CODE = "EXTRA_PAIR_CODE"
         const val ACTION_SEND_CLIPBOARD = "ACTION_SEND_CLIPBOARD"
         const val EXTRA_START_SHARE = "EXTRA_START_SHARE"
         const val SHARE_NOTIFICATION_ID = 1002
@@ -338,6 +341,15 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
                 // Trigger clipboard read & send
                 val clipText = intent?.getStringExtra("clipboard_text") ?: ""
                 sendClipboardToPc(clipText)
+            }
+            ACTION_ADB_PAIR_CODE -> {
+                // This path can cold-start the service from the notification,
+                // and Android only lets a foreground service stay up: enter
+                // the foreground before doing the (short) pairing.
+                runCatching {
+                    startForeground(NOTIFICATION_ID, buildNotification("Pairing with wireless debugging…"))
+                }
+                pairWirelessDebugging(intent?.getStringExtra(EXTRA_PAIR_CODE).orEmpty())
             }
             ACTION_START_LINK -> {
                 isManualDisconnect = false
@@ -950,7 +962,13 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
                 "nocode" -> "Open Developer options → Wireless debugging → Pair device with pairing code first"
                 else -> result.exceptionOrNull()?.message ?: "Pairing failed"
             }
-            if (result.isSuccess) AdbPairPrompt.clear(this@PairingForegroundService)
+            if (result.isSuccess) {
+                AdbPairPrompt.clear(this@PairingForegroundService)
+            } else if (error != "nocode") {
+                // A wrong code leaves the prompt up, with the reason, so the
+                // six digits can simply be typed again.
+                AdbPairPrompt.show(this@PairingForegroundService, error)
+            }
             reportAdbPair(result.isSuccess, error)
         }
     }

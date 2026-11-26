@@ -33,6 +33,7 @@ import com.phonepc.pairing.MainActivity
 import com.phonepc.pairing.control.PhoneAccessibilityService
 import com.phonepc.pairing.control.ScreenCaptureService
 import com.phonepc.pairing.apps.AdbBridge
+import com.phonepc.pairing.apps.AdbPairPrompt
 import com.phonepc.pairing.apps.AppWindows
 import com.phonepc.pairing.feature.CallController
 import com.phonepc.pairing.feature.MediaBrowser
@@ -143,6 +144,18 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
 
         var activeServiceInstance: PairingForegroundService? = null
             private set
+
+        /**
+         * Tells the PC how a pairing started on the phone ended. A no-op while
+         * the link is down: the next catalog reply carries the state anyway.
+         */
+        fun reportAdbPair(ok: Boolean, error: String) {
+            val svc = activeServiceInstance ?: return
+            svc.sendRawEnvelope(Protocol.TYPE_ADB_PAIR_RESULT, JsonObject().apply {
+                addProperty("ok", ok)
+                addProperty("error", error)
+            })
+        }
 
         /** True while a verified session socket is live (webcam gates frames on this). */
         fun hasActiveSession(): Boolean =
@@ -767,20 +780,12 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
 
             Protocol.TYPE_ADB_PAIR_REQ -> {
                 val code = message.payload.get("code")?.strOrNull().orEmpty()
-                serviceScope.launch {
-                    val result = AdbBridge.pair(this@PairingForegroundService, code)
-                    sendRawEnvelope(Protocol.TYPE_ADB_PAIR_RESULT, JsonObject().apply {
-                        addProperty("ok", result.isSuccess)
-                        addProperty(
-                            "error",
-                            if (result.isSuccess) "" else when (result.exceptionOrNull()?.message) {
-                                "nocode" -> "Open Developer options → Wireless debugging → Pair device with pairing code first"
-                                else -> result.exceptionOrNull()?.message ?: "Pairing failed"
-                            }
-                        )
-                    })
-                }
+                pairWirelessDebugging(code)
             }
+
+            // The PC asks for a pairing: the notification on the phone carries
+            // the whole flow, so the user never types an address anywhere.
+            Protocol.TYPE_ADB_PAIR_PROMPT -> AdbPairPrompt.show(this)
 
             Protocol.TYPE_CALL_LOG_DELETE -> {
                 val id = message.payload.get("id")?.strOrNull()
@@ -937,8 +942,23 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
      * Launchable third-party apps with their real label and a 96px icon, so the
      * PC can draw the phone's app grid without any desktop-side guessing.
      */
+    /** Pairs with this phone's own wireless debugging and reports to the PC. */
+    private fun pairWirelessDebugging(code: String) {
+        serviceScope.launch {
+            val result = AdbBridge.pair(this@PairingForegroundService, code.trim())
+            val error = if (result.isSuccess) "" else when (result.exceptionOrNull()?.message) {
+                "nocode" -> "Open Developer options → Wireless debugging → Pair device with pairing code first"
+                else -> result.exceptionOrNull()?.message ?: "Pairing failed"
+            }
+            if (result.isSuccess) AdbPairPrompt.clear(this@PairingForegroundService)
+            reportAdbPair(result.isSuccess, error)
+        }
+    }
+
     private fun sendAppCatalog() {
         val out = JsonObject()
+        out.addProperty("paired", AdbBridge.isPaired(this))
+        out.addProperty("wireless", AdbBridge.wirelessDebuggingOn(this))
         try {
             val pm = packageManager
             val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)

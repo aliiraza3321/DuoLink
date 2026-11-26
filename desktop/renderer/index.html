@@ -794,37 +794,12 @@
             <p>Every app you see is the real app from your phone: tapping one opens it in its own window on this PC, while the phone stays free.</p>
           </div>
 
-          <details class="apps-adv" id="apps-adv">
-            <summary>
-              <span>Advanced · Wireless debugging</span>
-              <svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg>
-            </summary>
-            <div class="apps-adv-body">
-              <p class="apps-step-hint">App windows run on this phone's own wireless debugging, so each app gets a display only it uses. Pair that once: Developer options → Wireless debugging → Pair device with pairing code, then enter the six-digit code.</p>
-              <div class="apps-inline">
-                <input id="adb-phone-code" class="apps-input apps-input-code" placeholder="6-digit code" autocomplete="off" maxlength="6">
-                <button id="btn-adb-phone-pair" class="apps-cta apps-cta-primary">Pair this phone</button>
-              </div>
-              <p class="apps-step-hint">Optional, for the desktop side: pair from the PC with an address and code.</p>
-              <label for="adb-pair-addr">Pairing address + code</label>
-              <input id="adb-pair-addr" class="apps-input" placeholder="192.168.1.40:41234" autocomplete="off">
-              <div class="apps-inline">
-                <input id="adb-pair-code" class="apps-input apps-input-code" placeholder="6-digit code" autocomplete="off" maxlength="6">
-                <button id="btn-adb-pair" class="apps-cta">Pair</button>
-              </div>
-              <label for="adb-connect-addr">Device address</label>
-              <div class="apps-inline">
-                <input id="adb-connect-addr" class="apps-input" placeholder="192.168.1.40:5555" autocomplete="off">
-                <button id="btn-adb-connect" class="apps-cta">Connect</button>
-              </div>
-              <label for="adb-serial">adb device</label>
-              <select id="adb-serial" class="apps-input apps-select"></select>
-              <div class="apps-inline">
-                <button id="btn-adb-refresh" class="apps-ghost"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> Reload apps</button>
-                <button id="btn-adb-disconnect" class="apps-ghost"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg> Disconnect</button>
-              </div>
-            </div>
-          </details>
+          <!-- Pairing lives on the phone: the PC only asks for it and the
+               notification carries the six-digit code. No address, no port. -->
+          <div class="apps-adv-body" id="apps-pair-box">
+            <p class="apps-step-hint">App windows need one wireless-debugging pairing. A notification appears on your phone — type the 6-digit code Android shows there and the phone connects itself.</p>
+            <button id="btn-adb-phone-prompt" class="apps-cta apps-cta-primary">Show pairing code on phone</button>
+          </div>
 
           <div id="adb-status" class="apps-status">Waiting for your phone</div>
         </aside>
@@ -844,7 +819,7 @@
             <div class="apps-empty">
               <span class="apps-empty-icon"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg></span>
               <strong>No apps yet</strong>
-              <p>Pair over wireless debugging on the left, then every app on your phone shows up here — tap one to open it on the phone.</p>
+              <p>Type the pairing code on your phone once, then every app on it shows up here — tap one to open it in a window.</p>
             </div>
           </div>
         </section>

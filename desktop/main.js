@@ -1579,6 +1579,11 @@ function setupIpc() {
     return sendToPhone(MessageType.APP_WINDOW_CLOSE, { session: sid });
   });
 
+  // Ask the phone itself for a wireless-debugging pairing: it posts the
+  // notification where the six digits are typed, so the PC never asks for an
+  // address or a port.
+  ipcMain.handle('adb-pair-prompt', () => sendToPhone(MessageType.ADB_PAIR_PROMPT, {}));
+
   // Wireless debugging on the phone itself: one pairing code, then the phone
   // can run the shell side that gives each app its own display.
   ipcMain.handle('adb-pair-phone', (_e, code) => {

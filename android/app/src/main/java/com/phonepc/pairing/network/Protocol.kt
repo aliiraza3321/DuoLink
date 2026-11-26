@@ -110,6 +110,9 @@ object Protocol {
 
     // The phone's own wireless debugging (what app windows run on)
     const val TYPE_ADB_PAIR_REQ = "ADB_PAIR_REQ"
+    // PC -> phone: show the pairing notification on the phone; the six digits
+    // are typed there, so no address ever has to be copied to the PC.
+    const val TYPE_ADB_PAIR_PROMPT = "ADB_PAIR_PROMPT"
     const val TYPE_ADB_PAIR_RESULT = "ADB_PAIR_RESULT"
     const val TYPE_ADB_PAIR_STATE = "ADB_PAIR_STATE"
 

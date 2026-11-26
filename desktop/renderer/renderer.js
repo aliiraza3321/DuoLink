@@ -2035,7 +2035,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderSmsThreads() {
     const q = ($id('sms-search').value || '').trim().toLowerCase();
     const list = smsThreads
-      .filter((t) => !q || (t.address || '').toLowerCase().includes(q) || (t.snippet || '').toLowerCase().includes(q))
+      .filter((t) => !q || (t.name || '').toLowerCase().includes(q) || (t.address || '').toLowerCase().includes(q) || (t.snippet || '').toLowerCase().includes(q))
       .sort((a, b) => (b.lastDate || 0) - (a.lastDate || 0));
     const unread = smsThreads.reduce((n, t) => n + (t.unread || 0), 0);
     $id('sms-unread-badge').textContent = `${unread} unread`;
@@ -2054,7 +2054,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     el.innerHTML = list.map((t) => {
-      const name = t.address || 'Unknown';
+      // The phone resolves the saved contact name; the number is the fallback
+      // for unsaved senders and for phones without the Contacts grant.
+      const name = t.name || t.address || 'Unknown';
       return `
       <div class="rf-row${t.address === smsCurrentAddr ? ' active' : ''}" data-addr="${escapeAttr(t.address)}">
         <span class="rf-avatar ${rfTone(name)}">${escapeHtml(rfInitial(name))}</span>
@@ -2087,7 +2089,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const sent = m.type === 'outgoing';
       const label = m.__temp
         ? (m.failed ? 'Failed to send' : 'Sending…')
-        : `${sent ? 'To' : 'From'} ${m.address || smsCurrentAddr} • ${m.dateLabel || timeLabel(m.date)}${m.failed ? ' • FAILED' : ''}`;
+        : `${sent ? 'To' : 'From'} ${m.name || m.address || smsCurrentAddr} • ${m.dateLabel || timeLabel(m.date)}${m.failed ? ' • FAILED' : ''}`;
       const temp = m.__temp || !m.id ? '' : `
           <span class="msg-actions">
             <button class="icon-btn icon-btn-xs" data-msg-copy="${escapeAttr(m.id)}" title="Copy message">${IC('copy')}</button>
@@ -2156,7 +2158,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function openSmsThread(addr) {
     smsCurrentAddr = addr;
-    $id('sms-thread-title').textContent = addr || 'Unknown';
+    const known = smsThreads.find((t) => t.address === addr);
+    $id('sms-thread-title').textContent = (known && known.name) || addr || 'Unknown';
     $id('sms-input').disabled = false;
     $id('btn-sms-send').disabled = false;
     renderSmsThreads();
@@ -2272,6 +2275,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (p.op === 'threads' && Array.isArray(p.threads)) {
       smsThreads = p.threads;
       renderSmsThreads();
+      // The phone also pushes a thread list when an SMS arrives, so keep the
+      // open conversation current without the user pressing Refresh.
+      const cur = smsCurrentAddr && smsThreads.find((t) => t.address === smsCurrentAddr);
+      if (cur) {
+        $id('sms-thread-title').textContent = cur.name || smsCurrentAddr;
+        const newest = (smsByAddr[smsCurrentAddr] || []).reduce((n, m) => Math.max(n, m.date || 0), 0);
+        if ((cur.lastDate || 0) > newest) {
+          window.phonePcApi.smsRequest({ op: 'messages', address: smsCurrentAddr, limit: 300 }).catch(() => {});
+        }
+      }
     } else if (p.op === 'messages' && p.address && Array.isArray(p.messages)) {
       const existing = (smsByAddr[p.address] || []).filter((m) => !m.__temp);
       const byId = new Map(existing.map((m) => [m.id, m]));
@@ -4010,9 +4023,6 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
   // 96px icon (APP_CATALOG). Tapping one asks the phone to launch it and the
   // PC opens its mirror window, so the app runs in a window here.
   let phoneApps = [];
-  let adbApps = [];
-  let adbSerial = null;
-  let adbBusy = false;
   let appsBusy = false;
   let catalogAt = 0;
 
@@ -4062,7 +4072,7 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
   function renderApps() {
     const wrap = $id('adb-apps');
     if (!wrap) return;
-    const list = phoneApps.length ? phoneApps : adbApps;
+    const list = phoneApps;
     const q = ($id('adb-search').value || '').trim().toLowerCase();
     const shown = q
       ? list.filter((a) => String(a.label || '').toLowerCase().includes(q) || String(a.pkg || '').toLowerCase().includes(q))
@@ -4108,7 +4118,7 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     // "Reading apps…" forever: say what to do instead.
     setTimeout(() => {
       if (phoneApps.length || catalogAt > askedAt) return;
-      adbSetStatus('The phone did not answer \u00b7 tap Refresh, or connect Wireless debugging below', 'error');
+      adbSetStatus('The phone did not answer \u00b7 tap Refresh', 'error');
     }, 10000);
   }
 
@@ -4119,8 +4129,10 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
       appsSetPhoneCard(status.deviceName || 'Your phone', status.modelCode || 'Connected over Wi-Fi', true);
       return appsLoadCatalog();
     }
-    appsSetPhoneCard('No phone connected', 'Connect from Overview — or use Wireless debugging below', false);
-    return adbRefreshAll(!!adbSerial);
+    appsSetPhoneCard('No phone connected', 'Connect your phone from Overview', false);
+    appsSetPairBox(true);
+    adbSetStatus('Waiting for your phone', '');
+    return null;
   }
 
   // ---- catalog + launch results from the phone ----
@@ -4132,6 +4144,7 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
       return;
     }
     phoneApps = (p.apps || []).slice().sort((a, b) => String(a.label).localeCompare(String(b.label)));
+    if (typeof p.paired === 'boolean') appsSetPairBox(!p.paired);
     renderApps();
     adbSetStatus(`Connected \u00b7 ${phoneApps.length} apps from your phone`, 'ok');
   });
@@ -4150,112 +4163,34 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     }
   });
 
-  // One-time pairing with the phone's own wireless debugging: without it the
-  // phone can't give an app a display of its own.
-  if ($id('btn-adb-phone-pair')) {
-    $id('btn-adb-phone-pair').addEventListener('click', async () => {
-      const code = ($id('adb-phone-code').value || '').replace(/[^0-9]/g, '');
-      if (code.length < 6) return adbSetStatus('Enter the six-digit code from the pairing dialog', 'error');
-      adbSetStatus('Pairing this phone with its own wireless debugging\u2026', 'busy');
-      const res = await window.phonePcApi.pairPhoneAdb(code).catch(() => null);
+  // Pairing starts on the phone: one tap here asks it to show the notification
+  // where the six-digit code is typed. Nothing is copied to this PC.
+  function appsSetPairBox(show) {
+    const box = $id('apps-pair-box');
+    if (box) box.hidden = !show;
+  }
+
+  if ($id('btn-adb-phone-prompt')) {
+    $id('btn-adb-phone-prompt').addEventListener('click', async () => {
+      adbSetStatus('Pairing request sent \u00b7 check your phone notifications', 'busy');
+      const res = await window.phonePcApi.pairPromptOnPhone().catch(() => null);
       if (!res || res.ok === false) {
         return adbSetStatus((res && res.error) || 'Phone not connected', 'error');
       }
+      showToast('Check your phone: type the 6-digit code in the notification', 'success');
     });
   }
 
   window.phonePcApi.on('adb-pair-result', (p) => {
     if (!p) return;
     if (p.ok) {
-      if ($id('adb-phone-code')) $id('adb-phone-code').value = '';
+      appsSetPairBox(false);
       adbSetStatus('Paired \u00b7 app windows are ready', 'ok');
       showToast('Paired. Every app can now open in its own window.', 'success');
     } else {
       adbSetStatus(p.error || 'Pairing failed', 'error');
     }
   });
-
-  // ---- Wireless debugging fallback (advanced) ----
-  async function adbLoadDevices() {
-    const res = await window.phonePcApi.adbStatus().catch(() => null);
-    const select = $id('adb-serial');
-    if (!res) { adbSetStatus('adb is unavailable', 'error'); return null; }
-    const devices = (res.devices || []).filter((d) => d.state === 'device');
-    select.innerHTML = devices.length
-      ? devices.map((d) => `<option value="${escapeAttr(d.serial)}">${escapeHtml(d.model || d.serial)} \u00b7 ${escapeHtml(d.serial)}</option>`).join('')
-      : '<option value="">No device connected</option>';
-    adbSerial = res.serial || (devices[0] ? devices[0].serial : null);
-    if (adbSerial) select.value = adbSerial;
-    select.disabled = !devices.length;
-    $id('btn-adb-disconnect').disabled = !devices.length;
-    $id('btn-adb-refresh').disabled = !devices.length;
-    if (adbSerial) {
-      adbSetStatus(`adb connected \u00b7 ${adbSerial.split('.').pop() || adbSerial}`, 'ok');
-    } else if (!phoneApps.length) {
-      const adbOk = res.adb && res.adb !== 'adb';
-      adbSetStatus(adbOk ? 'Waiting for your phone' : 'adb not found \u2014 install Android platform-tools', adbOk ? '' : 'error');
-    }
-    return adbSerial;
-  }
-
-  async function adbLoadApps() {
-    if (adbBusy || !adbSerial) return;
-    adbBusy = true;
-    const res = await window.phonePcApi.adbApps(adbSerial).catch(() => null);
-    adbBusy = false;
-    if (!res || !res.ok) {
-      adbSetStatus((res && res.error) || 'Could not read the app list', 'error');
-      return;
-    }
-    adbApps = res.apps || [];
-    if (!phoneApps.length) renderApps();
-    adbSetStatus(`adb \u00b7 ${adbApps.length} apps`, 'ok');
-  }
-
-  async function adbRefreshAll(loadApps) {
-    const serial = await adbLoadDevices();
-    if (serial && loadApps) adbLoadApps();
-    return serial;
-  }
-
-  if ($id('btn-adb-connect')) {
-    $id('btn-adb-connect').addEventListener('click', async () => {
-      const addr = ($id('adb-connect-addr').value || '').trim();
-      if (!addr) return adbSetStatus('Enter the IP:port from Wireless debugging', 'error');
-      adbSetStatus('Connecting\u2026', 'busy');
-      const res = await window.phonePcApi.adbConnect(addr).catch(() => null);
-      if (!res || !res.ok) return adbSetStatus((res && res.error) || 'Could not connect', 'error');
-      showToast(`Connected to ${addr}`, 'success');
-      adbRefreshAll(true);
-    });
-
-    $id('btn-adb-pair').addEventListener('click', async () => {
-      const addr = ($id('adb-pair-addr').value || '').trim();
-      const code = ($id('adb-pair-code').value || '').trim();
-      adbSetStatus('Pairing\u2026', 'busy');
-      const res = await window.phonePcApi.adbPair(addr, code).catch(() => null);
-      if (!res || !res.ok) return adbSetStatus((res && res.error) || 'Pairing failed', 'error');
-      $id('adb-pair-code').value = '';
-      showToast('Paired. Now press Connect with the device address.', 'success');
-      adbSetStatus('Paired \u00b7 enter the device address and press Connect', 'ok');
-      adbRefreshAll(false);
-    });
-
-    $id('btn-adb-disconnect').addEventListener('click', async () => {
-      await window.phonePcApi.adbDisconnect(adbSerial || '').catch(() => null);
-      adbApps = [];
-      renderApps();
-      adbRefreshAll(false);
-    });
-
-    $id('btn-adb-refresh').addEventListener('click', () => adbRefreshAll(true));
-    $id('adb-serial').addEventListener('change', () => {
-      adbSerial = $id('adb-serial').value || null;
-      adbApps = [];
-      if (!phoneApps.length) renderApps();
-      if (adbSerial) adbLoadApps();
-    });
-  }
 
   // The phone came back after a reconnect: fill the grid without the user
   // having to press Refresh on an empty pane.
@@ -4277,26 +4212,18 @@ Silent when Android allows it; otherwise a system confirmation appears on the ph
     const pkg = cell.dataset.pkg;
     cell.disabled = true;
     try {
-      const known = phoneApps.find((a) => a.pkg === pkg) || adbApps.find((a) => a.pkg === pkg);
+      const known = phoneApps.find((a) => a.pkg === pkg);
       const label = known ? known.label : '';
-      if (phoneApps.length) {
-        // Start it on the phone and show it in a window of its own, titled
-        // with the app's name.
-        const res = await window.phonePcApi.launchAppInWindow(pkg, label).catch(() => null);
-        if (res && res.ok === false) {
-          showToast(res.error || 'Could not open that app', 'error');
-        } else {
-          showToast(`Opening ${label || 'the app'} in its own window`, 'success');
-        }
-        return;
-      }
-      if (!adbSerial) return;
-      const res = await window.phonePcApi.adbLaunch(adbSerial, pkg).catch(() => null);
-      if (res && res.ok) {
-        await window.phonePcApi.openAppWindow(pkg, label).catch(() => null);
-        showToast(`Opening ${label || 'the app'} in its own window`, 'success');
+      // Start it on the phone and show it in a window of its own, titled with
+      // the app's name.
+      const res = await window.phonePcApi.launchAppInWindow(pkg, label).catch(() => null);
+      if (res && res.ok === false) {
+        showToast(res.error || 'Could not open that app', 'error');
+        // Not paired yet: point at the phone-side notification instead of an
+        // error the user cannot act on.
+        if (/pair/i.test(res.error || '')) appsSetPairBox(true);
       } else {
-        showToast((res && res.error) || 'Could not open that app', 'error');
+        showToast(`Opening ${label || 'the app'} in its own window`, 'success');
       }
     } finally {
       cell.disabled = false;

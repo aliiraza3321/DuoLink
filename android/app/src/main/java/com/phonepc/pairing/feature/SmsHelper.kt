@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SmsManager
 import androidx.core.content.ContextCompat
@@ -62,6 +63,54 @@ object SmsHelper {
     private fun deniedError(what: String): String =
         "$what permission not granted. On the phone: Settings → Apps → DuoLink → Permissions → SMS."
 
+    // ================= CONTACT NAMES =================
+
+    /**
+     * Display name for a raw SMS address, cached for the session.
+     *
+     * SMS rows only carry the number, so without this the PC shows
+     * "+923088870166" where the phone itself shows the saved contact. A name is
+     * purely cosmetic: when READ_CONTACTS is not granted (it is a separate
+     * grant from SMS) we return null and the number is used instead.
+     */
+    private val nameCache = java.util.Collections.synchronizedMap(HashMap<String, String>())
+    private val nameMisses = java.util.Collections.synchronizedSet(HashSet<String>())
+
+    fun contactName(context: Context, address: String): String? {
+        val key = address.trim()
+        if (key.isEmpty()) return null
+        nameCache[key]?.let { return it }
+        if (nameMisses.contains(key)) return null
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS)
+            != PackageManager.PERMISSION_GRANTED
+        ) return null
+
+        val name = try {
+            context.contentResolver.query(
+                Uri.withAppendedPath(
+                    ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+                    Uri.encode(key)
+                ),
+                arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null
+            )?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+        } catch (se: SecurityException) {
+            null
+        } catch (e: Exception) {
+            null
+        }
+
+        if (name.isNullOrBlank()) {
+            // Remember misses too: a shortcode in a 200-thread scan would
+            // otherwise re-query the contacts provider for every refresh.
+            if (nameMisses.size > 500) nameMisses.clear()
+            nameMisses.add(key)
+            return null
+        }
+        if (nameCache.size > 500) nameCache.clear()
+        nameCache[key] = name
+        return name
+    }
+
     // ================= THREADS =================
 
     fun sendThreads(context: Context, limit: Int) {
@@ -106,6 +155,7 @@ object SmsHelper {
                             if (entry == null) {
                                 seen[addr] = JsonObject().apply {
                                     addProperty("address", addr)
+                                    contactName(context, addr)?.let { addProperty("name", it) }
                                     addProperty("snippet", body.take(160))
                                     addProperty("lastDate", date)
                                     addProperty("count", 1)
@@ -170,6 +220,7 @@ object SmsHelper {
                             out.add(JsonObject().apply {
                                 addProperty("id", if (idIdx >= 0) c.getLong(idIdx).toString() else out.size().toString())
                                 addProperty("address", if (addrIdx >= 0) c.getString(addrIdx) ?: address else address)
+                                contactName(context, address)?.let { addProperty("name", it) }
                                 addProperty("body", if (bodyIdx >= 0) c.getString(bodyIdx) ?: "" else "")
                                 addProperty("date", if (dateIdx >= 0) c.getLong(dateIdx) else 0L)
                                 addProperty(
@@ -301,6 +352,22 @@ object SmsHelper {
             context, req, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+    }
+}
+
+/**
+ * Pushes a fresh conversation list when an SMS arrives, so the PC's Messages
+ * pane updates on its own instead of waiting for the user to press Refresh.
+ *
+ * Only a summary is pushed; the conversation itself is fetched by the PC.
+ * Registered in the manifest behind BROADCAST_SMS, so only the system (or the
+ * default SMS app) can trigger it.
+ */
+class SmsReceivedReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
+        // No-op (returns false) when no PC is connected.
+        SmsHelper.sendThreads(context.applicationContext, 200)
     }
 }
 

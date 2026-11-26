@@ -135,6 +135,8 @@ contextBridge.exposeInMainWorld('phonePcApi', {
   appWindowInput: (session, action, x, y) => ipcRenderer.invoke('app-window-input', { session, action, x, y }),
   closeAppWindow: (session) => ipcRenderer.invoke('app-window-close', session),
   pairPhoneAdb: (code) => ipcRenderer.invoke('adb-pair-phone', code),
+  // Show the pairing notification on the phone (six digits are typed there).
+  pairPromptOnPhone: () => ipcRenderer.invoke('adb-pair-prompt'),
   // Pop-out viewer: ask main for the cached last frame so the window paints
   // its picture immediately instead of opening blank.
   screenWindowReady: () => ipcRenderer.invoke('screen-window-ready'),

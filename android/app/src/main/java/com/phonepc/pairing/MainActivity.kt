@@ -673,7 +673,10 @@ fun SettingsScreen(onStartScreenShare: () -> Unit, onUnpair: () -> Unit) {
         val smsPerms = listOf(
             Manifest.permission.READ_SMS,
             Manifest.permission.RECEIVE_SMS,
-            Manifest.permission.SEND_SMS
+            Manifest.permission.SEND_SMS,
+            // Names, not numbers: the PC shows the saved contact for a thread.
+            // Denying it only costs the name — the number is still shown.
+            Manifest.permission.READ_CONTACTS
         )
 
         val allRuntimePerms = (mediaPerms + smsPerms + listOf(

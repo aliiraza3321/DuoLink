@@ -105,6 +105,7 @@ const MessageType = {
   APP_WINDOW_CLOSE: 'APP_WINDOW_CLOSE',   // PC -> phone: { session }
 
   // The phone's own wireless debugging (what app windows run on)
+  ADB_PAIR_PROMPT: 'ADB_PAIR_PROMPT',     // PC -> phone: show the pairing notification
   ADB_PAIR_REQ: 'ADB_PAIR_REQ',           // PC -> phone: { code }
   ADB_PAIR_RESULT: 'ADB_PAIR_RESULT',     // phone -> PC: { ok, error }
 

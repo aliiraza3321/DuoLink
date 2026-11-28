@@ -20,6 +20,7 @@ const { FeatureHub } = require('./src/features');
 const { RemotePcStreamer } = require('./src/remotepc');
 const { WebcamHub } = require('./src/webcam');
 const { WirelessAdb } = require('./src/wirelessadb');
+const { LanDiscovery } = require('./src/discovery');
 
 // Enforce single instance so clicking shortcut brings existing window to front
 const gotTheLock = app.requestSingleInstanceLock();
@@ -94,6 +95,7 @@ for (const method of ['log', 'warn', 'error']) {
 let mainWindow = null;
 let tray = null;
 let wssServer = null;
+let lanDiscovery = null;
 let jarvis = null;
 let pairingManager = null;
 let fileManager = null;
@@ -1992,6 +1994,15 @@ if (gotTheLock) app.whenReady().then(async () => {
     try { createTray(); } catch (e) { logLine('tray error', e.message); }
 
     await startServerWithFallback();
+    // Answer a paired phone that is looking for us at a new address (see
+    // src/discovery.js): without this, a reconnect after the PC's DHCP lease
+    // changed dialled the old IP forever and the phone stayed disconnected.
+    lanDiscovery = new LanDiscovery({
+      getPort: () => PORT,
+      pairingManager,
+      log: (msg) => logLine('discovery', msg)
+    });
+    try { lanDiscovery.start(); } catch (err) { logLine('discovery start failed', err.message); }
     jarvis.startStats();
   } catch (err) {
     if (!mainWindow) { try { setupIpc(); } catch (_) {} createWindow(); try { createTray(); } catch (_) {} }
@@ -2019,6 +2030,10 @@ app.on('will-quit', () => {
   globalShortcut.unregisterAll();
   if (remotePc) remotePc.stop();
   if (webcamHub) webcamHub.stop();
+  if (lanDiscovery) {
+    lanDiscovery.stop();
+    lanDiscovery = null;
+  }
   if (wssServer) {
     wssServer.stop();
   }

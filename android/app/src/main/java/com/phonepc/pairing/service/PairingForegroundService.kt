@@ -43,6 +43,7 @@ import com.phonepc.pairing.feature.WebcamService
 import com.phonepc.pairing.R
 import com.phonepc.pairing.data.ConnectionState
 import com.phonepc.pairing.data.SessionCredentials
+import com.phonepc.pairing.network.LanDiscovery
 import com.phonepc.pairing.network.Protocol
 import com.phonepc.pairing.network.TlsPinningSocket
 import com.phonepc.pairing.pairing.KeystoreStorage
@@ -94,6 +95,8 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
     private var isManualDisconnect = false
     private var reconnectJob: Job? = null
     private var latencyJob: Job? = null
+    /** Consecutive pings the PC never answered — a link that went silent. */
+    private var missedPings = 0
 
     companion object {
         const val CHANNEL_ID = "phonepc_link_channel"
@@ -326,7 +329,7 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
         val st = _connectionState.value
         if (socket != null && (st == ConnectionState.CONNECTED || st == ConnectionState.CONNECTING)) return
         try {
-            startForeground(NOTIFICATION_ID, buildNotification("Connecting to ${creds.pcDeviceName}..."))
+            enterForeground("Connecting to ${creds.pcDeviceName}...")
         } catch (_: Exception) {}
         connectWithCredentials(creds)
     }
@@ -347,7 +350,7 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
                 // and Android only lets a foreground service stay up: enter
                 // the foreground before doing the (short) pairing.
                 runCatching {
-                    startForeground(NOTIFICATION_ID, buildNotification("Pairing with wireless debugging…"))
+                    enterForeground("Pairing with wireless debugging…")
                 }
                 pairWirelessDebugging(intent?.getStringExtra(EXTRA_PAIR_CODE).orEmpty())
             }
@@ -359,7 +362,7 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
                     if (socket != null && (st == ConnectionState.CONNECTED || st == ConnectionState.CONNECTING)) {
                         return START_STICKY // already linked; don't tear down a healthy socket
                     }
-                    startForeground(NOTIFICATION_ID, buildNotification("Connecting to ${creds.pcDeviceName}..."))
+                    enterForeground("Connecting to ${creds.pcDeviceName}...")
                     connectWithCredentials(creds)
                 }
             }
@@ -399,15 +402,39 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
             while (isActive) {
                 val up = _connectionState.value == ConnectionState.CONNECTED && socket != null
                 if (up) {
-                    lastPingSentAt = SystemClock.elapsedRealtime()
-                    socket?.send(Protocol.createEnvelope(Protocol.TYPE_HEARTBEAT_PING, JsonObject()))
+                    // A backgrounded phone can keep a half-open socket: writes
+                    // still "succeed", nothing ever comes back, and the link is
+                    // only noticed as dead when the app is opened again. Count
+                    // unanswered pings and rebuild the socket after four.
+                    if (lastPingSentAt != 0L) missedPings++ else missedPings = 0
+                    if (missedPings >= 4) {
+                        missedPings = 0
+                        forceReconnect()
+                    } else {
+                        lastPingSentAt = SystemClock.elapsedRealtime()
+                        socket?.send(Protocol.createEnvelope(Protocol.TYPE_HEARTBEAT_PING, JsonObject()))
+                    }
                 } else {
+                    missedPings = 0
                     lastPingSentAt = 0L
                     _linkLatency.value = -1
                 }
                 delay(3000L)
             }
         }
+    }
+
+    /** Rebuilds the link right away, for a socket that is open but not answering. */
+    private fun forceReconnect() {
+        if (isManualDisconnect) return
+        val creds = keystoreStorage.getCredentials() ?: return
+        lastPingSentAt = 0L
+        reconnectAttempt = 0
+        reconnectJob?.cancel()
+        try { socket?.close() } catch (_: Exception) {}
+        socket = null
+        updateNotification("Reconnecting…")
+        connectWithCredentials(creds)
     }
 
     private fun connectWithCredentials(creds: SessionCredentials) {
@@ -950,10 +977,22 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
         reconnectJob?.cancel()
         reconnectJob = serviceScope.launch {
             delay(delayMs)
-            val creds = keystoreStorage.getCredentials()
-            if (creds != null && !isManualDisconnect) {
-                connectWithCredentials(creds)
+            var creds = keystoreStorage.getCredentials() ?: return@launch
+            if (isManualDisconnect) return@launch
+            // The saved host is the PC's address at pairing time. DHCP moves it
+            // (router reboot, Wi-Fi reconnect, hotspot swap) and every retry then
+            // dialled an address nobody answers on - the real reason a phone that
+            // lost its socket in the background never came back. After a couple
+            // of failures, ask the LAN where the PC is now and update the host;
+            // the TLS pin still proves it is the same PC.
+            if (reconnectAttempt >= 2) {
+                val found = LanDiscovery.findPc(creds.deviceId)
+                if (found != null && found != creds.pcHost) {
+                    keystoreStorage.updateHost(found)
+                    creds = keystoreStorage.getCredentials() ?: return@launch
+                }
             }
+            if (!isManualDisconnect) connectWithCredentials(creds)
         }
     }
 
@@ -1307,15 +1346,47 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(NotificationManager::class.java) ?: return
+            // A LOW-importance channel reads as background sync work to OEM
+            // battery managers (Infinix "Hiber" freezes the process, and the
+            // frozen process drops the socket -> "disconnects when minimised").
+            // DEFAULT keeps the same silent, ongoing notification but marks it
+            // as a service the user is meant to keep running.
+            val existing = manager.getNotificationChannel(CHANNEL_ID)
+            if (existing != null && existing.importance == NotificationManager.IMPORTANCE_LOW) {
+                manager.deleteNotificationChannel(CHANNEL_ID)
+            }
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "DuoLink — Link Status",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Shows real-time connection status with your paired PC."
+                description = "Keeps the link to your paired PC alive while the app is in the background."
+                setShowBadge(false)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(channel)
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    /**
+     * Enters the foreground as a *connected device* service.
+     *
+     * Declared in the manifest as connectedDevice|dataSync; naming the type
+     * explicitly stops Android from treating the link as a background sync job,
+     * which is what let vendor freezers suspend it minutes after the app was
+     * minimised.
+     */
+    private fun enterForeground(statusText: String) {
+        val notification = buildNotification(statusText)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
         }
     }
 
@@ -1340,6 +1411,10 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
             .setSmallIcon(R.drawable.ic_link)
             .setContentIntent(openIntent)
             .setOngoing(true)
+            .setSilent(true)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .addAction(R.drawable.ic_close, "Disconnect", disconnectIntent)
             .build()
     }

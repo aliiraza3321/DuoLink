@@ -144,6 +144,43 @@ class PcFileSystem {
   }
 
   /**
+   * Explorer's "This PC" folders — Desktop, Documents, Downloads, Music,
+   * Pictures and Videos. Only offered with full access, so the phone's root
+   * screen looks like Explorer instead of a bare list of drive letters.
+   */
+  knownFolders() {
+    const app = require('electron').app;
+    const defs = [
+      ['Desktop', 'desktop'],
+      ['Documents', 'documents'],
+      ['Downloads', 'downloads'],
+      ['Music', 'music'],
+      ['Pictures', 'pictures'],
+      ['Videos', 'videos']
+    ];
+    const out = [];
+    const seen = new Set();
+    // Explorer lists 3D Objects first; it is a plain folder in the profile.
+    try {
+      const threeD = path.join(app.getPath('home'), '3D Objects');
+      if (fs.statSync(threeD).isDirectory()) {
+        out.push({ name: '3D Objects', path: path.resolve(threeD) });
+        seen.add(path.resolve(threeD).toLowerCase());
+      }
+    } catch (_) { /* not created on this profile */ }
+    for (const [name, key] of defs) {
+      let dir;
+      try { dir = app.getPath(key); } catch (_) { continue; }
+      try { if (!fs.statSync(dir).isDirectory()) continue; } catch (_) { continue; }
+      const abs = path.resolve(dir);
+      if (seen.has(abs.toLowerCase())) continue;
+      seen.add(abs.toLowerCase());
+      out.push({ name, path: abs });
+    }
+    return out;
+  }
+
+  /**
    * Validates a path from the phone.
    * @returns {{ok: true, path: string}|{ok: false, error: string, needsApproval?: boolean}}
    */
@@ -268,7 +305,21 @@ class PcFileSystem {
 
   _rootListing() {
     const full = this.loadSettings().fileAccessAll === true;
-    const roots = this.roots().map((p) => ({
+    // Full access = the phone sees what Explorer shows: the user's own folders
+    // first, then every drive. Shared folders keep their own root screen.
+    const known = full
+      ? this.knownFolders().map((f) => ({
+        name: f.name,
+        path: f.path,
+        dir: true,
+        size: 0,
+        sizeLabel: '',
+        ext: '',
+        modified: 0,
+        place: 'known'
+      }))
+      : [];
+    const roots = full ? [] : this.roots().map((p) => ({
       name: path.basename(p) || p,
       path: p,
       dir: true,
@@ -278,11 +329,11 @@ class PcFileSystem {
       modified: 0,
       place: 'shared'
     }));
-    const shared = new Set(roots.map((r) => r.path.toLowerCase()));
+    const listed = new Set([...known, ...roots].map((e) => path.resolve(e.path).toLowerCase()));
     const drives = this.drives()
-      .filter((d) => !shared.has(path.resolve(d).toLowerCase()))
+      .filter((d) => !listed.has(path.resolve(d).toLowerCase()))
       .map((d) => ({ name: d, path: d, dir: true, size: 0, sizeLabel: '', ext: '', modified: 0, place: 'drive' }));
-    return { ok: true, path: null, parent: null, root: null, entries: [...roots, ...drives], places: true, fullAccess: full };
+    return { ok: true, path: null, parent: null, root: null, entries: [...known, ...roots, ...drives], places: true, fullAccess: full };
   }
 
   /** Copies files/folders into `destDir`, never overwriting an existing name. */

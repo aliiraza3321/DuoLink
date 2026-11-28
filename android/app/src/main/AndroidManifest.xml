@@ -36,6 +36,14 @@
     <!-- 7. FOREGROUND_SERVICE_DATA_SYNC: Required on Android 14+ (API 34) for continuous bi-directional file/clipboard sync -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
+    <!-- 7b. FOREGROUND_SERVICE_CONNECTED_DEVICE: the link is a connection to an
+         external device, and this is the type Android keeps alive for exactly
+         that job. A dataSync-only service is treated as background sync work, and
+         OEM freezers (Infinix "Hiber"/XOS) froze the whole app once it went off
+         screen - the process then stopped reading its socket and the PC saw a
+         1006 disconnect. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+
     <!-- 8. FOREGROUND_SERVICE_MEDIA_PROJECTION: Required on Android 14+ (API 34) for MediaProjection live screen sharing -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
@@ -125,7 +133,7 @@
             android:name=".service.PairingForegroundService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="connectedDevice|dataSync" />
 
         <!-- Screen Mirror MediaProjection Service -->
         <service

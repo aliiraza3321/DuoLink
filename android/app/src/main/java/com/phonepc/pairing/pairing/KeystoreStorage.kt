@@ -59,6 +59,15 @@ class KeystoreStorage(private val context: Context) {
             .apply()
     }
 
+    /**
+     * The PC answered a LAN probe from a new address: keep the pairing and just
+     * move the dial. The certificate pin still proves it is the same PC.
+     */
+    fun updateHost(host: String) {
+        if (host.isBlank()) return
+        sharedPreferences.edit().putString("pc_host", host).apply()
+    }
+
     fun getCredentials(): SessionCredentials? {
         val sessionId = sharedPreferences.getString("session_id", null) ?: return null
         val sessionSecret = sharedPreferences.getString("session_secret", null) ?: return null

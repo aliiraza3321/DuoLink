@@ -206,6 +206,22 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         isForeground = true
+        // Back from the background: if the link is down (Wi-Fi sleeps with the
+        // screen, or the socket died while the app was hidden) reconnect now —
+        // otherwise the app sits on a stale "Disconnected" until something else
+        // happens to trigger the service's backoff timer.
+        val state = PairingForegroundService.connectionState.value
+        if (state != ConnectionState.CONNECTED && state != ConnectionState.CONNECTING &&
+            KeystoreStorage(this).getCredentials() != null
+        ) {
+            runCatching {
+                val intent = Intent(this, PairingForegroundService::class.java).apply {
+                    action = PairingForegroundService.ACTION_START_LINK
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
+                else startService(intent)
+            }
+        }
     }
 
     override fun onStop() {

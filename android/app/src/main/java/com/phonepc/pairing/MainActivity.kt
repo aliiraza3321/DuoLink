@@ -2,6 +2,7 @@ package com.phonepc.pairing
 
 import android.Manifest
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -484,6 +485,49 @@ fun SettingsScreen(onStartScreenShare: () -> Unit, onUnpair: () -> Unit) {
         }
     }
 
+    /**
+     * Opens this phone's own battery / auto-start manager.
+     *
+     * Some ROMs freeze a background app and destroy its sockets (Infinix XOS
+     * "Hiber" does exactly that, which is what ends the link when the app is
+     * minimised). Only the phone's own power manager can exempt it, so open the
+     * right screen directly; if none of the known managers exist, fall back to
+     * this app's info page, where Battery → Unrestricted lives.
+     */
+    fun openBackgroundSettings() {
+        // Infinix / Tecno / itel (XOS) first, then the common OEM managers.
+        val targets = listOf(
+            "com.transsion.batterylab" to "com.android.settings.batterysave.BatteryLab\$TranAppSavingActivity",
+            "com.transsion.batterylab" to "com.android.settings.batterysave.BatteryLab\$TranOtherPowerSaveSettingsActivity",
+            "com.transsion.batterylab" to "com.transsion.batterylab.BatteryLabHomeActivity",
+            "com.miui.securitycenter" to "com.miui.permcenter.autostart.AutoStartManagementActivity",
+            "com.coloros.safecenter" to "com.coloros.safecenter.permission.startup.StartupAppListActivity",
+            "com.oplus.safecenter" to "com.oplus.safecenter.startupapp.StartupAppListActivity",
+            "com.vivo.permissionmanager" to "com.vivo.permissionmanager.activity.BgStartUpManagerActivity",
+            "com.samsung.android.lool" to "com.samsung.android.sm.ui.battery.BatteryActivity",
+            "com.huawei.systemmanager" to "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity",
+            "com.letv.android.letvsafe" to "com.letv.android.letvsafe.AutobootManageActivity"
+        )
+        for ((pkg, cls) in targets) {
+            try {
+                context.startActivity(
+                    Intent().setComponent(ComponentName(pkg, cls))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+                return
+            } catch (_: Exception) {
+                // Not this phone's manager, or it refuses to be opened: try the next.
+            }
+        }
+        try {
+            context.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.parse("package:${context.packageName}"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        } catch (_: Exception) {}
+    }
+
     fun openAccessibilitySettings() {
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
         context.startActivity(intent)
@@ -606,13 +650,17 @@ fun SettingsScreen(onStartScreenShare: () -> Unit, onUnpair: () -> Unit) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Background Link Keepalive", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 Text(
-                    "OEM battery savers (Samsung, Xiaomi, Oppo) kill background apps. Request battery optimization exemption so pairing never drops.",
+                    "Many phones freeze a background app and cut its network (Infinix's Hiber does), which disconnects DuoLink when you minimise it. Allow DuoLink to keep running in the background on both screens below.",
                     color = TextMuted,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 GlassButton(subtle = true, onClick = { requestBatteryExemption() }) {
                     Text("Allow background activity")
+                }
+                Spacer(Modifier.height(8.dp))
+                GlassButton(subtle = true, onClick = { openBackgroundSettings() }) {
+                    Text("Open battery & auto-start settings")
                 }
             }
         }

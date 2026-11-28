@@ -145,6 +145,18 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
         private val _connectionState = MutableStateFlow(ConnectionState.IDLE)
         val connectionState: StateFlow<ConnectionState> = _connectionState
 
+        private val _frozenHint = MutableStateFlow(false)
+        /**
+         * True when the link died while the app was in the background.
+         *
+         * Several ROMs freeze a background app and destroy its sockets (Infinix
+         * XOS "Hiber" logs `begin socketDestroy`), which no app-side keepalive can
+         * survive. The app can only point the user at the phone's own allow-list,
+         * so the flag drives a small, dismissible hint.
+         */
+        val frozenHint: StateFlow<Boolean> = _frozenHint
+        fun dismissFrozenHint() { _frozenHint.value = false }
+
         private val _incomingChatFlow = MutableStateFlow<String?>(null)
         val incomingChatFlow: StateFlow<String?> = _incomingChatFlow
 
@@ -949,6 +961,9 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
     }
 
     override fun onClosed(code: Int, reason: String) {
+        // A drop while the app was not on screen is the freezer's doing, not a
+        // network hiccup: remember it so the UI can explain it once.
+        if (!MainActivity.isForeground) _frozenHint.value = true
         // Stop camera capture immediately when the link drops (no frames can be sent)
         try { WebcamService.stopFrom(this) } catch (_: Exception) {}
         _pcScreenActive.value = false
@@ -962,6 +977,7 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
     }
 
     override fun onFailure(t: Throwable) {
+        if (!MainActivity.isForeground) _frozenHint.value = true
         if (!isManualDisconnect) {
             scheduleReconnect()
         }

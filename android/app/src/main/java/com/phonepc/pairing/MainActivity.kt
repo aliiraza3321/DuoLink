@@ -306,6 +306,8 @@ fun MainAppScaffold() {
     // Fullscreen PC-screen mirror stands the whole shell down: top bar and
     // bottom nav hide so only the PC picture is on the display.
     val pcImmersive by PairingForegroundService.pcScreenImmersive.collectAsState()
+    // Set when the link died while the app was not on screen (OEM freezer).
+    val frozenHint by PairingForegroundService.frozenHint.collectAsState()
     val keystore = remember { KeystoreStorage(context) }
     val savedCreds = remember { keystore.getCredentials() }
 
@@ -376,7 +378,13 @@ fun MainAppScaffold() {
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            if (!pcImmersive) TopAppBar(
+            if (!pcImmersive) Column {
+                if (frozenHint) FreezerHintBanner(
+                    onAllow = { openOemBackgroundSettings(context) },
+                    onDismiss = { PairingForegroundService.dismissFrozenHint() },
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
+                )
+                TopAppBar(
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -410,7 +418,8 @@ fun MainAppScaffold() {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-            )
+                )
+            }
         },
         bottomBar = {
             if (!pcImmersive) GlassNavBar(
@@ -468,6 +477,82 @@ fun MainAppScaffold() {
     }
 }
 
+/**
+ * One-line hint shown after the link died in the background: on ROMs that freeze
+ * apps (Infinix's Hiber and friends) the fix lives in the phone's own battery
+ * settings, so offer that shortcut instead of a silent "Disconnected".
+ */
+@Composable
+private fun FreezerHintBanner(onAllow: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        color = Color(0xFFF59E0B).copy(alpha = 0.16f),
+        border = BorderStroke(1.dp, Color(0xFFF59E0B).copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 12.dp, top = 4.dp, bottom = 4.dp, end = 2.dp)
+        ) {
+            Text(
+                "Your phone froze DuoLink in the background and cut the link.",
+                fontSize = 11.5.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onAllow, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                Text("Allow", fontSize = 12.sp, color = BrandCyan)
+            }
+            IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                Icon(Icons.Filled.Close, contentDescription = "Dismiss", modifier = Modifier.size(15.dp))
+            }
+        }
+    }
+}
+
+/**
+ * Opens this phone's own battery / auto-start manager.
+ *
+ * Some ROMs freeze a background app and destroy its sockets — Infinix XOS
+ * "Hiber" does exactly that, which is what ends the link when the app is
+ * minimised. Only the phone's own power manager can exempt an app, so open the
+ * right screen directly; if none of the known managers exist, fall back to this
+ * app's info page, where Battery → Unrestricted lives.
+ */
+fun openOemBackgroundSettings(context: Context) {
+    // Infinix / Tecno / itel (XOS) first, then the common OEM managers.
+    val targets = listOf(
+        "com.transsion.batterylab" to "com.android.settings.batterysave.BatteryLab\$TranAppSavingActivity",
+        "com.transsion.batterylab" to "com.android.settings.batterysave.BatteryLab\$TranOtherPowerSaveSettingsActivity",
+        "com.transsion.batterylab" to "com.transsion.batterylab.BatteryLabHomeActivity",
+        "com.miui.securitycenter" to "com.miui.permcenter.autostart.AutoStartManagementActivity",
+        "com.coloros.safecenter" to "com.coloros.safecenter.permission.startup.StartupAppListActivity",
+        "com.oplus.safecenter" to "com.oplus.safecenter.startupapp.StartupAppListActivity",
+        "com.vivo.permissionmanager" to "com.vivo.permissionmanager.activity.BgStartUpManagerActivity",
+        "com.samsung.android.lool" to "com.samsung.android.sm.ui.battery.BatteryActivity",
+        "com.huawei.systemmanager" to "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity",
+        "com.letv.android.letvsafe" to "com.letv.android.letvsafe.AutobootManageActivity"
+    )
+    for ((pkg, cls) in targets) {
+        try {
+            context.startActivity(
+                Intent().setComponent(ComponentName(pkg, cls))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+            return
+        } catch (_: Exception) {
+            // Not this phone's manager, or it refuses to be opened: try the next.
+        }
+    }
+    try {
+        context.startActivity(
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                .setData(Uri.parse("package:${context.packageName}"))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    } catch (_: Exception) {}
+}
+
 @Composable
 fun SettingsScreen(onStartScreenShare: () -> Unit, onUnpair: () -> Unit) {
     val context = LocalContext.current
@@ -485,48 +570,7 @@ fun SettingsScreen(onStartScreenShare: () -> Unit, onUnpair: () -> Unit) {
         }
     }
 
-    /**
-     * Opens this phone's own battery / auto-start manager.
-     *
-     * Some ROMs freeze a background app and destroy its sockets (Infinix XOS
-     * "Hiber" does exactly that, which is what ends the link when the app is
-     * minimised). Only the phone's own power manager can exempt it, so open the
-     * right screen directly; if none of the known managers exist, fall back to
-     * this app's info page, where Battery → Unrestricted lives.
-     */
-    fun openBackgroundSettings() {
-        // Infinix / Tecno / itel (XOS) first, then the common OEM managers.
-        val targets = listOf(
-            "com.transsion.batterylab" to "com.android.settings.batterysave.BatteryLab\$TranAppSavingActivity",
-            "com.transsion.batterylab" to "com.android.settings.batterysave.BatteryLab\$TranOtherPowerSaveSettingsActivity",
-            "com.transsion.batterylab" to "com.transsion.batterylab.BatteryLabHomeActivity",
-            "com.miui.securitycenter" to "com.miui.permcenter.autostart.AutoStartManagementActivity",
-            "com.coloros.safecenter" to "com.coloros.safecenter.permission.startup.StartupAppListActivity",
-            "com.oplus.safecenter" to "com.oplus.safecenter.startupapp.StartupAppListActivity",
-            "com.vivo.permissionmanager" to "com.vivo.permissionmanager.activity.BgStartUpManagerActivity",
-            "com.samsung.android.lool" to "com.samsung.android.sm.ui.battery.BatteryActivity",
-            "com.huawei.systemmanager" to "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity",
-            "com.letv.android.letvsafe" to "com.letv.android.letvsafe.AutobootManageActivity"
-        )
-        for ((pkg, cls) in targets) {
-            try {
-                context.startActivity(
-                    Intent().setComponent(ComponentName(pkg, cls))
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-                return
-            } catch (_: Exception) {
-                // Not this phone's manager, or it refuses to be opened: try the next.
-            }
-        }
-        try {
-            context.startActivity(
-                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    .setData(Uri.parse("package:${context.packageName}"))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-        } catch (_: Exception) {}
-    }
+    fun openBackgroundSettings() = openOemBackgroundSettings(context)
 
     fun openAccessibilitySettings() {
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)

@@ -147,15 +147,33 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
 
         private val _frozenHint = MutableStateFlow(false)
         /**
-         * True when the link died while the app was in the background.
-         *
-         * Several ROMs freeze a background app and destroy its sockets (Infinix
-         * XOS "Hiber" logs `begin socketDestroy`), which no app-side keepalive can
-         * survive. The app can only point the user at the phone's own allow-list,
-         * so the flag drives a small, dismissible hint.
+         * True when the link died in the background *and* that is worth
+         * explaining: either this ROM is known to freeze background apps
+         * (Infinix XOS "Hiber" logs `begin socketDestroy`), or it has happened
+         * three times. A single Wi-Fi hiccup must not claim the phone froze the
+         * app, so the counter - not the first drop - drives the hint.
          */
         val frozenHint: StateFlow<Boolean> = _frozenHint
-        fun dismissFrozenHint() { _frozenHint.value = false }
+
+        private var backgroundDrops = 0
+
+        /** ROMs whose battery managers are known to freeze background apps. */
+        private val freezerBrands = arrayOf(
+            "infinix", "tecno", "itel", "transsion",
+            "xiaomi", "redmi", "poco",
+            "oppo", "realme", "vivo", "iqoo",
+            "samsung", "huawei", "honor"
+        )
+
+        private fun isKnownFreezerRom(): Boolean {
+            val maker = "${Build.MANUFACTURER} ${Build.BRAND}".lowercase()
+            return freezerBrands.any { maker.contains(it) }
+        }
+
+        fun dismissFrozenHint() {
+            _frozenHint.value = false
+            backgroundDrops = 0
+        }
 
         private val _incomingChatFlow = MutableStateFlow<String?>(null)
         val incomingChatFlow: StateFlow<String?> = _incomingChatFlow
@@ -433,6 +451,14 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
                 }
                 delay(3000L)
             }
+        }
+    }
+
+    /** Counts a loss that happened while the app was off screen. */
+    private fun noteBackgroundDrop() {
+        backgroundDrops++
+        if (!_frozenHint.value && (backgroundDrops >= 3 || isKnownFreezerRom())) {
+            _frozenHint.value = true
         }
     }
 
@@ -961,9 +987,9 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
     }
 
     override fun onClosed(code: Int, reason: String) {
-        // A drop while the app was not on screen is the freezer's doing, not a
-        // network hiccup: remember it so the UI can explain it once.
-        if (!MainActivity.isForeground) _frozenHint.value = true
+        // Only a repeated background loss (or a ROM known to freeze apps) is
+        // worth explaining: one Wi-Fi drop must not blame the phone.
+        if (!MainActivity.isForeground) noteBackgroundDrop()
         // Stop camera capture immediately when the link drops (no frames can be sent)
         try { WebcamService.stopFrom(this) } catch (_: Exception) {}
         _pcScreenActive.value = false
@@ -977,7 +1003,7 @@ class PairingForegroundService : Service(), TlsPinningSocket.SocketEventListener
     }
 
     override fun onFailure(t: Throwable) {
-        if (!MainActivity.isForeground) _frozenHint.value = true
+        if (!MainActivity.isForeground) noteBackgroundDrop()
         if (!isManualDisconnect) {
             scheduleReconnect()
         }

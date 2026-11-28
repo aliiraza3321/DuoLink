@@ -478,9 +478,9 @@ fun MainAppScaffold() {
 }
 
 /**
- * One-line hint shown after the link died in the background: on ROMs that freeze
- * apps (Infinix's Hiber and friends) the fix lives in the phone's own battery
- * settings, so offer that shortcut instead of a silent "Disconnected".
+ * One-line hint shown when the link dies in the background — only for a ROM that
+ * is known to freeze apps, or after three such drops — with a shortcut to the
+ * phone's own battery settings, where the allow-list lives.
  */
 @Composable
 private fun FreezerHintBanner(onAllow: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
@@ -495,7 +495,7 @@ private fun FreezerHintBanner(onAllow: () -> Unit, onDismiss: () -> Unit, modifi
             modifier = Modifier.padding(start = 12.dp, top = 4.dp, bottom = 4.dp, end = 2.dp)
         ) {
             Text(
-                "Your phone froze DuoLink in the background and cut the link.",
+                "DuoLink lost the link while in the background. Allow it to keep running.",
                 fontSize = 11.5.sp,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
